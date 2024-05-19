@@ -1,0 +1,44 @@
+#ifndef CONSTS_HPP
+#define CONSTS_HPP
+
+#define COLOR_BACKGROUND juce::Colour(16, 17, 17)
+#define COLOR_BACKGROUND_LIGHTER juce::Colour(16, 17, 17)
+#define COLOR_APP_BACKGROUND juce::Colour(16, 17, 17)
+#define COLOR_BACKGROUND_HIGHLIGHT juce::Colour(28, 28, 28)
+#define COLOR_SAMPLE_BORDER juce::Colour(140, 140, 180)
+#define COLOR_TEXT COLOR_WHITE
+#define COLOR_TEXT_DARKER juce::Colour(195, 195, 195)
+#define COLOR_NOTIF_BAR_TOP juce::Colour(62, 49, 49)
+#define COLOR_NOTIF_BAR_BOTTOM juce::Colour(10, 10, 10)
+#define COLOR_LABELS_BORDER juce::Colour(210, 210, 220)
+#define COLOR_SPLIT_PLACEHOLDER juce::Colour(210, 30, 30)
+#define COLOR_SELECT_AREA juce::Colour(54, 210, 210)
+#define COLOR_OPAQUE_BICOLOR_LIST_1 COLOR_APP_BACKGROUND
+#define COLOR_OPAQUE_BICOLOR_LIST_2 COLOR_APP_BACKGROUND
+#define COLOR_DIALOG_BACKGROUND juce::Colour(30, 30, 30)
+#define COLOR_SEPARATOR_LINE juce::Colour(80, 80, 80)
+#define COLOR_HIGHLIGHT juce::Colour(56, 110, 155)
+#define COLOR_SELECTED_BACKGROUND juce::Colour(35, 36, 38)
+
+#define COLOR_NOTIF_INFO juce::Colour(64, 86, 165)
+#define COLOR_NOTIF_WARN juce::Colour(155, 95, 49)
+#define COLOR_NOTIF_ERROR juce::Colour(198, 66, 100)
+
+#define COLOR_UNITS COLOR_TEXT_DARKER.withAlpha(0.5f)
+
+#define COLOR_BLACK juce::Colour(10, 10, 10)
+#define COLOR_WHITE juce::Colour(230, 230, 230)
+
+#define DEFAULT_FONT_SIZE 15
+#define SMALLER_FONT_SIZE 13
+
+#define TAB_BUTTONS_INNER_PADDING 42
+
+#define TAB_PADDING 4
+#define TAB_SECTIONS_MARGINS 5
+
+#define POPUP_MENU_IDEAL_HEIGHT 18
+#define POPUP_MENU_SEPARATOR_IDEAL_HEIGHT 4
+#define TAB_HIGHLIGHT_LINE_WIDTH 2
+
+#endif // CONSTS_HPP
