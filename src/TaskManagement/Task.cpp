@@ -126,3 +126,38 @@ SilentTask::SilentTask()
 {
     recordableInHistory = false;
 }
+
+// =============================
+
+std::string CancelTask::marshal()
+{
+    json taskj = {{"object", "task"},
+                  {"task", "cancel_task"},
+                  {"is_completed", isCompleted()},
+                  {"failed", hasFailed()},
+                  {"recordable_in_history", recordableInHistory},
+                  {"is_part_of_reversion", isPartOfReversion}};
+    return taskj.dump();
+}
+
+std::string RestoreTask::marshal()
+{
+    json taskj = {{"object", "task"},
+                  {"task", "restore_task"},
+                  {"is_completed", isCompleted()},
+                  {"failed", hasFailed()},
+                  {"recordable_in_history", recordableInHistory},
+                  {"is_part_of_reversion", isPartOfReversion}};
+    return taskj.dump();
+}
+
+std::string ClearHistoryTask::marshal()
+{
+    json taskj = {{"object", "task"},
+                  {"task", "clear_history_task"},
+                  {"is_completed", isCompleted()},
+                  {"failed", hasFailed()},
+                  {"recordable_in_history", recordableInHistory},
+                  {"is_part_of_reversion", isPartOfReversion}};
+    return taskj.dump();
+}

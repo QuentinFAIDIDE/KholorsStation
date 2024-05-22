@@ -7,29 +7,6 @@
 
 #define MAX_TASK_INDEX 1048576
 
-#define RESET_TASK_NO_STEPS 3
-
-/**
-  Unused as of now.
- */
-class State
-{
-};
-
-/**
-  When a sample is created, it's one
-  of those duplication types.
- */
-enum DuplicationType
-{
-    DUPLICATION_TYPE_NO_DUPLICATION,    // plain new sample
-    DUPLICATION_TYPE_COPY_AT_POSITION,  // copied from another and moved to a certain position
-    DUPLICATION_TYPE_SPLIT_AT_POSITION, // take an existing sample, reduce it to be before some position, and create the
-                                        // cropped out part after as a new sample
-    DUPLICATION_TYPE_SPLIT_AT_FREQUENCY, // take an existing sample, filter it to be below some frequency, and create a
-                                         // new sample with the filtered out part
-};
-
 /**
   Abstract class for "Tasks", which are actions to perform or that were
   already performed. These Tasks are sent down the ActivityManager
@@ -173,6 +150,33 @@ class SilentTask : public Task
 {
   public:
     SilentTask();
+};
+
+class CancelTask : public SilentTask
+{
+  public:
+    /**
+      Convert the task into a string.
+     */
+    std::string marshal();
+};
+
+class RestoreTask : public SilentTask
+{
+  public:
+    /**
+      Convert the task into a string.
+     */
+    std::string marshal();
+};
+
+class ClearHistoryTask : public SilentTask
+{
+  public:
+    /**
+      Convert the task into a string.
+     */
+    std::string marshal();
 };
 
 #endif // DEF_TASK_HPP

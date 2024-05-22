@@ -1,7 +1,12 @@
 cmake_minimum_required(VERSION 3.22)
 project(Kholors2 VERSION 0.0.1)
 
+find_package(nlohmann_json 3.11.2 REQUIRED)
+
 include(FetchContent)
+
+# to use gdb
+set(CMAKE_BUILD_TYPE Debug)
 
 # Juce lib setup
 set(LIB_JUCE_TAG "7.0.9")

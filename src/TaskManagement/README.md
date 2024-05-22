@@ -14,6 +14,9 @@ The developement pattern is the following:
 
 For large classes, it may be a good idea to separate the tasks management code into a sidecar class.
 
+Warning, you should stop the tasking manager with `stopTaskBroadcast` before deleting any of the TaskListeners,
+otherwise there is a risk that segfault would occur.
+
 ## Usage
 
 ### Defining tasks
