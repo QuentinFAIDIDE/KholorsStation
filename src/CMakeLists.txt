@@ -1,4 +1,5 @@
 juce_add_module(GUIToolkit)
 add_subdirectory(TaskManagement)
+add_subdirectory(AudioTransport)
 add_subdirectory(StationApp)
 add_subdirectory(SinkPlugin)

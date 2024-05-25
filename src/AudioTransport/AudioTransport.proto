@@ -1,0 +1,48 @@
+syntax = "proto3";
+package AudioTransport;
+
+// The service receiving audio buffers with metadata.
+service KholorsAudioTransport {
+    // Upload an audio buffer.
+    rpc UploadAudioSegment (AudioSegmentPayload) returns (AudioSegmentUploadResponse) {}
+  }
+  
+  // The request that contains the audio segment to upload as well as the metadata attached to it.
+  message AudioSegmentPayload {
+    // 64 bits hash of a RFC 4122 version 4 UUID provided by Juce UUID implementation that we randomly assign to VST isntances
+    fixed64 track_identifier = 1;
+    // Bytes representing a RGBA color as a set of 4 unsigned 8 bits integers that are from left (first) to right (last): RED, GREEN, BLUE, ALPHA.
+    // They are representing the color attached to the UUID hash attached.
+    fixed32 track_color = 2;
+    // Name of the channel to display on screen.
+    string track_name = 3;
+    // Sample rate of the daw signal.
+    int32 daw_sample_rate = 4;
+    // Beats per minute setup in the DAW.
+    double daw_bpm = 5;
+    // Numerator of the DAW time signature.
+    int32 daw_time_signature_numerator = 6;
+    // Denominator of the daw time signature.
+    int32 daw_time_signature_denominator = 7;
+    // Is the daw in loop mode ?
+    bool daw_is_looping = 8;
+    // Start of loop section for this daw, in fractions of quarter-notes.
+    double daw_loop_start = 9;
+    // End of loop section for this daw, in fractions of quarter-notes.
+    double daw_loop_end = 10;
+    // Sample time at the start of the segment
+    double segment_start_sample = 11;
+    // Duration of the segment in samples
+    double segment_sample_duration = 12;
+    // Number of audio channels for this signal.
+    int32 segment_no_channels = 13;
+    // Audio content of the segment, arranged as a sequence of floats.
+    // There are segment_no_channels segments of length segment_sample_duration.
+    // It can also be empty, meaning this channel segment has so little intensity it can be ignored.
+    bytes segment_audio_samples = 14; 
+  }
+  
+  // The reply to an audio buffer and metadata upload request.
+  message AudioSegmentUploadResponse {
+  }
+  
