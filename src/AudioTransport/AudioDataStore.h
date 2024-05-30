@@ -1,7 +1,6 @@
 #ifndef DEF_AUDIO_DATA_STORE_HPP
 #define DEF_AUDIO_DATA_STORE_HPP
 
-#include "AudioSegment.h"
 #include "AudioTransport.pb.h"
 #include "AudioTransportData.h"
 #include "DawInfo.h"
@@ -35,7 +34,7 @@ class AudioDataStore
      */
     struct AudioDatumWithStorageId
     {
-        AudioTransportData datum;
+        std::shared_ptr<AudioTransportData> datum;
         uint64_t storageIdentifier;
     };
 
@@ -77,7 +76,7 @@ class AudioDataStore
      * @return Returns nothing if there is no need for a segment, or the segment with id
      * otherwise.
      */
-    std::optional<AudioDatumWithStorageId> extractPayloadAudioSegment(AudioSegmentPayload *payload);
+    std::vector<AudioDatumWithStorageId> extractPayloadAudioSegments(AudioSegmentPayload *payload);
 
     /**
      * @brief Tries to reserve ownership for one of the preallocated audio segments.
@@ -85,18 +84,26 @@ class AudioDataStore
      * @return std::optional<AudioSegment> std::nullopt if there is no more free preallocated buffers,
      * an AudioSegment datastruct otherwise.
      */
-    std::optional<AudioSegment> reserveAudioSegment();
+    std::optional<AudioDatumWithStorageId> reserveAudioSegment();
+
+    /**
+     * @brief Push the datum with its storage id to the queue and notify the condition variable.
+     *
+     * @param datum audio update datum with its id to broadcast to the listeners through waitForDatum
+     */
+    void pushAudioDatumToQueue(AudioDatumWithStorageId datum);
 
     std::queue<AudioDatumWithStorageId> pendingAudioData; /**< data updates to be passed to the Station */
     std::mutex pendingAudioDataMutex; /**< A mutex to protect concurrent access to the pendingAudioData queue*/
     std::condition_variable pendingAudioDataCondVar; /**< a condition variable to wait on new queued data updates */
 
-    std::vector<AudioDatumWithStorageId> preallocatedAudioSegments; /**< preallocated audio buffers to reuse */
-    std::set<uint64_t> freeAudioBuffers; /**< Buffers that are not currently being used by the station */
+    std::vector<AudioDatumWithStorageId> preallocatedBuffers; /**< preallocated audio buffers to reuse */
+    std::set<uint64_t> freePreallocatedBuffers; /**< Buffers that are not currently being used by the station */
+    std::mutex preallocatedBuffersMutex;        /**< Mutex to protect freePreallocatedBuffers set. */
 
     // these next two elements are not thread safe, the server currently only has one thread, beware.
     std::map<uint64_t, TrackInfo> trackInfoByIdentifier; /**< Map of tracks info to prevent pushing duplicate updates*/
-    std::shared_ptr<DawInfo> lastDawInfo; /**< last daw info received to prevent pushing duplicate updates */
+    DawInfo lastDawInfo; /**< last daw info received to prevent pushing duplicate updates */
 };
 
 } // namespace AudioTransport

@@ -1,15 +1,37 @@
 #include "AudioSegment.h"
-#include <memory>
-
-#include "Constants.h"
+#include <stdexcept>
 
 namespace AudioTransport
 {
 
-AudioSegment::AudioSegment()
+void AudioSegment::parseFromApiPayload(AudioSegmentPayload *payload, size_t channel)
 {
-    audioSamples = std::make_shared<std::vector<float>>();
-    audioSamples->resize(AUDIO_SEGMENTS_BLOCK_SIZE);
+    if (payload == nullptr)
+    {
+        throw std::runtime_error("parseFromApiPayload received nullptr payload");
+    }
+
+    if (payload->segment_audio_samples().size() != payload->segment_sample_duration())
+    {
+        throw std::invalid_argument(
+            "parseFromApiPayload called when segment_audio_samples has different size than segment_sample_duration");
+    }
+
+    if (channel >= payload->segment_no_channels())
+    {
+        throw std::invalid_argument("parseFromApiPayload called with invalid channel");
+    }
+
+    trackIdentifier = payload->track_identifier();
+    channel = channel;
+    sampleRate = payload->daw_sample_rate();
+    segmentStartSample = payload->segment_start_sample();
+    noAudioSamples = payload->segment_sample_duration();
+
+    for (size_t i = 0; i < payload->segment_sample_duration(); i++)
+    {
+        audioSamples[i] = payload->segment_audio_samples()[i];
+    }
 }
 
 } // namespace AudioTransport

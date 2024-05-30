@@ -1,5 +1,8 @@
+#include "ColorBytesTest.h"
+
 int main(int, char **)
 {
-    // TODO
+    ColorBytesTestSuite suite1;
+    suite1.runAll();
     return 0;
 }

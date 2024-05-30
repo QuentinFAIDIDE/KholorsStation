@@ -33,7 +33,7 @@ service KholorsAudioTransport {
     // Sample time at the start of the segment
     double segment_start_sample = 11;
     // Duration of the segment in samples
-    double segment_sample_duration = 12;
+    uint64 segment_sample_duration = 12;
     // Number of audio channels for this signal.
     int32 segment_no_channels = 13;
     // Audio content of the segment, arranged as a sequence of floats.
