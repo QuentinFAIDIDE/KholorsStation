@@ -1,0 +1,28 @@
+#ifndef DEF_AUDIO_DATA_STORE_TEST_HPP
+#define DEF_AUDIO_DATA_STORE_TEST_HPP
+
+namespace AudioTransport
+{
+
+class AudioDataStoreTestSuite
+{
+  public:
+    /**
+     * @brief Testing that the AudioSegmentPayloads are properly parsed,
+     * within a single thread.
+     */
+    void testParse01();
+
+    /**
+     * @brief Testing that the structs are properly reused.
+     *
+     */
+    void testPreallocation01();
+
+    // run all tests
+    void runAll();
+};
+
+} // namespace AudioTransport
+
+#endif // DEF_AUDIO_DATA_STORE_TEST_HPP

@@ -11,6 +11,8 @@ namespace AudioTransport
  */
 class AudioTransportData
 {
+  public:
+    virtual ~AudioTransportData() = default;
 };
 
 } // namespace AudioTransport

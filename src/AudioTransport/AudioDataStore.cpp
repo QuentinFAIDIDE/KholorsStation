@@ -16,14 +16,32 @@
 namespace AudioTransport
 {
 
-AudioDataStore::AudioDataStore(size_t noAudioSegments)
+AudioDataStore::AudioDataStore(size_t noAllocatedStructs) : noPreallocatedStructs(noAllocatedStructs)
 {
-    preallocatedBuffers.resize(noAudioSegments);
-    for (size_t i = 0; i < preallocatedBuffers.size(); i++)
+    preallocatedAudioSegments.resize(noAllocatedStructs);
+    for (size_t i = 0; i < preallocatedAudioSegments.size(); i++)
     {
-        preallocatedBuffers[i].storageIdentifier = i;
-        preallocatedBuffers[i].datum = std::make_shared<AudioSegment>();
-        freePreallocatedBuffers.insert(i);
+        preallocatedAudioSegments[i].storageIdentifier = i;
+        preallocatedAudioSegments[i].datum = std::make_shared<AudioSegment>();
+        freeAudioSegments.insert(i);
+    }
+
+    preallocatedDawInfo.resize(noAllocatedStructs);
+    for (size_t i = 0; i < preallocatedDawInfo.size(); i++)
+    {
+        size_t dawIndex = noAllocatedStructs + i;
+        preallocatedDawInfo[i].storageIdentifier = dawIndex;
+        preallocatedDawInfo[i].datum = std::make_shared<DawInfo>();
+        freeDawInfo.insert(i);
+    }
+
+    preallocatedTrackInfo.resize(noAllocatedStructs);
+    for (size_t i = 0; i < preallocatedTrackInfo.size(); i++)
+    {
+        size_t trackIndex = (noAllocatedStructs * 2) + i;
+        preallocatedTrackInfo[i].storageIdentifier = trackIndex;
+        preallocatedTrackInfo[i].datum = std::make_shared<TrackInfo>();
+        freeTrackInfo.insert(i);
     }
 }
 
@@ -46,20 +64,76 @@ std::optional<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::waitForDa
 
 std::optional<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::reserveAudioSegment()
 {
-    std::lock_guard<std::mutex> lock(preallocatedBuffersMutex);
-    if (freePreallocatedBuffers.size() == 0)
+    std::lock_guard<std::mutex> lock(preallocatedAudioSegmentsMutex);
+    if (freeAudioSegments.size() == 0)
     {
         return std::nullopt;
     }
-    auto storageIdentifier = *freePreallocatedBuffers.begin();
-    freePreallocatedBuffers.erase(storageIdentifier);
-    return preallocatedBuffers[storageIdentifier];
+    auto storageIdentifier = *freeAudioSegments.begin();
+    freeAudioSegments.erase(storageIdentifier);
+    return preallocatedAudioSegments[storageIdentifier];
+}
+
+std::optional<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::reserveDawInfo()
+{
+    std::lock_guard<std::mutex> lock(preallocatedDawInfoMutex);
+    if (freeDawInfo.size() == 0)
+    {
+        return std::nullopt;
+    }
+    auto storageIdentifier = *freeDawInfo.begin();
+    freeDawInfo.erase(storageIdentifier);
+    return preallocatedDawInfo[storageIdentifier];
+}
+
+std::optional<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::reserveTrackInfo()
+{
+    std::lock_guard<std::mutex> lock(preallocatedTrackInfoMutex);
+    if (freeTrackInfo.size() == 0)
+    {
+        return std::nullopt;
+    }
+    auto storageIdentifier = *freeTrackInfo.begin();
+    freeTrackInfo.erase(storageIdentifier);
+    return preallocatedTrackInfo[storageIdentifier];
 }
 
 void AudioDataStore::freeStoredDatum(uint64_t storageIndentifier)
 {
-    std::lock_guard<std::mutex> lock(preallocatedBuffersMutex);
-    freePreallocatedBuffers.insert(storageIndentifier);
+    if (storageIndentifier >= 3 * noPreallocatedStructs || storageIndentifier < 0)
+    {
+        throw std::invalid_argument("storageidentifier out of range in freeStoredDatum");
+    }
+
+    if (storageIndentifier >= 2 * noPreallocatedStructs)
+    {
+        // this is a track info
+        int i = storageIndentifier - (2 * noPreallocatedStructs);
+        std::lock_guard<std::mutex> lock(preallocatedTrackInfoMutex);
+        freeTrackInfo.insert(i);
+    }
+    else if (storageIndentifier >= noPreallocatedStructs)
+    {
+        // this is a daw info
+        int i = storageIndentifier - noPreallocatedStructs;
+        std::lock_guard<std::mutex> lock(preallocatedDawInfoMutex);
+        freeDawInfo.insert(i);
+    }
+    else
+    {
+        // this is an audio segment
+        std::lock_guard<std::mutex> lock(preallocatedAudioSegmentsMutex);
+        freeAudioSegments.insert(storageIndentifier);
+    }
+}
+
+std::vector<size_t> AudioDataStore::countFreePreallocatedStructs()
+{
+    std::vector<size_t> freeStructsCount(3);
+    freeStructsCount[0] = freeAudioSegments.size();
+    freeStructsCount[1] = freeDawInfo.size();
+    freeStructsCount[2] = freeTrackInfo.size();
+    return freeStructsCount;
 }
 
 void AudioDataStore::parseNewData(AudioSegmentPayload *payload)
@@ -83,22 +157,39 @@ void AudioDataStore::parseNewData(AudioSegmentPayload *payload)
 
     if (lastDawInfo != dawInfo)
     {
-        AudioDatumWithStorageId dawInfoUpdate;
-        // TODO: preallocate these too instead of allocating on the heap
-        dawInfoUpdate.datum = std::make_shared<DawInfo>(dawInfo);
-        dawInfoUpdate.storageIdentifier = -1;
-        pushAudioDatumToQueue(dawInfoUpdate);
+        lastDawInfo = dawInfo;
+        auto optionalDawInfo = reserveDawInfo();
+        if (!optionalDawInfo.has_value())
+        {
+            throw TooManyRequestsException("No more preallocated gRPC api storage daw info buffers.");
+        }
+        else
+        {
+            *std::dynamic_pointer_cast<DawInfo>(optionalDawInfo->datum) = dawInfo;
+            pushAudioDatumToQueue(*optionalDawInfo);
+        }
     }
 
     auto trackInfoFound = trackInfoByIdentifier.find(trackInfo.identifier);
-    if (trackInfoFound == trackInfoByIdentifier.end())
+    if (trackInfoFound == trackInfoByIdentifier.end() || trackInfoFound->second != trackInfo)
     {
-        AudioDatumWithStorageId trackInfoUpdate;
-        // TODO: preallocate these too instead of allocating on the heap
-        trackInfoByIdentifier.insert(std::pair<uint64_t, TrackInfo>(trackInfo.identifier, trackInfo));
-        trackInfoUpdate.datum = std::make_shared<TrackInfo>(trackInfo);
-        trackInfoUpdate.storageIdentifier = -1;
-        pushAudioDatumToQueue(trackInfoUpdate);
+        // we update or insert the new value
+        std::pair<uint64_t, TrackInfo> pairToInsert;
+        pairToInsert.first = trackInfo.identifier;
+        pairToInsert.second = trackInfo;
+        trackInfoByIdentifier.insert(pairToInsert);
+
+        // we then reserve the buffer and push it to the queue for listeners (server threads) to pick it
+        auto optionalTrackInfo = reserveTrackInfo();
+        if (!optionalTrackInfo.has_value())
+        {
+            throw TooManyRequestsException("No more preallocated gRPC api storage track info buffers.");
+        }
+        else
+        {
+            *std::dynamic_pointer_cast<TrackInfo>(optionalTrackInfo->datum) = trackInfo;
+            pushAudioDatumToQueue(*optionalTrackInfo);
+        }
     }
 }
 
@@ -125,7 +216,8 @@ std::vector<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::extractPayl
     if (payload->segment_sample_duration() > 0)
     {
         // if the audio data size matches segment lenght, we generate a segment
-        if (payload->segment_audio_samples().size() == payload->segment_sample_duration())
+        if (payload->segment_audio_samples().size() / payload->segment_no_channels() ==
+            payload->segment_sample_duration())
         {
 
             for (size_t i = 0; i < payload->segment_no_channels(); i++)
@@ -133,8 +225,7 @@ std::vector<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::extractPayl
                 auto optionalBuffer = reserveAudioSegment();
                 if (optionalBuffer.has_value())
                 {
-                    std::shared_ptr<AudioSegment> segment =
-                        std::dynamic_pointer_cast<AudioSegment>(optionalBuffer->datum);
+                    auto segment = std::dynamic_pointer_cast<AudioSegment>(optionalBuffer->datum);
                     segment->parseFromApiPayload(payload, i);
                     extractedAudioBuffers.push_back(*optionalBuffer);
                 }

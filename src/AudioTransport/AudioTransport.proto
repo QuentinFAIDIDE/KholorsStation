@@ -39,7 +39,7 @@ service KholorsAudioTransport {
     // Audio content of the segment, arranged as a sequence of floats.
     // There are segment_no_channels segments of length segment_sample_duration.
     // It can also be empty, meaning this channel segment has so little intensity it can be ignored.
-    bytes segment_audio_samples = 14; 
+    repeated float segment_audio_samples = 14; 
   }
   
   // The reply to an audio buffer and metadata upload request.

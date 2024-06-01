@@ -6,6 +6,8 @@ class ColorBytesTestSuite
   public:
     void runAll();
     void testColorConversion();
+    void testColorConversion2();
+    void testColorConversion3();
 };
 
 #endif // DEF_COLOR_BYTES_TEST_HPP

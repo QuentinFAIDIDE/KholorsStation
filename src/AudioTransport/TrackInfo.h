@@ -3,7 +3,6 @@
 
 #include "AudioTransport.pb.h"
 #include "AudioTransportData.h"
-#include "Constants.h"
 #include <cstdint>
 
 namespace AudioTransport
@@ -23,7 +22,7 @@ struct TrackInfo : public AudioTransportData
     uint8_t redColorLevel;   /**< Amount of red in the track color */
     uint8_t greenColorLevel; /**< Amount of green in the track color */
     uint8_t blueColorLevel;  /**< Amount of blue in the track color */
-    uint8_t alphaColorLevel; /**< Amount of alpha in the track color (probably will be unused but is there for
+    uint8_t alphaColorLevel; /**< Amount of alpha in the track color (probably will be unused but at least is there for
                                 maintaining 32 bits alignment ) */
 };
 

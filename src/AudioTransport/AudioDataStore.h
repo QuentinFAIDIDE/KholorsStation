@@ -15,9 +15,14 @@
 namespace AudioTransport
 {
 
+class AudioDataStoreTestSuite;
+
 /**
- * @brief Defines a class that stores various type of structures
- * and preallocate and reuse the structs in order to minimize allocs.
+ * @brief Defines a class that stores and deliver various type of structures
+ * and preallocate and reuse the structs in order to minimize heap allocations.
+ * It contains a queue on which audio data consumers can concurrently do blocking reads,
+ * and data publishers can concurrently send the struct received by the gRPC api to be
+ * split into various AudioTransportData instances fed to the queue.
  */
 class AudioDataStore
 {
@@ -68,6 +73,15 @@ class AudioDataStore
      */
     void parseNewData(AudioSegmentPayload *payload);
 
+    /**
+     * @brief A testing utility to check on how many buffers of each struct are free to be used.
+     *
+     * @return std::vector<size_t> Vector of size 3 with number of free structs for [AudioSegment, DawInfo, TrackInfo].
+     */
+    std::vector<size_t> countFreePreallocatedStructs();
+
+    friend class AudioDataStoreTestSuite;
+
   private:
     /**
      * @brief If necessary, extract an audio segment from the gRPC endpoint payload.
@@ -81,10 +95,26 @@ class AudioDataStore
     /**
      * @brief Tries to reserve ownership for one of the preallocated audio segments.
      *
-     * @return std::optional<AudioSegment> std::nullopt if there is no more free preallocated buffers,
+     * @return std::optional<AudioDatumWithStorageId> std::nullopt if there is no more free preallocated buffers,
      * an AudioSegment datastruct otherwise.
      */
     std::optional<AudioDatumWithStorageId> reserveAudioSegment();
+
+    /**
+     * @brief Tries to reserve ownership for one of the preallocated DAW info.
+     *
+     * @return std::optional<AudioDatumWithStorageId> std::nullopt if there is no more free daw info,
+     * an AudioDatumWithStorageId datastruct otherwise.
+     */
+    std::optional<AudioDatumWithStorageId> reserveDawInfo();
+
+    /**
+     * @brief Tries to reserve ownership for one of the preallocated Track info.
+     *
+     * @return std::optional<AudioDatumWithStorageId> std::nullopt if there is no more free track info,
+     * an AudioDatumWithStorageId datastruct otherwise.
+     */
+    std::optional<AudioDatumWithStorageId> reserveTrackInfo();
 
     /**
      * @brief Push the datum with its storage id to the queue and notify the condition variable.
@@ -97,13 +127,23 @@ class AudioDataStore
     std::mutex pendingAudioDataMutex; /**< A mutex to protect concurrent access to the pendingAudioData queue*/
     std::condition_variable pendingAudioDataCondVar; /**< a condition variable to wait on new queued data updates */
 
-    std::vector<AudioDatumWithStorageId> preallocatedBuffers; /**< preallocated audio buffers to reuse */
-    std::set<uint64_t> freePreallocatedBuffers; /**< Buffers that are not currently being used by the station */
-    std::mutex preallocatedBuffersMutex;        /**< Mutex to protect freePreallocatedBuffers set. */
+    std::vector<AudioDatumWithStorageId> preallocatedAudioSegments; /**< preallocated audio buffers to reuse */
+    std::set<uint64_t> freeAudioSegments;      /**< Buffers that are not currently being used by the station */
+    std::mutex preallocatedAudioSegmentsMutex; /**< Mutex to protect freeAudioSegments set. */
+
+    std::vector<AudioDatumWithStorageId> preallocatedDawInfo; /**< preallocated daws info structs to reuse */
+    std::set<uint64_t> freeDawInfo;      /**< DawInfo that are not currently being used by the station */
+    std::mutex preallocatedDawInfoMutex; /**< Mutex to protect freeDawInfo set. */
+
+    std::vector<AudioDatumWithStorageId> preallocatedTrackInfo; /**< preallocated track info structs to reuse */
+    std::set<uint64_t> freeTrackInfo;      /**< DawInfo that are not currently being used by the station */
+    std::mutex preallocatedTrackInfoMutex; /**< Mutex to protect freeTrackInfo set. */
 
     // these next two elements are not thread safe, the server currently only has one thread, beware.
     std::map<uint64_t, TrackInfo> trackInfoByIdentifier; /**< Map of tracks info to prevent pushing duplicate updates*/
     DawInfo lastDawInfo; /**< last daw info received to prevent pushing duplicate updates */
+
+    size_t noPreallocatedStructs;
 };
 
 } // namespace AudioTransport

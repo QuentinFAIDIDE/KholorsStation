@@ -30,15 +30,18 @@ add_custom_command(
 # Include generated *.pb.h files
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
-# list all source files
+# list all source files and headers
 file(
   GLOB_RECURSE all_module_cpp
   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
   "*.cpp")
+list(FILTER all_module_cpp EXCLUDE REGEX ".*Test\\.cpp$")
+
 file(
   GLOB_RECURSE all_module_headers
   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
   "*.h")
+list(FILTER all_module_headers EXCLUDE REGEX ".*Test\\.h$")
 
 # define the library that includes both our code and protobuf generated one
 add_library(
@@ -49,8 +52,14 @@ add_library(
 target_link_libraries(AudioTransport ${_REFLECTION} ${_GRPC_GRPCPP}
                       ${_PROTOBUF_LIBPROTOBUF})
 
+# list all test source files and headers
+file(
+  GLOB_RECURSE all_test_cpp
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+  "*Test.cpp")
+
 # add library testing target
-add_executable(AudioTransportTest AudioTransportTest.cpp)
+add_executable(AudioTransportTest ${all_test_cpp})
 target_link_libraries(
   AudioTransportTest
   AudioTransport

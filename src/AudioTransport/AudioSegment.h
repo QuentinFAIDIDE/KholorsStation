@@ -35,6 +35,7 @@ struct AudioSegment : public AudioTransportData
                              track channel (used size is noAudioSamples) */
     uint64_t trackIdentifier;                      /**< Identifier of the track the data comes from */
     uint32_t channel;                              /**< Index of the channel the data comes from */
+    uint32_t noChannels;                           /**< Total number of channels */
     uint32_t sampleRate;                           /**< Sample rate of the data */
     uint32_t segmentStartSample;                   /**< Start sample of the audio segment position */
     uint64_t noAudioSamples;                       /**< How many audio samples there are in this audio segment */

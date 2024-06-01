@@ -1,6 +1,7 @@
 #include "TrackInfo.h"
 #include "AudioTransport.pb.h"
 #include "ColorBytes.h"
+#include "Constants.h"
 #include <stdexcept>
 
 namespace AudioTransport
