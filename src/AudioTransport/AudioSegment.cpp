@@ -8,7 +8,7 @@ AudioSegment::AudioSegment()
 {
 }
 
-void AudioSegment::parseFromApiPayload(AudioSegmentPayload *payload, size_t channelPicked)
+void AudioSegment::parseFromApiPayload(const AudioSegmentPayload *payload, size_t channelPicked)
 {
     if (payload == nullptr)
     {

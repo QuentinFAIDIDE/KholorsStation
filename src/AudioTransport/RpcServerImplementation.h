@@ -1,6 +1,7 @@
 #ifndef DEF_RPC_SERVER_IMPLEMENTATION_DEF
 #define DEF_RPC_SERVER_IMPLEMENTATION_DEF
 
+#include "AudioDataStore.h"
 #include "AudioTransport.grpc.pb.h"
 #include "AudioTransport.pb.h"
 #include "grpcpp/server_context.h"
@@ -12,7 +13,7 @@ namespace AudioTransport
 class RpcServerImplementation final : public KholorsAudioTransport::Service
 {
   public:
-    // TODO: Use AudioSegmentStore
+    RpcServerImplementation(AudioDataStore &);
 
   private:
     /**
@@ -25,6 +26,8 @@ class RpcServerImplementation final : public KholorsAudioTransport::Service
      */
     grpc::Status UploadAudioSegment(grpc::ServerContext *ctx, const AudioSegmentPayload *data,
                                     AudioSegmentUploadResponse *response) override;
+
+    AudioDataStore &dataStore; /**< where the endpoint callback will store data and where it will be read by consumers*/
 };
 
 } // namespace AudioTransport

@@ -65,6 +65,8 @@ target_link_libraries(
   AudioTransport
   absl::flags
   absl::flags_parse
+  spdlog
+  fmt
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})

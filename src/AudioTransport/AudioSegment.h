@@ -29,7 +29,7 @@ struct AudioSegment : public AudioTransportData
      * @param payload Payload received by the gRPC api
      * @param channel Index of the channel to parse
      */
-    void parseFromApiPayload(AudioSegmentPayload *payload, size_t channel);
+    void parseFromApiPayload(const AudioSegmentPayload *payload, size_t channel);
 
     float audioSamples[AUDIO_SEGMENTS_BLOCK_SIZE]; /**< buffer of AUDIO_SEGMENTS_BLOCK_SIZE audio samples of the
                              track channel (used size is noAudioSamples) */

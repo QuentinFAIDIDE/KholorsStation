@@ -7,7 +7,7 @@
 namespace AudioTransport
 {
 
-void TrackInfo::parseFromApiPayload(AudioSegmentPayload *payload)
+void TrackInfo::parseFromApiPayload(const AudioSegmentPayload *payload)
 {
     if (payload == nullptr)
     {

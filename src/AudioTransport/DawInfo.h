@@ -14,7 +14,7 @@ namespace AudioTransport
  */
 struct DawInfo : public AudioTransportData
 {
-    void parseFromApiPayload(AudioSegmentPayload *payload);
+    void parseFromApiPayload(const AudioSegmentPayload *payload);
     bool operator!=(const DawInfo &o);
 
     double loopStartQuarterNotePos;    /**< Start position of the loop in quarter notes fractions */

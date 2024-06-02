@@ -136,7 +136,7 @@ std::vector<size_t> AudioDataStore::countFreePreallocatedStructs()
     return freeStructsCount;
 }
 
-void AudioDataStore::parseNewData(AudioSegmentPayload *payload)
+void AudioDataStore::parseNewData(const AudioSegmentPayload *payload)
 {
     if (payload == nullptr)
     {
@@ -200,7 +200,7 @@ void AudioDataStore::pushAudioDatumToQueue(AudioDatumWithStorageId datum)
 }
 
 std::vector<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::extractPayloadAudioSegments(
-    AudioSegmentPayload *payload)
+    const AudioSegmentPayload *payload)
 {
     if (payload == nullptr)
     {

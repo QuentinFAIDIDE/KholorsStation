@@ -71,7 +71,7 @@ class AudioDataStore
      * @throw std::runtime_error if the error is internal (including if nullptr is provided) == 400 api error.
      * @throw std::invalid_argument if the request is invalid == 500 api error.
      */
-    void parseNewData(AudioSegmentPayload *payload);
+    void parseNewData(const AudioSegmentPayload *payload);
 
     /**
      * @brief A testing utility to check on how many buffers of each struct are free to be used.
@@ -90,7 +90,7 @@ class AudioDataStore
      * @return Returns nothing if there is no need for a segment, or the segment with id
      * otherwise.
      */
-    std::vector<AudioDatumWithStorageId> extractPayloadAudioSegments(AudioSegmentPayload *payload);
+    std::vector<AudioDatumWithStorageId> extractPayloadAudioSegments(const AudioSegmentPayload *payload);
 
     /**
      * @brief Tries to reserve ownership for one of the preallocated audio segments.

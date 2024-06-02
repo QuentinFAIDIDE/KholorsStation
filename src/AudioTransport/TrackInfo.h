@@ -14,7 +14,7 @@ namespace AudioTransport
  */
 struct TrackInfo : public AudioTransportData
 {
-    void parseFromApiPayload(AudioSegmentPayload *payload);
+    void parseFromApiPayload(const AudioSegmentPayload *payload);
     bool operator!=(const TrackInfo &o);
 
     uint64_t identifier;     /**< Hash of the uuid of the track (provided by juce uuid implementatioon )*/

@@ -6,7 +6,7 @@
 namespace AudioTransport
 {
 
-void DawInfo::parseFromApiPayload(AudioSegmentPayload *payload)
+void DawInfo::parseFromApiPayload(const AudioSegmentPayload *payload)
 {
     if (payload == nullptr)
     {
