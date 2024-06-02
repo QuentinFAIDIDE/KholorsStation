@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="60mm"
+   height="60mm"
+   viewBox="0 0 59.999999 59.999999"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
+   sodipodi:docname="search.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#000000"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#000000"
+     inkscape:document-units="mm"
+     showgrid="false"
+     showguides="false"
+     inkscape:zoom="1"
+     inkscape:cx="116"
+     inkscape:cy="-106.5"
+     inkscape:window-width="1920"
+     inkscape:window-height="1048"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <sodipodi:guide
+       position="59.19144,30.000353"
+       orientation="0,-1"
+       id="guide512"
+       inkscape:locked="false" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-51.976223,-103.94632)">
+    <path
+       id="path1"
+       style="color:#000000;fill:#ffffff;-inkscape-stroke:none"
+       d="M -74.23843 104.20108 C -62.07741 104.20108 -52.130736 114.14776 -52.130736 126.30878 C -52.130736 138.46981 -62.07741 148.41389 -74.23843 148.41389 C -78.155433 148.41389 -81.839438 147.37786 -85.038288 145.57272 L -103.76944 164.12301 L -110.7654 157.05884 L -92.398045 138.86874 C -94.881255 135.29558 -96.343541 130.96635 -96.343541 126.30878 C -96.343541 114.14776 -86.399451 104.20108 -74.23843 104.20108 z M -74.23843 112.33599 C -82.002979 112.33599 -88.209154 118.54424 -88.209154 126.30878 C -88.209154 134.07333 -82.002979 140.2795 -74.23843 140.2795 C -66.473882 140.2795 -60.26564 134.07333 -60.26564 126.30878 C -60.26564 118.54424 -66.473882 112.33599 -74.23843 112.33599 z "
+       transform="scale(-1,1)" />
+  </g>
+</svg>

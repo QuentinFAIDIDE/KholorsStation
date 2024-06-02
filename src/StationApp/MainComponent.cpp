@@ -1,12 +1,20 @@
 #include "MainComponent.h"
 
-//==============================================================================
+#include "GUIToolkit/GUIToolkit.h"
+
 MainComponent::MainComponent()
 {
+    // create Roboto font
+    juce::Typeface::Ptr tface =
+        juce::Typeface::createSystemTypefaceFor(GUIData::RobotoRegular_ttf, GUIData::RobotoRegular_ttfSize);
+    // set roboto as default font
+    appLookAndFeel.setDefaultSansSerifTypeface(tface);
+    setLookAndFeel(&appLookAndFeel);
+    juce::LookAndFeel::setDefaultLookAndFeel(&appLookAndFeel);
+
     setSize(600, 400);
 }
 
-//==============================================================================
 void MainComponent::paint(juce::Graphics &g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)

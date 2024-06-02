@@ -1,6 +1,6 @@
 /** BEGIN_JUCE_MODULE_DECLARATION
 
-    ID:            GUIToolkit
+    ID:             GUIToolkit
     vendor:
     version:        0.0.1
     name:
@@ -12,3 +12,11 @@
 
     END_JUCE_MODULE_DECLARATION
 */
+
+#pragma once
+
+#include "Consts.h"
+#include "FontsLoader.h"
+#include "GUIData.h"
+#include "IconsLoader.h"
+#include "KholorsLookAndFeel.h"
