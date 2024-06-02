@@ -17,6 +17,7 @@ grpc::Status RpcServerImplementation::UploadAudioSegment(grpc::ServerContext *, 
     try
     {
         dataStore.parseNewData(data);
+        return grpc::Status(grpc::Status::OK);
     }
     catch (TooManyRequestsException &e)
     {

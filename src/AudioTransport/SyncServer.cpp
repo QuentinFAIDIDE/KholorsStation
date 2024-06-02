@@ -24,6 +24,7 @@ SyncServer::SyncServer() : store(DEFAULT_STORE_PREALLOCS), service(store)
 
 SyncServer::~SyncServer()
 {
+    store.stopServing();
     if (isRunning())
     {
         stopServer();
@@ -121,4 +122,14 @@ void SyncServer::waitForServerShutdown()
     spdlog::info("Server has stopped");
     std::lock_guard lock(serverThreadMutex);
     actualServerState.first = false;
+}
+
+std::optional<AudioDataStore::AudioDatumWithStorageId> SyncServer::waitForDatum()
+{
+    return store.waitForDatum();
+}
+
+void SyncServer::freeStoredDatum(uint64_t storageIndentifier)
+{
+    store.freeStoredDatum(storageIndentifier);
 }

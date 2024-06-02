@@ -16,7 +16,7 @@
 namespace AudioTransport
 {
 
-AudioDataStore::AudioDataStore(size_t noAllocatedStructs) : noPreallocatedStructs(noAllocatedStructs)
+AudioDataStore::AudioDataStore(size_t noAllocatedStructs) : isStopping(false), noPreallocatedStructs(noAllocatedStructs)
 {
     preallocatedAudioSegments.resize(noAllocatedStructs);
     for (size_t i = 0; i < preallocatedAudioSegments.size(); i++)
@@ -47,11 +47,22 @@ AudioDataStore::AudioDataStore(size_t noAllocatedStructs) : noPreallocatedStruct
 
 std::optional<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::waitForDatum()
 {
+    {
+        std::lock_guard lock(pendingAudioDataMutex);
+        if (isStopping)
+        {
+            return std::nullopt;
+        }
+    }
     std::unique_lock<std::mutex> lock(pendingAudioDataMutex);
-    auto predicate = [this] { return pendingAudioData.size() > 0; };
+    auto predicate = [this] { return pendingAudioData.size() > 0 || isStopping; };
     bool result = pendingAudioDataCondVar.wait_for(lock, std::chrono::seconds(1), predicate);
     if (result)
     {
+        if (isStopping)
+        {
+            return std::nullopt;
+        }
         auto datum = pendingAudioData.front();
         pendingAudioData.pop();
         return datum;
@@ -98,8 +109,31 @@ std::optional<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::reserveTr
     return preallocatedTrackInfo[storageIdentifier];
 }
 
+void AudioDataStore::stopServing()
+{
+    {
+        std::lock_guard lock(pendingAudioDataMutex);
+        isStopping = true;
+    }
+    pendingAudioDataCondVar.notify_all();
+}
+
+bool AudioDataStore::hasStoppedServing()
+{
+    std::lock_guard lock(pendingAudioDataMutex);
+    return hasStoppedServing();
+}
+
 void AudioDataStore::freeStoredDatum(uint64_t storageIndentifier)
 {
+    {
+        std::lock_guard lock(pendingAudioDataMutex);
+        if (isStopping)
+        {
+            return;
+        }
+    }
+
     if (storageIndentifier >= 3 * noPreallocatedStructs || storageIndentifier < 0)
     {
         throw std::invalid_argument("storageidentifier out of range in freeStoredDatum");
@@ -138,6 +172,14 @@ std::vector<size_t> AudioDataStore::countFreePreallocatedStructs()
 
 void AudioDataStore::parseNewData(const AudioSegmentPayload *payload)
 {
+    {
+        std::lock_guard lock(pendingAudioDataMutex);
+        if (isStopping)
+        {
+            return;
+        }
+    }
+
     if (payload == nullptr)
     {
         throw std::runtime_error("called parseNewData with nullptr payload");

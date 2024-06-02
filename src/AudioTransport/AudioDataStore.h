@@ -80,6 +80,19 @@ class AudioDataStore
      */
     std::vector<size_t> countFreePreallocatedStructs();
 
+    /**
+     * @brief Will stop serving consumers and publishers.
+     */
+    void stopServing();
+
+    /**
+     * @brief Tell consumers or publishers that no more requests will be served.
+     *
+     * @return true no more request will be served.
+     * @return false requests are served as usual.
+     */
+    bool hasStoppedServing();
+
     friend class AudioDataStoreTestSuite;
 
   private:
@@ -144,6 +157,8 @@ class AudioDataStore
     DawInfo lastDawInfo; /**< last daw info received to prevent pushing duplicate updates */
 
     size_t noPreallocatedStructs;
+
+    bool isStopping;
 };
 
 } // namespace AudioTransport
