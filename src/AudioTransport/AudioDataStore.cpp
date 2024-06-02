@@ -174,10 +174,7 @@ void AudioDataStore::parseNewData(AudioSegmentPayload *payload)
     if (trackInfoFound == trackInfoByIdentifier.end() || trackInfoFound->second != trackInfo)
     {
         // we update or insert the new value
-        std::pair<uint64_t, TrackInfo> pairToInsert;
-        pairToInsert.first = trackInfo.identifier;
-        pairToInsert.second = trackInfo;
-        trackInfoByIdentifier.insert(pairToInsert);
+        trackInfoByIdentifier[trackInfo.identifier] = trackInfo;
 
         // we then reserve the buffer and push it to the queue for listeners (server threads) to pick it
         auto optionalTrackInfo = reserveTrackInfo();
