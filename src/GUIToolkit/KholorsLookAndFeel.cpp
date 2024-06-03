@@ -1,7 +1,6 @@
 #include "KholorsLookAndFeel.h"
 
 #include "Consts.h"
-#include "StationApp/MainComponent.h"
 
 #define MENU_SEPARATOR_HEIGHT 6
 #define MENU_ITEM_HEIGHT 28

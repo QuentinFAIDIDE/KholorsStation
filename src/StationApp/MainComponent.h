@@ -2,6 +2,7 @@
 
 #include "GUIToolkit/FontsLoader.h"
 #include "GUIToolkit/KholorsLookAndFeel.h"
+#include "StationApp/GUI/BottomPanel.h"
 #include "StationApp/GUI/TopMenuModel.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
@@ -28,6 +29,8 @@ class MainComponent final : public juce::Component, public TaskListener
 
     juce::MenuBarComponent menuBar;
     TopMenuModel menuBarModel;
+
+    BottomPanel bottomPanel;
 
     juce::SharedResourcePointer<FontsLoader> sharedFonts;
 

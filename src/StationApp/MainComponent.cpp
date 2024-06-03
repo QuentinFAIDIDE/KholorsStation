@@ -1,7 +1,8 @@
 #include "MainComponent.h"
 
 #include "GUIToolkit/Consts.h"
-#include "GUIToolkit/GUIToolkit.h"
+#include "GUIToolkit/GUIData.h"
+#include "StationApp/GUI/BottomPanel.h"
 #include <spdlog/spdlog.h>
 
 MainComponent::MainComponent() : menuBarModel(taskManager)
@@ -15,6 +16,9 @@ MainComponent::MainComponent() : menuBarModel(taskManager)
 
     menuBar.setModel(&menuBarModel);
     addAndMakeVisible(menuBar);
+
+    bottomPanel.setSize(getWidth(), 300);
+    addAndMakeVisible(bottomPanel);
 
     setSize(1440, 900);
 
@@ -46,6 +50,8 @@ void MainComponent::resized()
 {
     juce::Rectangle<int> localBounds = getLocalBounds();
     menuBar.setBounds(localBounds.removeFromTop(MENU_BAR_HEIGHT));
+
+    bottomPanel.setBounds(localBounds.removeFromBottom(bottomPanel.getHeight()));
 }
 
 bool MainComponent::taskHandler(std::shared_ptr<Task> task)
