@@ -1,5 +1,4 @@
-#ifndef DEF_CUSTOM_FONTS_HPP
-#define DEF_CUSTOM_FONTS_HPP
+#pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
@@ -14,5 +13,3 @@ struct FontsLoader
   private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FontsLoader)
 };
-
-#endif // DEF_CUSTOM_FONTS_HPP

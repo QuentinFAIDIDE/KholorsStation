@@ -1,5 +1,4 @@
-#ifndef DEF_AUDIO_TRANSPORT_DATA_HPP
-#define DEF_AUDIO_TRANSPORT_DATA_HPP
+#pragma once
 
 namespace AudioTransport
 {
@@ -16,5 +15,3 @@ class AudioTransportData
 };
 
 } // namespace AudioTransport
-
-#endif // DEF_AUDIO_TRANSPORT_DATA_HPP

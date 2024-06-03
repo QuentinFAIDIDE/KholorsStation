@@ -1,5 +1,4 @@
-#ifndef DEF_AUDIO_SEGMENT_HPP
-#define DEF_AUDIO_SEGMENT_HPP
+#pragma once
 
 #include "AudioTransport.pb.h"
 #include "AudioTransportData.h"
@@ -53,5 +52,3 @@ struct AudioSegmentNoOp : public AudioTransportData
 };
 
 } // namespace AudioTransport
-
-#endif // DEF_AUDIO_SEGMENT_HPP

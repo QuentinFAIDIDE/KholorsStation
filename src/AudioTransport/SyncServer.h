@@ -1,5 +1,4 @@
-#ifndef DEF_SYNC_SERVER_HPP
-#define DEF_SYNC_SERVER_HPP
+#pragma once
 
 #include "AudioDataStore.h"
 #include "RpcServerImplementation.h"
@@ -107,5 +106,3 @@ class SyncServer final
 };
 
 }; // namespace AudioTransport
-
-#endif // DEF_SYNC_SERVER_HPP

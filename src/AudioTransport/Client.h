@@ -1,5 +1,4 @@
-#ifndef DEF_AUDIO_TRANSPORT_CLIENT_HPP
-#define DEF_AUDIO_TRANSPORT_CLIENT_HPP
+#pragma once
 
 #include "AudioTransport.grpc.pb.h"
 #include "AudioTransport.pb.h"
@@ -28,5 +27,3 @@ class Client
     std::shared_mutex portChangeMutex;
 };
 }; // namespace AudioTransport
-
-#endif // DEF_AUDIO_TRANSPORT_CLIENT_HPP

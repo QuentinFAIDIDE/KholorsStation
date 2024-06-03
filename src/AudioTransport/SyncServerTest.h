@@ -1,5 +1,4 @@
-#ifndef DEF_SYNC_SERVER_TEST_HPP
-#define DEF_SYNC_SERVER_TEST_HPP
+#pragma once
 
 namespace AudioTransport
 {
@@ -18,5 +17,3 @@ class SyncServerTestSuite
 };
 
 } // namespace AudioTransport
-
-#endif // DEF_SYNC_SERVER_TEST_HPP

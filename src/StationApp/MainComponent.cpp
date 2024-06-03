@@ -2,17 +2,31 @@
 
 #include "GUIToolkit/GUIToolkit.h"
 
-MainComponent::MainComponent()
+MainComponent::MainComponent() : menuBarModel(taskManager)
 {
-    // create Roboto font
+    // Various GUI related initializations
     juce::Typeface::Ptr tface =
         juce::Typeface::createSystemTypefaceFor(GUIData::RobotoRegular_ttf, GUIData::RobotoRegular_ttfSize);
-    // set roboto as default font
     appLookAndFeel.setDefaultSansSerifTypeface(tface);
     setLookAndFeel(&appLookAndFeel);
     juce::LookAndFeel::setDefaultLookAndFeel(&appLookAndFeel);
 
+    menuBar.setModel(&menuBarModel);
+    addAndMakeVisible(menuBar);
+
     setSize(600, 400);
+
+    taskManager.startTaskBroadcast();
+}
+
+MainComponent::~MainComponent()
+{
+    taskManager.stopTaskBroadcast();
+
+    menuBar.setModel(nullptr);
+    appLookAndFeel.setDefaultSansSerifTypeface(nullptr);
+    setLookAndFeel(nullptr);
+    juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
 }
 
 void MainComponent::paint(juce::Graphics &g)
@@ -27,7 +41,6 @@ void MainComponent::paint(juce::Graphics &g)
 
 void MainComponent::resized()
 {
-    // This is called when the MainComponent is resized.
-    // If you add any child components, this is where you should
-    // update their positions.
+    juce::Rectangle<int> localBounds = getLocalBounds();
+    menuBar.setBounds(localBounds.removeFromTop(MENU_BAR_HEIGHT));
 }

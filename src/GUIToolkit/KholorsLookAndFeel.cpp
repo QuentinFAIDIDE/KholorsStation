@@ -58,6 +58,11 @@ juce::Font KholorsLookAndFeel::getPopupMenuFont()
     return juce::Font(DEFAULT_FONT_SIZE);
 }
 
+juce::Font KholorsLookAndFeel::getMenuBarFont(juce::MenuBarComponent &, int, const juce::String &)
+{
+    return juce::Font(DEFAULT_FONT_SIZE);
+}
+
 void KholorsLookAndFeel::getIdealPopupMenuItemSize(const juce::String &text, bool isSeparator, int, int &idealWidth,
                                                    int &idealHeight)
 {

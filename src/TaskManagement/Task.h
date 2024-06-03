@@ -1,5 +1,4 @@
-#ifndef DEF_TASK_HPP
-#define DEF_TASK_HPP
+#pragma once
 
 #include "Marshalable.h"
 #include <memory>
@@ -178,5 +177,3 @@ class ClearHistoryTask : public SilentTask
      */
     std::string marshal();
 };
-
-#endif // DEF_TASK_HPP

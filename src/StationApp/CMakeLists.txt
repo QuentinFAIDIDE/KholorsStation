@@ -24,7 +24,11 @@ juce_add_gui_app(
 # which should normally be PRIVATE. Finally, we supply a list of source files
 # that will be built into the target. This is a standard CMake command.
 
-target_sources(StationApp PRIVATE Main.cpp MainComponent.cpp)
+file(
+  GLOB_RECURSE all_sources
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+  "*.cpp")
+target_sources(StationApp PRIVATE ${all_sources})
 
 # `target_compile_definitions` adds some preprocessor definitions to our target.
 # In a Projucer project, these might be passed in the 'Preprocessor Definitions'

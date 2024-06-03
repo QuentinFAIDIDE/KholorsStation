@@ -1,5 +1,4 @@
-#ifndef DEF_TOO_MANY_REQUESTS_EXCEPTION_HPP
-#define DEF_TOO_MANY_REQUESTS_EXCEPTION_HPP
+#pragma once
 
 #include <exception>
 #include <string>
@@ -24,5 +23,3 @@ class TooManyRequestsException : public std::exception
 };
 
 }; // namespace AudioTransport
-
-#endif // DEF_TOO_MANY_REQUESTS_EXCEPTION_HPP

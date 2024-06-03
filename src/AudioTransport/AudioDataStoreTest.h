@@ -1,5 +1,4 @@
-#ifndef DEF_AUDIO_DATA_STORE_TEST_HPP
-#define DEF_AUDIO_DATA_STORE_TEST_HPP
+#pragma once
 
 namespace AudioTransport
 {
@@ -24,5 +23,3 @@ class AudioDataStoreTestSuite
 };
 
 } // namespace AudioTransport
-
-#endif // DEF_AUDIO_DATA_STORE_TEST_HPP

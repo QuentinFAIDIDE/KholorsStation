@@ -1,5 +1,4 @@
-#ifndef DEF_TRACK_INFO_HPP
-#define DEF_TRACK_INFO_HPP
+#pragma once
 
 #include "AudioTransport.pb.h"
 #include "AudioTransportData.h"
@@ -27,5 +26,3 @@ struct TrackInfo : public AudioTransportData
 };
 
 } // namespace AudioTransport
-
-#endif // DEF_TRACK_INFO_HPP

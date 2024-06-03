@@ -1,5 +1,4 @@
-#ifndef DEF_AUDIO_DATA_STORE_HPP
-#define DEF_AUDIO_DATA_STORE_HPP
+#pragma once
 
 #include "AudioTransport.pb.h"
 #include "AudioTransportData.h"
@@ -162,5 +161,3 @@ class AudioDataStore
 };
 
 } // namespace AudioTransport
-
-#endif // DEF_AUDIO_DATA_STORE_HPP

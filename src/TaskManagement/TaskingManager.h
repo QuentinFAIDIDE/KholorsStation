@@ -1,5 +1,4 @@
-#ifndef DEF_TASKING_MANAGER_HPP
-#define DEF_TASKING_MANAGER_HPP
+#pragma once
 
 #include "TaskListener.h"
 #include <condition_variable>
@@ -125,5 +124,3 @@ class TaskingManager : public TaskListener
                                            thread ids and nullity in other functions */
     std::condition_variable taskingThreadCV; /**< Used to wake up the background thread */
 };
-
-#endif // DEF_TASKING_MANAGER_HPP

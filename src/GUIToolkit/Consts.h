@@ -1,5 +1,4 @@
-#ifndef CONSTS_HPP
-#define CONSTS_HPP
+#pragma once
 
 #define COLOR_BACKGROUND juce::Colour(16, 17, 17)
 #define COLOR_BACKGROUND_LIGHTER juce::Colour(16, 17, 17)
@@ -40,5 +39,3 @@
 #define POPUP_MENU_IDEAL_HEIGHT 18
 #define POPUP_MENU_SEPARATOR_IDEAL_HEIGHT 4
 #define TAB_HIGHLIGHT_LINE_WIDTH 2
-
-#endif // CONSTS_HPP

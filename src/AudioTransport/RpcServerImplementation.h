@@ -1,5 +1,4 @@
-#ifndef DEF_RPC_SERVER_IMPLEMENTATION_DEF
-#define DEF_RPC_SERVER_IMPLEMENTATION_DEF
+#pragma once
 
 #include "AudioDataStore.h"
 #include "AudioTransport.grpc.pb.h"
@@ -31,5 +30,3 @@ class RpcServerImplementation final : public KholorsAudioTransport::Service
 };
 
 } // namespace AudioTransport
-
-#endif // DEF_RPC_SERVER_IMPLEMENTATION_DEF

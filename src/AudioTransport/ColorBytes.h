@@ -1,8 +1,8 @@
-#ifndef DEF_COLOR_BYTES_HPP
-#define DEF_COLOR_BYTES_HPP
+#pragma once
 
 #include <cstdint>
 #include <cstring>
+
 namespace AudioTransport
 {
 
@@ -42,5 +42,4 @@ struct ColorContainer
     uint8_t alpha;
 };
 
-};     // namespace AudioTransport
-#endif // DEF_COLOR_BYTES_HPP
+}; // namespace AudioTransport

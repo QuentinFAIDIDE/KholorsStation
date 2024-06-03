@@ -1,5 +1,4 @@
-#ifndef DEF_TASK_LISTENER_HPP
-#define DEF_TASK_LISTENER_HPP
+#pragma once
 
 #include "Task.h"
 #include <memory>
@@ -18,5 +17,3 @@ class TaskListener
      */
     virtual bool taskHandler(std::shared_ptr<Task> task) = 0;
 };
-
-#endif // DEF_TASK_LISTENER_HPP

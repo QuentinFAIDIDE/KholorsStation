@@ -1,5 +1,4 @@
-#ifndef DEF_DAW_INFO_HPP
-#define DEF_DAW_INFO_HPP
+#pragma once
 
 #include "AudioTransport.pb.h"
 #include "AudioTransportData.h"
@@ -26,5 +25,3 @@ struct DawInfo : public AudioTransportData
 };
 
 } // namespace AudioTransport
-
-#endif // DEF_DAW_INFO_HPP
