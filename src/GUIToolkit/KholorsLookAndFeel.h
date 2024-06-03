@@ -17,4 +17,6 @@ class KholorsLookAndFeel : public juce::LookAndFeel_V4
     void drawResizableFrame(juce::Graphics &g, int w, int h, const juce::BorderSize<int> &border) override;
     int getPopupMenuBorderSize() override;
     int getPopupMenuBorderSizeWithOptions(const juce::PopupMenu::Options &) override;
+    void drawMenuBarBackground(juce::Graphics &g, int width, int height, bool isMouseOverBar,
+                               juce::MenuBarComponent &) override;
 };

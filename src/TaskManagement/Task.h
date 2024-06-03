@@ -177,3 +177,16 @@ class ClearHistoryTask : public SilentTask
      */
     std::string marshal();
 };
+
+/**
+ * @brief      This class describes a quitting task. It will
+ *             exit the software and close the window.
+ */
+class QuittingTask : public SilentTask
+{
+  public:
+    /**
+    Dumps the task data to a string as json
+    */
+    std::string marshal() override;
+};

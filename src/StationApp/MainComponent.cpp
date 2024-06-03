@@ -1,6 +1,8 @@
 #include "MainComponent.h"
 
+#include "GUIToolkit/Consts.h"
 #include "GUIToolkit/GUIToolkit.h"
+#include <spdlog/spdlog.h>
 
 MainComponent::MainComponent() : menuBarModel(taskManager)
 {
@@ -14,8 +16,9 @@ MainComponent::MainComponent() : menuBarModel(taskManager)
     menuBar.setModel(&menuBarModel);
     addAndMakeVisible(menuBar);
 
-    setSize(600, 400);
+    setSize(1440, 900);
 
+    taskManager.registerTaskListener(this);
     taskManager.startTaskBroadcast();
 }
 
@@ -43,4 +46,43 @@ void MainComponent::resized()
 {
     juce::Rectangle<int> localBounds = getLocalBounds();
     menuBar.setBounds(localBounds.removeFromTop(MENU_BAR_HEIGHT));
+}
+
+bool MainComponent::taskHandler(std::shared_ptr<Task> task)
+{
+    auto quitTask = std::dynamic_pointer_cast<QuittingTask>(task);
+    if (quitTask != nullptr)
+    {
+        juce::JUCEApplicationBase::quit();
+        quitTask->setCompleted(true);
+        return true;
+    }
+
+    return false;
+}
+
+void MainComponent::paintOverChildren(juce::Graphics &g)
+{
+    int middlePadding = 8;
+    int leftPadding = 8;
+
+    int mainTitleWidth = sharedFonts->robotoBlack.withHeight(MENU_BAR_HEIGHT).getStringWidth("KHOLORS II");
+    int subTitleWidth = sharedFonts->roboto.withHeight(MENU_BAR_HEIGHT).getStringWidth("STATION");
+    int totalWidth = mainTitleWidth + middlePadding + subTitleWidth;
+
+    auto bounds = getLocalBounds();
+    g.setFont(sharedFonts->robotoBlack.withHeight(MENU_BAR_HEIGHT));
+    g.setColour(COLOR_TEXT);
+
+    auto topspace = bounds.removeFromTop(MENU_BAR_HEIGHT);
+    topspace.removeFromRight(leftPadding);
+    auto titleSpace = topspace.removeFromRight(totalWidth);
+    auto leftTitleSpace = titleSpace.removeFromLeft(mainTitleWidth);
+    titleSpace.removeFromLeft(middlePadding);
+
+    g.drawText("KHOLORS II", leftTitleSpace, juce::Justification::centredLeft, false);
+
+    g.setFont(sharedFonts->roboto.withHeight(MENU_BAR_HEIGHT));
+    g.setColour(COLOR_TEXT_DARKER);
+    g.drawText("STATION", titleSpace, juce::Justification::centredLeft, false);
 }

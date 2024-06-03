@@ -161,3 +161,16 @@ std::string ClearHistoryTask::marshal()
                   {"is_part_of_reversion", isPartOfReversion}};
     return taskj.dump();
 }
+
+///////////////////////////////////////
+
+std::string QuittingTask::marshal()
+{
+    json taskj = {{"object", "task"},
+                  {"task", "quitting"},
+                  {"is_completed", isCompleted()},
+                  {"failed", hasFailed()},
+                  {"recordable_in_history", recordableInHistory},
+                  {"is_part_of_reversion", isPartOfReversion}};
+    return taskj.dump();
+}

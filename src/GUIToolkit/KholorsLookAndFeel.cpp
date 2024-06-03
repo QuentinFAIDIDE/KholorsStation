@@ -1,6 +1,7 @@
 #include "KholorsLookAndFeel.h"
 
 #include "Consts.h"
+#include "StationApp/MainComponent.h"
 
 #define MENU_SEPARATOR_HEIGHT 6
 #define MENU_ITEM_HEIGHT 28
@@ -31,6 +32,8 @@ KholorsLookAndFeel::KholorsLookAndFeel()
     setColour(juce::TextEditor::ColourIds::outlineColourId, juce::Colours::transparentBlack);
     setColour(juce::TextEditor::ColourIds::focusedOutlineColourId, juce::Colours::transparentBlack);
     setColour(juce::TextEditor::ColourIds::highlightColourId, COLOR_HIGHLIGHT);
+
+    setColour(juce::ResizableWindow::backgroundColourId, COLOR_BACKGROUND);
 }
 
 void KholorsLookAndFeel::drawTabButton(juce::TabBarButton &tb, juce::Graphics &g, bool isMouseOver, bool)
@@ -55,12 +58,12 @@ void KholorsLookAndFeel::drawTabButton(juce::TabBarButton &tb, juce::Graphics &g
 
 juce::Font KholorsLookAndFeel::getPopupMenuFont()
 {
-    return juce::Font(DEFAULT_FONT_SIZE);
+    return juce::Font(DEFAULT_FONT_SIZE + 2);
 }
 
 juce::Font KholorsLookAndFeel::getMenuBarFont(juce::MenuBarComponent &, int, const juce::String &)
 {
-    return juce::Font(DEFAULT_FONT_SIZE);
+    return juce::Font(DEFAULT_FONT_SIZE + 3);
 }
 
 void KholorsLookAndFeel::getIdealPopupMenuItemSize(const juce::String &text, bool isSeparator, int, int &idealWidth,
@@ -119,4 +122,9 @@ void KholorsLookAndFeel::drawResizableFrame(juce::Graphics &, int, int, const ju
 {
     // not working for removing popup menu borders...
     return;
+}
+
+void KholorsLookAndFeel::drawMenuBarBackground(juce::Graphics &g, int, int, bool, juce::MenuBarComponent &)
+{
+    g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
 }

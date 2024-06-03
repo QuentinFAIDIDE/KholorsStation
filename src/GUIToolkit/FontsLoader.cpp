@@ -8,4 +8,5 @@ FontsLoader::FontsLoader()
         juce::Typeface::createSystemTypefaceFor(GUIData::FragmentMonoRegular_ttf, GUIData::FragmentMonoRegular_ttfSize);
     roboto = juce::Typeface::createSystemTypefaceFor(GUIData::RobotoRegular_ttf, GUIData::RobotoRegular_ttfSize);
     robotoBold = juce::Typeface::createSystemTypefaceFor(GUIData::RobotoBold_ttf, GUIData::RobotoBold_ttfSize);
+    robotoBlack = juce::Typeface::createSystemTypefaceFor(GUIData::RobotoBlack_ttf, GUIData::RobotoBlack_ttfSize);
 }

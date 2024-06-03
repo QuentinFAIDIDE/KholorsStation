@@ -2,7 +2,6 @@
 #include "TaskManagement/TaskingManager.h"
 #include <spdlog/spdlog.h>
 #include <stdexcept>
-#include <string>
 
 #define RESULT_ID_EXIT 1
 #define RESULT_ID_ABOUT 2
@@ -42,11 +41,8 @@ void TopMenuModel::menuItemSelected(int menuItemId, int)
         break;
 
     case RESULT_ID_EXIT:
-        spdlog::info("exit clicked");
-        break;
-
-    default:
-        spdlog::warn("Received menu click with unknown id: " + std::to_string(menuItemId));
+        auto quitTask = std::make_shared<QuittingTask>();
+        taskManager.broadcastTask(quitTask);
         break;
     }
 }
