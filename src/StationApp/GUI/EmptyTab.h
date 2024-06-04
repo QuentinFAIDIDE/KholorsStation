@@ -9,9 +9,4 @@ class EmptyTab : public juce::Component
     EmptyTab()
     {
     }
-
-    void paint(juce::Graphics &g) override
-    {
-        g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
-    }
 };

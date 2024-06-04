@@ -1,9 +1,10 @@
 #include "BottomPanel.h"
 #include "GUIToolkit/Consts.h"
 #include "StationApp/GUI/EmptyTab.h"
+#include "StationApp/GUI/ServerTab.h"
 #include <memory>
 
-BottomPanel::BottomPanel() : tabs(juce::TabbedButtonBar::Orientation::TabsAtTop)
+BottomPanel::BottomPanel(TaskingManager *tm) : tabs(juce::TabbedButtonBar::Orientation::TabsAtTop)
 {
     sizeConstrainer = std::make_shared<juce::ComponentBoundsConstrainer>();
     sizeConstrainer->setMinimumHeight(BOTTOM_BAR_MINIMUM_HEIGHT);
@@ -13,8 +14,10 @@ BottomPanel::BottomPanel() : tabs(juce::TabbedButtonBar::Orientation::TabsAtTop)
                                                                    juce::ResizableEdgeComponent::topEdge);
 
     tabs.setTabBarDepth(TABS_HEIGHT);
-    tabs.addTab("Server", COLOR_BACKGROUND, new EmptyTab(), true);
-    tabs.addTab("Display", COLOR_BACKGROUND, new EmptyTab(), true);
+    tabs.addTab(TRANS("Server"), COLOR_BACKGROUND, new ServerTab(tm), true);
+    tabs.addTab(TRANS("Display"), COLOR_BACKGROUND, new EmptyTab(), true);
+
+    lastHeight = 0;
 
     addAndMakeVisible(*resizableEdge);
     addAndMakeVisible(tabs);
@@ -25,6 +28,16 @@ void BottomPanel::resized()
     auto bounds = getLocalBounds();
     resizableEdge->setBounds(bounds.removeFromTop(RESIZE_BAR_HEIGHT));
     tabs.setBounds(bounds);
+    // if height change, the parent needs to resize its internal components
+    if (lastHeight != getHeight())
+    {
+        lastHeight = getHeight();
+        auto parent = getParentComponent();
+        if (parent != nullptr)
+        {
+            parent->resized();
+        }
+    }
 }
 
 void BottomPanel::paint(juce::Graphics &g)

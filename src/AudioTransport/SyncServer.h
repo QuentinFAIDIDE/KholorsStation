@@ -2,6 +2,7 @@
 
 #include "AudioDataStore.h"
 #include "RpcServerImplementation.h"
+#include "TaskManagement/TaskingManager.h"
 #include "grpcpp/server_builder.h"
 #include <condition_variable>
 #include <memory>
@@ -37,6 +38,13 @@ class SyncServer final
     SyncServer();
 
     ~SyncServer();
+
+    /**
+     * @brief Set the Task Manager object
+     *
+     * @param tm TaskManager that will get sent task with server related updates
+     */
+    void setTaskManager(TaskingManager *tm);
 
     /**
      * @brief Start or restart the server on the provided port.
@@ -103,6 +111,8 @@ class SyncServer final
 
     RpcServerImplementation service; /**< gRPC server implementation */
     AudioDataStore store;            /**< Where samples are stored when received untill they're fetched */
+
+    TaskingManager *taskingManager;
 };
 
 }; // namespace AudioTransport

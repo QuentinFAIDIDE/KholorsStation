@@ -1,4 +1,6 @@
 #include "SyncServer.h"
+#include "AudioTransport/ServerStatusTask.h"
+#include "TaskManagement/TaskingManager.h"
 #include "absl/strings/str_format.h"
 #include <cstdint>
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
@@ -110,6 +112,10 @@ bool SyncServer::runServerOnPort(size_t port)
     spdlog::info("Server listening on " + server_address);
     actualServerState.first = true;
     actualServerState.second = port;
+    if (taskingManager != nullptr)
+    {
+        taskingManager->broadcastTask(std::make_shared<ServerStatusTask>(actualServerState));
+    }
 
     serverThread = std::make_shared<std::thread>(&SyncServer::waitForServerShutdown, this);
 
@@ -122,6 +128,17 @@ void SyncServer::waitForServerShutdown()
     spdlog::info("Server has stopped");
     std::lock_guard lock(serverThreadMutex);
     actualServerState.first = false;
+    if (taskingManager != nullptr)
+    {
+        taskingManager->broadcastTask(std::make_shared<ServerStatusTask>(actualServerState));
+    }
+}
+
+void SyncServer::setTaskManager(TaskingManager *tm)
+{
+    std::lock_guard lock(serverThreadMutex);
+    taskingManager = tm;
+    taskingManager->broadcastTask(std::make_shared<ServerStatusTask>(actualServerState));
 }
 
 std::optional<AudioDataStore::AudioDatumWithStorageId> SyncServer::waitForDatum()

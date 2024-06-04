@@ -2,3 +2,5 @@
 #include "GUIData.cpp"
 #include "IconsLoader.cpp"
 #include "KholorsLookAndFeel.cpp"
+#include "Widgets/LabeledLineContainer.cpp"
+#include "Widgets/LabeledLineStack.cpp"

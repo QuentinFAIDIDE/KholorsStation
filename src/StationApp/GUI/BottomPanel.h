@@ -1,5 +1,6 @@
 #pragma once
 
+#include "TaskManagement/TaskingManager.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
 #include "GUIToolkit/Consts.h"
@@ -11,7 +12,7 @@
 class BottomPanel : public juce::Component
 {
   public:
-    BottomPanel();
+    BottomPanel(TaskingManager *tm);
     void resized() override;
     void paint(juce::Graphics &g) override;
 
@@ -19,4 +20,6 @@ class BottomPanel : public juce::Component
     std::shared_ptr<juce::ComponentBoundsConstrainer> sizeConstrainer;
     std::shared_ptr<juce::ResizableEdgeComponent> resizableEdge;
     juce::TabbedComponent tabs;
+
+    int lastHeight;
 };

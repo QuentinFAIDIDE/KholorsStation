@@ -1,8 +1,10 @@
 #pragma once
 
+#include "AudioTransport/SyncServer.h"
 #include "GUIToolkit/FontsLoader.h"
 #include "GUIToolkit/KholorsLookAndFeel.h"
 #include "StationApp/GUI/BottomPanel.h"
+#include "StationApp/GUI/FreqTimeView.h"
 #include "StationApp/GUI/TopMenuModel.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
@@ -20,19 +22,17 @@ class MainComponent final : public juce::Component, public TaskListener
     void paint(juce::Graphics &) override;
     void paintOverChildren(juce::Graphics &) override;
     void resized() override;
-
     bool taskHandler(std::shared_ptr<Task> task) override;
 
   private:
-    KholorsLookAndFeel appLookAndFeel;
-    TaskingManager taskManager;
-
-    juce::MenuBarComponent menuBar;
-    TopMenuModel menuBarModel;
-
-    BottomPanel bottomPanel;
-
-    juce::SharedResourcePointer<FontsLoader> sharedFonts;
+    KholorsLookAndFeel appLookAndFeel;                    /**< Defines the app look and feel */
+    TaskingManager taskManager;                           /**< Object that manages task for actions */
+    juce::MenuBarComponent menuBar;                       /**< App menu at the top of the app */
+    TopMenuModel menuBarModel;                            /**< Model that populates the menuBar */
+    BottomPanel bottomPanel;                              /**< pannel at the bottom with all tabs */
+    juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */
+    FreqTimeView freqTimeView;                            /**< Viewer that display frequencies over time received */
+    AudioTransport::SyncServer audioDataReceiver;         /**< Server that receives audio data */
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

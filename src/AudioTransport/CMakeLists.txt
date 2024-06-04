@@ -27,9 +27,6 @@ add_custom_command(
     --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}" "${at_proto}"
   DEPENDS "${at_proto}")
 
-# Include generated *.pb.h files
-include_directories("${CMAKE_CURRENT_BINARY_DIR}")
-
 # list all source files and headers
 file(
   GLOB_RECURSE all_module_cpp
@@ -48,9 +45,15 @@ add_library(
   AudioTransport ${at_grpc_srcs} ${at_proto_hdrs} ${at_proto_srcs}
                  ${at_grpc_hdrs} ${all_module_cpp} ${all_module_headers})
 
+# Include generated *.pb.h files
+target_include_directories(AudioTransport PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
+
+target_include_directories(AudioTransport
+                           PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
+
 # link the library with the required libs
-target_link_libraries(AudioTransport ${_REFLECTION} ${_GRPC_GRPCPP}
-                      ${_PROTOBUF_LIBPROTOBUF})
+target_link_libraries(AudioTransport TaskManagement ${_REFLECTION}
+                      ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
 
 # list all test source files and headers
 file(
@@ -58,11 +61,17 @@ file(
   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
   "*Test.cpp")
 
+file(
+  GLOB_RECURSE all_test_headers
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+  "*Test.h")
+
 # add library testing target
-add_executable(AudioTransportTest ${all_test_cpp})
+add_executable(AudioTransportTest ${all_test_cpp} ${all_test_headers})
 target_link_libraries(
   AudioTransportTest
   AudioTransport
+  TaskManagement
   absl::flags
   absl::flags_parse
   spdlog
