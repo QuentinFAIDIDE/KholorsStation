@@ -12,7 +12,7 @@
 class BottomPanel : public juce::Component
 {
   public:
-    BottomPanel(TaskingManager *tm);
+    BottomPanel(TaskingManager &tm);
     void resized() override;
     void paint(juce::Graphics &g) override;
 

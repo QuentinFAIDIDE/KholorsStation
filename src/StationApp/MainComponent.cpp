@@ -7,7 +7,7 @@
 
 #define DEFAULT_SERVER_PORT 7849
 
-MainComponent::MainComponent() : menuBarModel(taskManager), bottomPanel(&taskManager)
+MainComponent::MainComponent() : menuBarModel(taskManager), bottomPanel(taskManager)
 {
     // Various GUI related initializations
     juce::Typeface::Ptr tface =
@@ -25,6 +25,8 @@ MainComponent::MainComponent() : menuBarModel(taskManager), bottomPanel(&taskMan
     addAndMakeVisible(freqTimeView);
 
     setSize(1440, 900);
+
+    audioDataReceiver.setTaskManager(&taskManager);
 
     audioDataReceiver.setServerToListenOnPort(DEFAULT_SERVER_PORT);
 

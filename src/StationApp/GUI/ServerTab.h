@@ -7,7 +7,7 @@
 class ServerTab : public juce::Component
 {
   public:
-    ServerTab(TaskingManager *taskManager);
+    ServerTab(TaskingManager &taskManager);
     void resized() override;
 
   private:

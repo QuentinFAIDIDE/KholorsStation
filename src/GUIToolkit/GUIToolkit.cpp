@@ -4,3 +4,5 @@
 #include "KholorsLookAndFeel.cpp"
 #include "Widgets/LabeledLineContainer.cpp"
 #include "Widgets/LabeledLineStack.cpp"
+#include "Widgets/ServerPortText.cpp"
+#include "Widgets/ServerStatusText.cpp"

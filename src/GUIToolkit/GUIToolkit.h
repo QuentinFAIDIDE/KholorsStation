@@ -22,3 +22,6 @@
 #include "KholorsLookAndFeel.h"
 #include "Widgets/LabeledLineContainer.h"
 #include "Widgets/LabeledLineStack.h"
+#include "Widgets/LabeledLineText.h"
+#include "Widgets/ServerPortText.h"
+#include "Widgets/ServerStatusText.h"

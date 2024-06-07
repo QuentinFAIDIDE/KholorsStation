@@ -4,7 +4,7 @@
 #include "StationApp/GUI/ServerTab.h"
 #include <memory>
 
-BottomPanel::BottomPanel(TaskingManager *tm) : tabs(juce::TabbedButtonBar::Orientation::TabsAtTop)
+BottomPanel::BottomPanel(TaskingManager &tm) : tabs(juce::TabbedButtonBar::Orientation::TabsAtTop)
 {
     sizeConstrainer = std::make_shared<juce::ComponentBoundsConstrainer>();
     sizeConstrainer->setMinimumHeight(BOTTOM_BAR_MINIMUM_HEIGHT);

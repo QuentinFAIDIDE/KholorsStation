@@ -23,6 +23,11 @@
 #define COLOR_NOTIF_WARN juce::Colour(155, 95, 49)
 #define COLOR_NOTIF_ERROR juce::Colour(198, 66, 100)
 
+// these ones are lighter and more appropriate for text
+#define COLOR_TEXT_STATUS_OK juce::Colour(94, 219, 103)
+#define COLOR_TEXT_WARN juce::Colour(219, 157, 94)
+#define COLOR_TEXT_STATUS_ERROR juce::Colour(219, 94, 94)
+
 #define COLOR_UNITS COLOR_TEXT_DARKER.withAlpha(0.5f)
 
 #define COLOR_BLACK juce::Colour(10, 10, 10)
