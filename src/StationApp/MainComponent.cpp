@@ -19,7 +19,7 @@ MainComponent::MainComponent() : menuBarModel(taskManager), bottomPanel(taskMana
     menuBar.setModel(&menuBarModel);
     addAndMakeVisible(menuBar);
 
-    bottomPanel.setSize(getWidth(), 300);
+    bottomPanel.setSize(getWidth(), 210);
     addAndMakeVisible(bottomPanel);
 
     addAndMakeVisible(freqTimeView);

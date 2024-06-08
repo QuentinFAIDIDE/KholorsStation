@@ -3,11 +3,10 @@
 #include "GUIToolkit/Widgets/LabeledLineText.h"
 #include "GUIToolkit/Widgets/ServerPortText.h"
 #include "GUIToolkit/Widgets/ServerStatusText.h"
-#include "StationApp/GUI/EmptyTab.h"
 #include "TaskManagement/TaskingManager.h"
 #include <memory>
 
-ServerTab::ServerTab(TaskingManager &tm) : serverStatusStack(TRANS("DATA SERVER STATUS").toStdString())
+ServerTab::ServerTab(TaskingManager &tm) : serverStatusStack(TRANS("DATA RECEIVER STATUS").toStdString())
 {
     auto serverStatusText = std::make_shared<ServerStatusText>(tm);
     auto serverStatusPort = std::make_shared<ServerPortText>(tm);
