@@ -13,9 +13,9 @@
 class NewFftDataTask : public SilentTask
 {
   public:
-    NewFftDataTask(uint32_t _trackIdentifier, uint32_t _noChannels, uint32_t _channelIndex, uint32_t _sampleRate,
+    NewFftDataTask(uint64_t _trackIdentifier, uint32_t _noChannels, uint32_t _channelIndex, uint32_t _sampleRate,
                    uint32_t _segmentStartSample, uint64_t _segmentSampleLength, uint32_t _noFFTs,
-                   std::shared_ptr<float> _data)
+                   std::shared_ptr<std::vector<float>> _data)
     {
         trackIdentifier = _trackIdentifier;
         totalNoChannels = _noChannels;
@@ -48,12 +48,12 @@ class NewFftDataTask : public SilentTask
         return taskj.dump();
     }
 
-    uint32_t trackIdentifier;       /**< Identifier of the track this segment belongs to */
-    uint32_t totalNoChannels;       /**< Total number of channels of this track */
-    uint32_t channelIndex;          /**< Index of this specific channel data */
-    uint32_t sampleRate;            /**< Sample rate of this segment */
-    uint32_t segmentStartSample;    /**< Start sample of this segment */
-    uint64_t segmentSampleLength;   /**< Length of the segment in samples */
-    uint32_t noFFTs;                /**< Number of FFTs generated for this segment */
-    std::shared_ptr<float> fftData; /**< raw FFT result in dBs (noFFTs FFTs of len FFT_OUTPUT_NO_FREQS) */
+    uint64_t trackIdentifier;                    /**< Identifier of the track this segment belongs to */
+    uint32_t totalNoChannels;                    /**< Total number of channels of this track */
+    uint32_t channelIndex;                       /**< Index of this specific channel data */
+    uint32_t sampleRate;                         /**< Sample rate of this segment */
+    uint32_t segmentStartSample;                 /**< Start sample of this segment */
+    uint64_t segmentSampleLength;                /**< Length of the segment in samples */
+    uint32_t noFFTs;                             /**< Number of FFTs generated for this segment */
+    std::shared_ptr<std::vector<float>> fftData; /**< raw FFT result in dBs (noFFTs FFTs of len FFT_OUTPUT_NO_FREQS) */
 };

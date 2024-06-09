@@ -50,7 +50,7 @@ void AudioDataWorker::workerThreadLoop()
                 {
                     audioBuffer->setSize(1, audioSegment->noAudioSamples, true, false, true);
                 }
-                catch (const std::bad_alloc e)
+                catch (const std::bad_alloc &e)
                 {
                     spdlog::warn("Ignored an audio buffer after failing to allocate memory");
                     audioDataServer.freeStoredDatum(audioDataUpdate->storageIdentifier);
@@ -70,8 +70,8 @@ void AudioDataWorker::workerThreadLoop()
                 // emit a task with the new data to be added to the visualizer
                 auto newDataTask = std::make_shared<NewFftDataTask>(
                     audioSegment->trackIdentifier, audioSegment->noChannels, audioSegment->channel,
-                    audioSegment->sampleRate, audioSegment->segmentStartSample, audioSegment->noAudioSamples, numFFTs,
-                    shortTimeFFTs);
+                    audioSegment->sampleRate, audioSegment->segmentStartSample, audioSegment->noAudioSamples,
+                    (uint32_t)numFFTs, shortTimeFFTs);
 
                 taskingManager.broadcastTask(newDataTask);
             }

@@ -1,7 +1,9 @@
 #pragma once
 
+#include "StationApp/Audio/NewFftDataTask.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <cstdint>
+#include <memory>
 
 /**
  * @brief Abstract class that receives the audio data (sfft freqs intensities) to display
@@ -32,28 +34,9 @@ class FftDrawingBackend : public juce::Component
     virtual void updateViewScale(uint32_t samplesPerPixel, float referenceHorizontalScreenPosition) = 0;
 
     /**
-     * @brief Add an intensity point to be displayed on screen. It will only be showed when regerateTextures
-     * will have been called.
+     * @brief Add the fft data inside the task struct to the currently displayed data.
      *
-     * @param trackIdentifier identifier of the track to store intensities for.
-     * @param samplePosition position in audioSamples at which this fft appears
-     * @param frequency frequency at which to add an intensity in Hz
-     * @param intensityDB intensity in dB of the band in kHz
-     * @param isTopSide if the drawing is made on the top or bottom band (left and right for stereo)
+     * @param fftData struct containing the FFt data position, length, channel info and data
      */
-    virtual void addIntensity(uint64_t trackIdentifier, uint32_t samplePosition, float frequency, float intensityDB,
-                              bool isTopSide) = 0;
-
-    /**
-     * @brief Coalesce intensities into textures to be displayed on screen.
-     */
-    virtual void generateTextures() = 0;
-
-    /**
-     * @brief Clear all intensities in that range of audio samples position.
-     *
-     * @param startSamplePosition start position in audio samples to clear
-     * @param stopSamplePosition end position in audio samples to clear
-     */
-    virtual void clearMemoryInRange(uint32_t startSamplePosition, uint32_t stopSamplePosition) = 0;
+    virtual void displayNewFftData(std::shared_ptr<NewFftDataTask> fftData) = 0;
 };

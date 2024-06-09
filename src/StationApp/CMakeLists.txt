@@ -77,10 +77,12 @@ target_link_libraries(
   StationApp
   PRIVATE GUIToolkit
           juce::juce_gui_extra
+          juce::juce_audio_basics
           AudioTransport
           TaskManagement
           nlohmann_json::nlohmann_json
           spdlog
           fmt
+          fftw3f
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)

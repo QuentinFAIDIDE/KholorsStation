@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FftDrawingBackend.h"
+#include "TaskManagement/TaskListener.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
 /**
@@ -8,7 +9,7 @@
  * which own a drawing backend that will draw FFT of signal
  * received. It will draw labels and eventually more info over drawing widgets.
  */
-class FreqTimeView : public juce::Component
+class FreqTimeView : public juce::Component, public TaskListener
 {
   public:
     FreqTimeView();
@@ -18,6 +19,17 @@ class FreqTimeView : public juce::Component
     void paintOverChildren(juce::Graphics &g) override;
     void resized() override;
 
+    /**
+     * @brief Receives tasks from tasking manager and is responsible for
+     * handling the one emmited by AudioDataWorker, in particular the ones
+     * with Short Time Fast Fourier Transforms or track name/colors updates.
+     *
+     * @param task the task to be casted, we may or may not be interested by it
+     * @return true if we want to stop the task from broacasting to further listeners
+     * @return false if we don't care if the tasks keep on going to other Listeners.
+     */
+    bool taskHandler(std::shared_ptr<Task> task) override;
+
   private:
-    std::shared_ptr<FftDrawingBackend> fftDrawBackend;
+    std::shared_ptr<FftDrawingBackend> fftDrawBackend; /**< Juce component that draws FFTs on screen */
 };
