@@ -3,6 +3,7 @@
 #include "AudioTransport/SyncServer.h"
 #include "GUIToolkit/FontsLoader.h"
 #include "GUIToolkit/KholorsLookAndFeel.h"
+#include "StationApp/Audio/AudioDataWorker.h"
 #include "StationApp/GUI/BottomPanel.h"
 #include "StationApp/GUI/FreqTimeView.h"
 #include "StationApp/GUI/TopMenuModel.h"
@@ -32,7 +33,8 @@ class MainComponent final : public juce::Component, public TaskListener
     BottomPanel bottomPanel;                              /**< pannel at the bottom with all tabs */
     juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */
     FreqTimeView freqTimeView;                            /**< Viewer that display frequencies over time received */
-    AudioTransport::SyncServer audioDataReceiver;         /**< Server that receives audio data */
+    AudioTransport::SyncServer audioDataServer;           /**< Server that receives audio data */
+    AudioDataWorker audioDataWorker; /**< Worker threads to parse audio data from server and emit Tasks accordingly */
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

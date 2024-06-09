@@ -2,12 +2,15 @@
 
 #include "GUIToolkit/Consts.h"
 #include "GUIToolkit/GUIData.h"
+#include "StationApp/Audio/AudioDataWorker.h"
 #include "StationApp/GUI/BottomPanel.h"
+#include "TaskManagement/TaskingManager.h"
 #include <spdlog/spdlog.h>
 
 #define DEFAULT_SERVER_PORT 7849
 
-MainComponent::MainComponent() : menuBarModel(taskManager), bottomPanel(taskManager)
+MainComponent::MainComponent()
+    : menuBarModel(taskManager), bottomPanel(taskManager), audioDataWorker(audioDataServer, taskManager)
 {
     // Various GUI related initializations
     juce::Typeface::Ptr tface =
@@ -26,9 +29,9 @@ MainComponent::MainComponent() : menuBarModel(taskManager), bottomPanel(taskMana
 
     setSize(1440, 900);
 
-    audioDataReceiver.setTaskManager(&taskManager);
+    audioDataServer.setTaskManager(&taskManager);
 
-    audioDataReceiver.setServerToListenOnPort(DEFAULT_SERVER_PORT);
+    audioDataServer.setServerToListenOnPort(DEFAULT_SERVER_PORT);
 
     taskManager.registerTaskListener(this);
     taskManager.startTaskBroadcast();
@@ -36,7 +39,7 @@ MainComponent::MainComponent() : menuBarModel(taskManager), bottomPanel(taskMana
 
 MainComponent::~MainComponent()
 {
-    audioDataReceiver.stopServer();
+    audioDataServer.stopServer();
     taskManager.stopTaskBroadcast();
 
     menuBar.setModel(nullptr);

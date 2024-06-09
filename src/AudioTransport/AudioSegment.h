@@ -39,16 +39,4 @@ struct AudioSegment : public AudioTransportData
     uint32_t segmentStartSample;                   /**< Start sample of the audio segment position */
     uint64_t noAudioSamples;                       /**< How many audio samples there are in this audio segment */
 };
-
-/**
- * @brief Holds information about a near empty audio data segment that we don't need to process.
- */
-struct AudioSegmentNoOp : public AudioTransportData
-{
-    uint64_t trackIdentifier; /**< Identifier of the track the data comes from */
-    uint32_t channel;         /**< Index of the channel the data comes from */
-    uint32_t sampleRate;      /**< Sample rate of the data */
-    uint64_t noAudioSamples;  /**< How many audio samples there are in this audio segment */
-};
-
 } // namespace AudioTransport
