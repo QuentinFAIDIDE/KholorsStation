@@ -80,6 +80,7 @@ target_link_libraries(
           juce::juce_audio_basics
           AudioTransport
           TaskManagement
+          Utils
           nlohmann_json::nlohmann_json
           spdlog
           fmt

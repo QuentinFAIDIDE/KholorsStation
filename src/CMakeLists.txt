@@ -1,3 +1,4 @@
+add_subdirectory(Utils)
 juce_add_module(GUIToolkit)
 add_subdirectory(TaskManagement)
 add_subdirectory(AudioTransport)

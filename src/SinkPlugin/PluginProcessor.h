@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SinkPlugin/BufferForwarder.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #define MAX_DB_BOOST 30.0f
@@ -156,6 +157,8 @@ class AudioPluginAudioProcessor : public juce::AudioProcessor
     float getGainReductionDB() const;
 
   private:
+    BufferForwarder audioInfoForwarder;
+
     // Juce utility to delete copy constructors
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };

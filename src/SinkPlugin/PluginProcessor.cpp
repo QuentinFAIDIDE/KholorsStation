@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "SinkPlugin/BufferForwarder.h"
 
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     : AudioProcessor(BusesProperties()
@@ -91,15 +92,77 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
     // a common thing to disabled for DSP, not sure if I should not remove it
     juce::ScopedNoDenormals noDenormals;
 
-    for (int channel = 0; channel < getTotalNumInputChannels(); ++channel)
+    // ignore sending batch of signals when used in an offline rendering mode
+    if (isNonRealtime())
     {
-        auto *channelSamples = buffer.getWritePointer(channel);
+        return;
+    }
 
-        for (int i = 0; i < buffer.getNumSamples(); i++)
+    // fetch daw info and abort if not available
+    juce::AudioPlayHead *playHead = getPlayHead();
+    if (playHead == nullptr)
+    {
+        audioInfoForwarder.setDawIsCompatible(false);
+        return;
+    }
+    auto positionInfo = playHead->getPosition();
+    if (!positionInfo.hasValue())
+    {
+        audioInfoForwarder.setDawIsCompatible(false);
+        return;
+    }
+
+    // get a pointer to a preallocated structure we can ship our audio data into
+    std::shared_ptr<BufferForwarder::AudioBlockInfo> blockInfo = audioInfoForwarder.getFreeBlockInfoStruct();
+
+    // all this information will be matched against last known values and shipped to the Station
+    blockInfo->sampleRate = (int64_t)(getSampleRate() + 0.5);
+    blockInfo->bpm = positionInfo->getBpm();
+    blockInfo->timeSignature = positionInfo->getTimeSignature();
+    blockInfo->isLooping = positionInfo->getIsLooping();
+    blockInfo->isPlaying = positionInfo->getIsPlaying();
+    blockInfo->loopBounds = positionInfo->getLoopPoints();
+    auto segmentStartSampleIfAvailable = positionInfo->getTimeInSamples();
+
+    if (!segmentStartSampleIfAvailable.hasValue())
+    {
+        audioInfoForwarder.setDawIsCompatible(false);
+        return;
+    }
+    blockInfo->startSample = *segmentStartSampleIfAvailable;
+
+    blockInfo->numChannels = getTotalNumInputChannels();
+    if (blockInfo->numChannels < buffer.getNumChannels())
+    {
+        audioInfoForwarder.setDawIsCompatible(false);
+        return;
+    }
+    audioInfoForwarder.setDawIsCompatible(true);
+
+    blockInfo->numSamples = buffer.getNumSamples();
+
+    // We then copy all audio samples one by one. Note than in theory, resize should
+    // not have to allocate as we're suppose to reserve the size of the channelData vectors before.
+    if (getTotalNumInputChannels() >= 1)
+    {
+        const float *firstChannelData = buffer.getReadPointer(0);
+        blockInfo->firstChannelData.resize((size_t)blockInfo->numSamples);
+        for (size_t i = 0; i < (size_t)blockInfo->numSamples; i++)
         {
-            // access channelSamples[i] for signal
+            blockInfo->firstChannelData[i] = firstChannelData[i];
         }
     }
+    if (getTotalNumInputChannels() >= 2)
+    {
+        const float *secondChannelData = buffer.getReadPointer(1);
+        blockInfo->secondChannelData.resize((size_t)blockInfo->numSamples);
+        for (size_t i = 0; i < (size_t)blockInfo->numSamples; i++)
+        {
+            blockInfo->secondChannelData[i] = secondChannelData[i];
+        }
+    }
+
+    audioInfoForwarder.forwardAudioBlockInfo(blockInfo);
 }
 
 bool AudioPluginAudioProcessor::hasEditor() const

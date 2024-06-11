@@ -7,7 +7,7 @@
 #include <mutex>
 #include <vector>
 
-#include "../Utils/WaitGroup.h"
+#include "Utils/WaitGroup.h"
 
 // a cool post about C++ thread pools: https://stackoverflow.com/a/32593825
 

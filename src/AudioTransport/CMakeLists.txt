@@ -55,6 +55,8 @@ target_include_directories(AudioTransport
 target_link_libraries(AudioTransport TaskManagement ${_REFLECTION}
                       ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
 
+set_target_properties(AudioTransport PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 # list all test source files and headers
 file(
   GLOB_RECURSE all_test_cpp

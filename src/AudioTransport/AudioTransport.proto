@@ -26,20 +26,24 @@ service KholorsAudioTransport {
     int32 daw_time_signature_denominator = 7;
     // Is the daw in loop mode ?
     bool daw_is_looping = 8;
+    // Is the daw currently playing ?
+    bool daw_is_playing = 9;
+    // Is this DAW providing the basic informations required to run this VST ?
+    bool daw_not_supported = 10;
     // Start of loop section for this daw, in fractions of quarter-notes.
-    double daw_loop_start = 9;
+    double daw_loop_start = 11;
     // End of loop section for this daw, in fractions of quarter-notes.
-    double daw_loop_end = 10;
+    double daw_loop_end = 12;
     // Sample time at the start of the segment
-    double segment_start_sample = 11;
+    uint64 segment_start_sample = 13;
     // Duration of the segment in samples
-    uint64 segment_sample_duration = 12;
+    uint64 segment_sample_duration = 14;
     // Number of audio channels for this signal.
-    int32 segment_no_channels = 13;
+    int32 segment_no_channels = 15;
     // Audio content of the segment, arranged as a sequence of floats.
     // There are segment_no_channels segments of length segment_sample_duration.
     // It can also be empty, meaning this channel segment has so little intensity it can be ignored.
-    repeated float segment_audio_samples = 14; 
+    repeated float segment_audio_samples = 16; 
   }
   
   // The reply to an audio buffer and metadata upload request.
