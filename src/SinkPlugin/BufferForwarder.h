@@ -1,32 +1,23 @@
 #pragma once
 
 #include "AudioTransport.pb.h"
+#include "SinkPlugin/LockFreeFIFO.h"
+#include "Utils/NoAllocIndexQueue.h"
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <vector>
 
-#include "juce_audio_basics/juce_audio_basics.h"
+#include "AudioBlockInfo.h"
+
+#define FORWARDER_THREAD_MAX_WAIT_MS 100
 
 class BufferForwarder
 {
   public:
     BufferForwarder();
-
-    struct AudioBlockInfo
-    {
-        int64_t nonce;                        /**< Monotically increasing sequence number */
-        int64_t sampleRate;                   /**< Sample rate of the daw */
-        int64_t startSample;                  /**< Start sample of this segment */
-        int32_t numChannels;                  /**< Number of channels of this track */
-        int32_t numSamples;                   /**< Number of samples in this audio segment */
-        std::vector<float> firstChannelData;  /**< left channel audio samples */
-        std::vector<float> secondChannelData; /**< right channel audio samples, if numChan==1 => size==0 */
-        juce::Optional<double> bpm;           /**< beats per minutes of the daw */
-        juce::Optional<juce::AudioPlayHead::TimeSignature> timeSignature; /**< DAW time signature (ex 4/4) */
-        juce::Optional<juce::AudioPlayHead::LoopPoints> loopBounds;       /**< option loops upper and lower bounds*/
-        bool isLooping;                                                   /**< true if the daw is currently looping */
-        bool isPlaying;                                                   /**< true if the daw is currently playing */
-    };
+    ~BufferForwarder();
 
     /**
      * @brief Get a preallocated BlockInfo struct to copy audio block data into;
@@ -61,16 +52,85 @@ class BufferForwarder
      */
     void setDawIsCompatible(bool isCompatible);
 
+    /**
+     * @brief The background thread loop that coalesce audio block info
+     */
+    void coalescePayloadsThreadLoop();
+
+    /**
+     * @brief The background thread loop that sends audio payloads to the station
+     */
+    void sendPayloadsThreadLoop();
+
+    /**
+     * @brief Tells if the audio segment payload is empty or not.
+     *
+     * @return true The audio segment payload does not yet include data
+     * @return false The audio segment payload already include some audio data
+     */
+    static bool payloadIsEmpty(std::shared_ptr<AudioTransport::AudioSegmentPayload>);
+
+    /**
+     * @brief Tells if the audio segment payload is full or not.
+     *
+     * @return true The audio segment payload has all its samples filled, it should be sent.
+     * @return false The audio segment payload still has room for more audio data, we'll keep filling it.
+     */
+    static bool payloadIsFull(std::shared_ptr<AudioTransport::AudioSegmentPayload>);
+
+    /**
+     * @brief Clear the audio samples.
+     *
+     */
+    static void clearPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload>);
+
+    /**
+     * @brief Copy metadata from src to dest, and also add some track info from this class.
+     * Metadata includes all daw and track informations except the segment size or audio data.
+     *
+     * @param dest where to copy the data to
+     * @param src where to copy the data from
+     */
+    void copyMetadataToPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload> dest,
+                               std::shared_ptr<AudioBlockInfo> src);
+
+    static size_t appendAudioBlockToPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload> dest,
+                                            std::shared_ptr<AudioBlockInfo> src);
+
+    /**
+     * @brief Remove the first noUsedSamples samples used from the audio block info so that
+     * the remaining ones can be used. It also shift the buffer start position.
+     *
+     * @param usedBlock The audio block info that was used to fill a payload.
+     * @param noUsedSamples The number of audio blocks that were used and to not account for anymore.
+     */
+    static void removeFirstUsedSamplesFromAudioBlock(std::shared_ptr<AudioBlockInfo> usedBlock, size_t noUsedSamples);
+
+    static void popVectorFront(std::shared_ptr<std::vector<size_t>>);
+
+    static bool audioBlockInfoFollowsPayloadContent(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload,
+                                                    std::shared_ptr<AudioBlockInfo> src);
+
   private:
-    std::shared_ptr<std::thread> coalescerSenderThread;
+    std::shared_ptr<std::thread> coalescerThread;
 
-    std::vector<AudioBlockInfo> preallocatedBlockInfo;
-    std::vector<AudioTransport::AudioSegmentPayload> preallocatedPayloads;
+    std::queue<std::shared_ptr<AudioTransport::AudioSegmentPayload>> freePayloads;
+    std::queue<std::shared_ptr<AudioTransport::AudioSegmentPayload>> payloadsToSend;
+    std::condition_variable payloadsCV;
+    std::mutex payloadsMutex;
 
-    std::queue<size_t> freeBlockInfos;
-    std::mutex freeBlockInfosMutex;
-    std::queue<size_t> blockInfosToCoalesce;
-    std::queue<size_t> payloadsToSend;
+    std::vector<std::shared_ptr<AudioBlockInfo>> preallocatedBlockInfo;
+    LockFreeIndexFIFO freeBlockInfos;
+    std::shared_ptr<std::vector<size_t>> freeBlockInfosFetchContainer;
+
+    LockFreeIndexFIFO blockInfosToCoalesce;
+    std::condition_variable blockInfosToCoalesceCV;
+    std::shared_ptr<std::vector<size_t>> blockInfoToCoalesceFetchContainer;
+    std::mutex blockInfosToCoalesceMutex;
+
+    std::shared_ptr<AudioTransport::AudioSegmentPayload> currentlyFilledPayload;
+
+    std::atomic<bool> shouldStop;
 
     std::atomic<uint64_t> trackIdentifier;
     std::atomic<uint8_t> trackColorRed;

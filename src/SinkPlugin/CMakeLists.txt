@@ -99,6 +99,6 @@ target_compile_definitions(
 
 target_link_libraries(
   SinkPlugin
-  PRIVATE GUIToolkit juce::juce_audio_utils AudioTransport spdlog fmt
+  PRIVATE GUIToolkit juce::juce_audio_utils AudioTransport spdlog fmt Utils
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)

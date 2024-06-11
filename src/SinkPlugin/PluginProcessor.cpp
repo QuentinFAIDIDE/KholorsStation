@@ -1,6 +1,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "SinkPlugin/BufferForwarder.h"
+#include <cstddef>
+#include <spdlog/spdlog.h>
 
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     : AudioProcessor(BusesProperties()
@@ -114,6 +116,12 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
 
     // get a pointer to a preallocated structure we can ship our audio data into
     std::shared_ptr<BufferForwarder::AudioBlockInfo> blockInfo = audioInfoForwarder.getFreeBlockInfoStruct();
+    if (blockInfo == nullptr)
+    {
+        // we ignore audio if we are under stress
+        spdlog::warn("Ignored an audio block because all AudioBlockInfo allocated are in use");
+        return;
+    }
 
     // all this information will be matched against last known values and shipped to the Station
     blockInfo->sampleRate = (int64_t)(getSampleRate() + 0.5);
