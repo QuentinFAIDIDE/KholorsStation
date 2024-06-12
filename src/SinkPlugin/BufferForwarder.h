@@ -41,7 +41,7 @@ class BufferForwarder
      *
      * @param trackIdentifier track identifier, preferrably generated from hash of UUID at plugin startup.
      */
-    void setTrackIdentifier(uint64_t trackIdentifier);
+    void setTrackInfo(uint64_t trackIdentifier);
 
     /**
      * @brief Set the boolean telling if the daw is compatible with what we wanna do or not.
@@ -52,6 +52,7 @@ class BufferForwarder
      */
     void setDawIsCompatible(bool isCompatible);
 
+  private:
     /**
      * @brief The background thread loop that coalesce audio block info
      */
@@ -106,13 +107,21 @@ class BufferForwarder
      */
     static void removeFirstUsedSamplesFromAudioBlock(std::shared_ptr<AudioBlockInfo> usedBlock, size_t noUsedSamples);
 
-    static void popVectorFront(std::shared_ptr<std::vector<size_t>>);
-
     static bool audioBlockInfoFollowsPayloadContent(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload,
                                                     std::shared_ptr<AudioBlockInfo> src);
 
-  private:
+    static void fillPayloadRemainingSpaceWithZeros(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload);
+
+    void allocateCurrentlyFilledPayloadIfNecessary();
+
+    bool payloadIsFullOrBlockInfoRemains(size_t queuedBlockInfoIndex);
+
+    void queueCurrentlyFilledPayloadForSend();
+
+    /////////////////////////////////////
+
     std::shared_ptr<std::thread> coalescerThread;
+    std::shared_ptr<std::thread> senderThread;
 
     std::queue<std::shared_ptr<AudioTransport::AudioSegmentPayload>> freePayloads;
     std::queue<std::shared_ptr<AudioTransport::AudioSegmentPayload>> payloadsToSend;
