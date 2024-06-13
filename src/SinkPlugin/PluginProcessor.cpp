@@ -1,13 +1,17 @@
 #include "PluginProcessor.h"
+#include "AudioTransport/Client.h"
 #include "PluginEditor.h"
 #include "SinkPlugin/BufferForwarder.h"
 #include <cstddef>
 #include <spdlog/spdlog.h>
 
+#define DEFAULT_SERVER_PORT 8991
+
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     : AudioProcessor(BusesProperties()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
-                         .withOutput("Output", juce::AudioChannelSet::stereo(), true))
+                         .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
+      audioTransportGrpcClient(DEFAULT_SERVER_PORT), audioInfoForwarder(audioTransportGrpcClient)
 {
 }
 
@@ -115,7 +119,7 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
     }
 
     // get a pointer to a preallocated structure we can ship our audio data into
-    std::shared_ptr<BufferForwarder::AudioBlockInfo> blockInfo = audioInfoForwarder.getFreeBlockInfoStruct();
+    std::shared_ptr<AudioBlockInfo> blockInfo = audioInfoForwarder.getFreeBlockInfoStruct();
     if (blockInfo == nullptr)
     {
         // we ignore audio if we are under stress
@@ -130,6 +134,7 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
     blockInfo->isLooping = positionInfo->getIsLooping();
     blockInfo->isPlaying = positionInfo->getIsPlaying();
     blockInfo->loopBounds = positionInfo->getLoopPoints();
+    blockInfo->numUsedSamples = 0;
     auto segmentStartSampleIfAvailable = positionInfo->getTimeInSamples();
 
     if (!segmentStartSampleIfAvailable.hasValue())
@@ -147,15 +152,15 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
     }
     audioInfoForwarder.setDawIsCompatible(true);
 
-    blockInfo->numSamples = buffer.getNumSamples();
+    blockInfo->numTotalSamples = buffer.getNumSamples();
 
     // We then copy all audio samples one by one. Note than in theory, resize should
     // not have to allocate as we're suppose to reserve the size of the channelData vectors before.
     if (getTotalNumInputChannels() >= 1)
     {
         const float *firstChannelData = buffer.getReadPointer(0);
-        blockInfo->firstChannelData.resize((size_t)blockInfo->numSamples);
-        for (size_t i = 0; i < (size_t)blockInfo->numSamples; i++)
+        blockInfo->firstChannelData.resize((size_t)blockInfo->numTotalSamples);
+        for (size_t i = 0; i < (size_t)blockInfo->numTotalSamples; i++)
         {
             blockInfo->firstChannelData[i] = firstChannelData[i];
         }
@@ -163,8 +168,8 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
     if (getTotalNumInputChannels() >= 2)
     {
         const float *secondChannelData = buffer.getReadPointer(1);
-        blockInfo->secondChannelData.resize((size_t)blockInfo->numSamples);
-        for (size_t i = 0; i < (size_t)blockInfo->numSamples; i++)
+        blockInfo->secondChannelData.resize((size_t)blockInfo->numTotalSamples);
+        for (size_t i = 0; i < (size_t)blockInfo->numTotalSamples; i++)
         {
             blockInfo->secondChannelData[i] = secondChannelData[i];
         }

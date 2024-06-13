@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AudioTransport/Client.h"
 #include "SinkPlugin/BufferForwarder.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
@@ -157,6 +158,7 @@ class AudioPluginAudioProcessor : public juce::AudioProcessor
     float getGainReductionDB() const;
 
   private:
+    AudioTransport::Client audioTransportGrpcClient;
     BufferForwarder audioInfoForwarder;
 
     // Juce utility to delete copy constructors
