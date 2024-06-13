@@ -95,22 +95,6 @@ void BufferForwarder::setDawIsCompatible(bool v)
     dawIsCompatible = v;
 }
 
-void BufferForwarder::queueCurrentlyFilledPayloadForSend()
-{
-    // if the payload is full, we just send it and keep iterating with a fresh new payload
-    {
-        std::lock_guard lockPayload(payloadsMutex);
-        payloadsToSend.push(currentlyFilledPayload);
-        currentlyFilledPayload = nullptr;
-    }
-    payloadsCV.notify_one();
-}
-
-void BufferForwarder::sendPayloadsThreadLoop()
-{
-    // TODO
-}
-
 void BufferForwarder::coalescePayloadsThreadLoop()
 {
     while (true)
@@ -145,14 +129,9 @@ void BufferForwarder::coalescePayloadsThreadLoop()
                 // set metadata on the payload with the one from the first block
                 copyMetadataToPayload(currentlyFilledPayload, currentBlockInfo);
                 // append the data to the buffer
-                size_t remainingSample = appendAudioBlockToPayload(currentlyFilledPayload, currentBlockInfo);
-                if (remainingSample > 0)
-                {
-                    // if it was not fully used, change it to ignore the already used items
-                    size_t usedSamples = (size_t)currentBlockInfo->numSamples - remainingSample;
-                    removeFirstUsedSamplesFromAudioBlock(currentBlockInfo, usedSamples);
-                }
-                else
+                size_t remainingSampleInAudioBlock =
+                    appendAudioBlockToPayload(currentlyFilledPayload, currentBlockInfo);
+                if (remainingSampleInAudioBlock == 0)
                 {
                     // if it was fully used, remove it from the queued items and keep iterating
                     queuedBlockInfoIndex++;
@@ -165,14 +144,9 @@ void BufferForwarder::coalescePayloadsThreadLoop()
                 if (audioBlockInfoFollowsPayloadContent(currentlyFilledPayload, currentBlockInfo))
                 {
                     // append the data to the buffer
-                    size_t remainingSample = appendAudioBlockToPayload(currentlyFilledPayload, currentBlockInfo);
-                    if (remainingSample > 0)
-                    {
-                        // if it was not fully used, change it to ignore the already used items
-                        size_t usedSamples = (size_t)currentBlockInfo->numSamples - remainingSample;
-                        removeFirstUsedSamplesFromAudioBlock(currentBlockInfo, usedSamples);
-                    }
-                    else
+                    size_t remainingSampleInAudioBlock =
+                        appendAudioBlockToPayload(currentlyFilledPayload, currentBlockInfo);
+                    if (remainingSampleInAudioBlock == 0)
                     {
                         // if it was fully used, remove it from the queued items and keep iterating
                         queuedBlockInfoIndex++;
@@ -186,6 +160,55 @@ void BufferForwarder::coalescePayloadsThreadLoop()
             }
         }
     }
+}
+
+void BufferForwarder::sendPayloadsThreadLoop()
+{
+    // TODO
+}
+
+bool BufferForwarder::payloadIsEmpty(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
+{
+    if (payload == nullptr)
+    {
+        throw std::invalid_argument("received nullptr at payloadIsEmpty");
+    }
+    return payload->segment_sample_duration() == 0;
+}
+
+bool BufferForwarder::payloadIsFull(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
+{
+    return payload->segment_sample_duration() == DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE;
+}
+
+void BufferForwarder::clearPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
+{
+    payload->mutable_segment_audio_samples()->Resize(0, 0.0f);
+    payload->mutable_segment_audio_samples()->Resize(DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE * 2, 0.0f);
+    payload->set_segment_sample_duration(0);
+}
+
+void BufferForwarder::copyMetadataToPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload> dest,
+                                            std::shared_ptr<AudioBlockInfo> src)
+{
+    // TODO
+}
+
+size_t BufferForwarder::appendAudioBlockToPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload> dest,
+                                                  std::shared_ptr<AudioBlockInfo> src)
+{
+    // TODO
+}
+
+bool BufferForwarder::audioBlockInfoFollowsPayloadContent(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload,
+                                                          std::shared_ptr<AudioBlockInfo> src)
+{
+    // TODO
+}
+
+void BufferForwarder::fillPayloadRemainingSpaceWithZeros(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
+{
+    // TODO
 }
 
 void BufferForwarder::allocateCurrentlyFilledPayloadIfNecessary()
@@ -216,23 +239,13 @@ bool BufferForwarder::payloadIsFullOrBlockInfoRemains(size_t queuedBlockInfoInde
     return blockInfoRemains || payloadExistAndIsFull;
 }
 
-bool BufferForwarder::payloadIsEmpty(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
+void BufferForwarder::queueCurrentlyFilledPayloadForSend()
 {
-    if (payload == nullptr)
+    // if the payload is full, we just send it and keep iterating with a fresh new payload
     {
-        throw std::invalid_argument("received nullptr at payloadIsEmpty");
+        std::lock_guard lockPayload(payloadsMutex);
+        payloadsToSend.push(currentlyFilledPayload);
+        currentlyFilledPayload = nullptr;
     }
-    return payload->segment_sample_duration() == 0;
-}
-
-bool BufferForwarder::payloadIsFull(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
-{
-    return payload->segment_sample_duration() == DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE;
-}
-
-void BufferForwarder::clearPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
-{
-    payload->mutable_segment_audio_samples()->Resize(0, 0.0f);
-    payload->mutable_segment_audio_samples()->Resize(DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE * 2, 0.0f);
-    payload->set_segment_sample_duration(0);
+    payloadsCV.notify_one();
 }
