@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AudioTransport.pb.h"
+#include "AudioTransport/AudioSegmentPayloadSender.h"
 #include "SinkPlugin/LockFreeFIFO.h"
 #include <condition_variable>
 #include <memory>
@@ -20,7 +21,7 @@
 class BufferForwarder
 {
   public:
-    BufferForwarder();
+    BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps);
     ~BufferForwarder();
 
     /**
@@ -163,6 +164,8 @@ class BufferForwarder
 
     std::shared_ptr<std::thread> coalescerThread;
     std::shared_ptr<std::thread> senderThread;
+
+    AudioTransport::AudioSegmentPayloadSender &payloadSender;
 
     std::queue<std::shared_ptr<AudioTransport::AudioSegmentPayload>>
         freePayloads; /**< payloads that are allocated and ready to be filled */

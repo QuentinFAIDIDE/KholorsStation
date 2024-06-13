@@ -2,6 +2,7 @@
 
 #include "AudioTransport.grpc.pb.h"
 #include "AudioTransport.pb.h"
+#include "AudioTransport/AudioSegmentPayloadSender.h"
 #include <cstdint>
 #include <grpcpp/grpcpp.h>
 #include <memory>
@@ -14,12 +15,12 @@ namespace AudioTransport
  * to the server.
  *
  */
-class Client
+class Client : public AudioSegmentPayloadSender
 {
   public:
     Client(uint32_t port);
     void changeDestinationPort(uint32_t port);
-    bool sendAudioSegment(AudioSegmentPayload *payload);
+    bool sendAudioSegment(AudioSegmentPayload *payload) override;
 
   private:
     std::unique_ptr<KholorsAudioTransport::Stub> stub;

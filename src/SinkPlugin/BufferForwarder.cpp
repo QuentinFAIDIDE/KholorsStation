@@ -1,6 +1,8 @@
 #include "BufferForwarder.h"
 #include "AudioTransport.pb.h"
+#include "AudioTransport/ColorBytes.h"
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <spdlog/spdlog.h>
@@ -12,8 +14,8 @@
 #define PREALLOCATED_BLOCKINFO_SAMPLE_SIZE 4096
 #define DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE 4096
 
-BufferForwarder::BufferForwarder()
-    : freeBlockInfos(NUM_PREALLOCATED_BLOCKINFO), blockInfosToCoalesce(NUM_PREALLOCATED_BLOCKINFO)
+BufferForwarder::BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps)
+    : payloadSender(ps), freeBlockInfos(NUM_PREALLOCATED_BLOCKINFO), blockInfosToCoalesce(NUM_PREALLOCATED_BLOCKINFO)
 {
     shouldStop = false;
     dawIsCompatible = true;
@@ -50,7 +52,11 @@ BufferForwarder::BufferForwarder()
 BufferForwarder::~BufferForwarder()
 {
     shouldStop = true;
+
     blockInfosToCoalesceCV.notify_one();
+    coalescerThread->join();
+
+    payloadsCV.notify_one();
     coalescerThread->join();
 }
 
@@ -59,6 +65,7 @@ std::shared_ptr<AudioBlockInfo> BufferForwarder::getFreeBlockInfoStruct()
     freeBlockInfos.dequeue(freeBlockInfosFetchContainer, 1);
     if (freeBlockInfosFetchContainer->size() > 0)
     {
+        preallocatedBlockInfo[(*freeBlockInfosFetchContainer)[0]]->numUsedSamples = 0;
         return preallocatedBlockInfo[(*freeBlockInfosFetchContainer)[0]];
     }
     else
@@ -164,7 +171,33 @@ void BufferForwarder::coalescePayloadsThreadLoop()
 
 void BufferForwarder::sendPayloadsThreadLoop()
 {
-    // TODO
+    while (true)
+    {
+        // Wait on a cv for new datums with some timeout
+        std::unique_lock lock(payloadsMutex);
+        payloadsCV.wait_for(lock, std::chrono::milliseconds(FORWARDER_THREAD_MAX_WAIT_MS));
+        if (shouldStop)
+        {
+            return;
+        }
+        std::shared_ptr<AudioTransport::AudioSegmentPayload> filledPayloadToSend;
+        if (payloadsToSend.size() == 0)
+        {
+            return;
+        }
+        filledPayloadToSend = payloadsToSend.front();
+        payloadsToSend.pop();
+        lock.release();
+
+        // send payload to the api
+        payloadSender.sendAudioSegment(filledPayloadToSend.get());
+
+        // release the payload so it can be reused
+        {
+            std::lock_guard lock2(payloadsMutex);
+            freePayloads.push(filledPayloadToSend);
+        }
+    }
 }
 
 bool BufferForwarder::payloadIsEmpty(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
@@ -191,24 +224,121 @@ void BufferForwarder::clearPayload(std::shared_ptr<AudioTransport::AudioSegmentP
 void BufferForwarder::copyMetadataToPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload> dest,
                                             std::shared_ptr<AudioBlockInfo> src)
 {
-    // TODO
+    dest->set_track_identifier(trackIdentifier);
+    dest->set_track_color(
+        AudioTransport::ColorContainer(trackColorRed, trackColorGreen, trackColorBlue, trackColorAlpha).toColorBytes());
+    {
+        std::lock_guard lock(trackNameMutex);
+        dest->set_track_name(trackName);
+    }
+
+    dest->set_daw_sample_rate(src->sampleRate);
+    if (src->bpm.hasValue())
+    {
+        dest->set_daw_bpm(*src->bpm);
+    }
+    else
+    {
+        dest->set_daw_bpm(0);
+    }
+
+    if (src->timeSignature.hasValue())
+    {
+        dest->set_daw_time_signature_numerator(src->timeSignature->numerator);
+        dest->set_daw_time_signature_denominator(src->timeSignature->denominator);
+    }
+    else
+    {
+        dest->set_daw_time_signature_numerator(0);
+        dest->set_daw_time_signature_denominator(0);
+    }
+
+    dest->set_daw_is_looping(src->isLooping);
+    dest->set_daw_is_playing(src->isPlaying);
+    dest->set_daw_not_supported(!dawIsCompatible);
+
+    if (src->loopBounds.hasValue())
+    {
+        dest->set_daw_loop_start(src->loopBounds->ppqStart);
+        dest->set_daw_loop_end(src->loopBounds->ppqEnd);
+    }
+    else
+    {
+        dest->set_daw_loop_start(0);
+        dest->set_daw_loop_end(0);
+    }
+
+    dest->set_segment_start_sample(src->startSample);
+    dest->set_segment_sample_duration(0);
+    dest->set_segment_no_channels(src->numChannels);
 }
 
 size_t BufferForwarder::appendAudioBlockToPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload> dest,
                                                   std::shared_ptr<AudioBlockInfo> src)
 {
-    // TODO
+    if (dest == nullptr || src == nullptr)
+    {
+        throw std::runtime_error("passed nullptr pointer to appendAudioBlockToPayload");
+    }
+
+    int remainingBlockInfoSamples = src->numTotalSamples - src->numUsedSamples;
+    int remainingPayloadSamples = DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE - dest->segment_sample_duration();
+    int numMaxIter = std::min(remainingPayloadSamples, remainingBlockInfoSamples);
+
+    if (remainingBlockInfoSamples < 0)
+    {
+        throw std::runtime_error(
+            "block info passed to appendAudioBlockToPayload has numUsedSamples higher than numTotalSamples");
+    }
+
+    if (payloadIsFull(dest))
+    {
+        return (size_t)remainingBlockInfoSamples;
+    }
+
+    for (int chan = 0; chan < src->numChannels; chan++)
+    {
+        int channelShift = chan * DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE;
+        std::vector<float> &channelData = src->firstChannelData;
+        if (chan == 2)
+        {
+            channelData = src->secondChannelData;
+        }
+        if (chan > 2)
+        {
+            continue;
+        }
+        for (int i = 0; i < numMaxIter; i++)
+        {
+            dest->mutable_segment_audio_samples()->Set((uint64_t)channelShift + dest->segment_sample_duration() +
+                                                           (uint64_t)i,
+                                                       channelData[(size_t)src->numUsedSamples + (size_t)i]);
+        }
+    }
+
+    src->numUsedSamples += numMaxIter;
+    dest->set_segment_sample_duration(dest->segment_sample_duration() + (uint64_t)numMaxIter);
+
+    if (src->numTotalSamples < src->numUsedSamples)
+    {
+        throw std::runtime_error("block info has read more samples than it has.");
+    }
+
+    return ((size_t)src->numTotalSamples - (size_t)src->numUsedSamples);
 }
 
 bool BufferForwarder::audioBlockInfoFollowsPayloadContent(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload,
                                                           std::shared_ptr<AudioBlockInfo> src)
 {
-    // TODO
+    return (payload->segment_start_sample() + (int64_t)payload->segment_sample_duration()) ==
+           (src->startSample + src->numUsedSamples);
 }
 
 void BufferForwarder::fillPayloadRemainingSpaceWithZeros(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
 {
-    // TODO
+    // since we're clearing buffer with zeros before use, filling with zeros is about sizing the segment up the
+    // allocated section (two times the size for the two maximum channels)
+    payload->set_segment_sample_duration(DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE * 2);
 }
 
 void BufferForwarder::allocateCurrentlyFilledPayloadIfNecessary()

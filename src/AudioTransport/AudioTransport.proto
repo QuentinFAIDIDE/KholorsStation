@@ -35,7 +35,7 @@ service KholorsAudioTransport {
     // End of loop section for this daw, in fractions of quarter-notes.
     double daw_loop_end = 12;
     // Sample time at the start of the segment
-    uint64 segment_start_sample = 13;
+    int64 segment_start_sample = 13;
     // Duration of the segment in samples
     uint64 segment_sample_duration = 14;
     // Number of audio channels for this signal.
