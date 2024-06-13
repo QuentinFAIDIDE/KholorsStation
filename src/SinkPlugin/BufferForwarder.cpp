@@ -57,7 +57,7 @@ BufferForwarder::~BufferForwarder()
     coalescerThread->join();
 
     payloadsCV.notify_one();
-    coalescerThread->join();
+    senderThread->join();
 }
 
 std::shared_ptr<AudioBlockInfo> BufferForwarder::getFreeBlockInfoStruct()
