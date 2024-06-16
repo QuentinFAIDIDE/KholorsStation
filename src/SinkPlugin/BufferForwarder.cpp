@@ -9,11 +9,6 @@
 #include <stdexcept>
 #include <string>
 
-#define NUM_PREALLOCATED_BLOCKINFO 16
-#define NUM_PREALLOCATED_COALESCED_PAYLOADS 8
-#define PREALLOCATED_BLOCKINFO_SAMPLE_SIZE 4096
-#define DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE 4096
-
 BufferForwarder::BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps)
     : payloadSender(ps), freeBlockInfos(NUM_PREALLOCATED_BLOCKINFO), blockInfosToCoalesce(NUM_PREALLOCATED_BLOCKINFO)
 {
@@ -53,11 +48,17 @@ BufferForwarder::~BufferForwarder()
 {
     shouldStop = true;
 
+    spdlog::debug("Terminating BufferForwarder instance");
+
     blockInfosToCoalesceCV.notify_one();
     coalescerThread->join();
 
+    spdlog::debug("Joined and deleted BufferForwarder coalescer thread");
+
     payloadsCV.notify_one();
     senderThread->join();
+
+    spdlog::debug("Joined and deleted BufferForwarder sender thread");
 }
 
 std::shared_ptr<AudioBlockInfo> BufferForwarder::getFreeBlockInfoStruct()
@@ -109,8 +110,10 @@ void BufferForwarder::coalescePayloadsThreadLoop()
         // Wait on a cv for new datums with some timeout
         std::unique_lock lock(blockInfosToCoalesceMutex);
         blockInfosToCoalesceCV.wait_for(lock, std::chrono::milliseconds(FORWARDER_THREAD_MAX_WAIT_MS));
+        spdlog::debug("Buffer coalesce routine woke up...");
         if (shouldStop)
         {
+            spdlog::debug("Stopping the coalescer thread...");
             return;
         }
 
@@ -120,10 +123,13 @@ void BufferForwarder::coalescePayloadsThreadLoop()
 
         while (payloadIsFullOrBlockInfoRemains(queuedBlockInfoIndex))
         {
+            spdlog::debug("Preparing to operate on payloads to send or buffer to coalesce...");
+
             allocateCurrentlyFilledPayloadIfNecessary();
 
             if (payloadIsFull(currentlyFilledPayload))
             {
+                spdlog::debug("Current payload is full");
                 queueCurrentlyFilledPayloadForSend();
                 continue;
             }
@@ -133,6 +139,7 @@ void BufferForwarder::coalescePayloadsThreadLoop()
 
             if (payloadIsEmpty(currentlyFilledPayload))
             {
+                spdlog::debug("Current payload is empty");
                 // set metadata on the payload with the one from the first block
                 copyMetadataToPayload(currentlyFilledPayload, currentBlockInfo);
                 // append the data to the buffer
@@ -140,6 +147,7 @@ void BufferForwarder::coalescePayloadsThreadLoop()
                     appendAudioBlockToPayload(currentlyFilledPayload, currentBlockInfo);
                 if (remainingSampleInAudioBlock == 0)
                 {
+                    spdlog::debug("Used all of the audio signal in audio block info");
                     // if it was fully used, remove it from the queued items and keep iterating
                     queuedBlockInfoIndex++;
                     freeBlockInfos.queue(currentBlockInfo->storageId);
@@ -147,14 +155,17 @@ void BufferForwarder::coalescePayloadsThreadLoop()
             }
             else // this is reached if the payload is partially filled
             {
+                spdlog::debug("Current payload is partially filled");
                 // if the audio block info is the continuation of the payload data we keep filling
                 if (audioBlockInfoFollowsPayloadContent(currentlyFilledPayload, currentBlockInfo))
                 {
+                    spdlog::debug("Latest audio block info perfectly continues current payload signal");
                     // append the data to the buffer
                     size_t remainingSampleInAudioBlock =
                         appendAudioBlockToPayload(currentlyFilledPayload, currentBlockInfo);
                     if (remainingSampleInAudioBlock == 0)
                     {
+                        spdlog::debug("Used all of the audio signal in audio block info");
                         // if it was fully used, remove it from the queued items and keep iterating
                         queuedBlockInfoIndex++;
                         freeBlockInfos.queue(currentBlockInfo->storageId);
@@ -162,6 +173,8 @@ void BufferForwarder::coalescePayloadsThreadLoop()
                 }
                 else // if the audio block does not continue previous signal, we send payload padded with zeros
                 {
+                    spdlog::debug("Latest audio block does not continue payload data, filling payload with zero before "
+                                  "sending it");
                     fillPayloadRemainingSpaceWithZeros(currentlyFilledPayload);
                 }
             }
@@ -176,27 +189,33 @@ void BufferForwarder::sendPayloadsThreadLoop()
         // Wait on a cv for new datums with some timeout
         std::unique_lock lock(payloadsMutex);
         payloadsCV.wait_for(lock, std::chrono::milliseconds(FORWARDER_THREAD_MAX_WAIT_MS));
+        spdlog::debug("Payload sending routine woke up...");
         if (shouldStop)
         {
+            spdlog::debug("Stopping payload thread");
             return;
         }
+
         std::shared_ptr<AudioTransport::AudioSegmentPayload> filledPayloadToSend;
         if (payloadsToSend.size() == 0)
         {
+            spdlog::debug("Not payloads are pending transfer to the station");
             return;
         }
         filledPayloadToSend = payloadsToSend.front();
         payloadsToSend.pop();
-        lock.release();
+
+        spdlog::debug("Got a payload to send to the station");
 
         // send payload to the api
         payloadSender.sendAudioSegment(filledPayloadToSend.get());
 
+        spdlog::debug("Sent payload to the station");
+
         // release the payload so it can be reused
-        {
-            std::lock_guard lock2(payloadsMutex);
-            freePayloads.push(filledPayloadToSend);
-        }
+        freePayloads.push(filledPayloadToSend);
+
+        spdlog::debug("Pushed payload back to free payloads queue");
     }
 }
 

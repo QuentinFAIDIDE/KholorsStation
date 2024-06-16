@@ -102,3 +102,23 @@ target_link_libraries(
   PRIVATE GUIToolkit juce::juce_audio_utils AudioTransport spdlog fmt Utils
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
+
+# ##############################################################################
+# Test target
+juce_add_console_app(BufferForwarderTest PRODUCT_NAME "Console App Example")
+
+target_sources(
+  BufferForwarderTest PRIVATE BufferForwarder.cpp BufferForwarder.h
+                              BufferForwarderTest.cpp)
+
+target_compile_definitions(BufferForwarderTest PRIVATE JUCE_WEB_BROWSER=0
+                                                       JUCE_USE_CURL=0)
+
+target_link_libraries(
+  BufferForwarderTest
+  PRIVATE juce::juce_audio_utils AudioTransport spdlog fmt Utils
+  PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
+         juce::juce_recommended_warning_flags)
+
+add_test(NAME BufferForwarderTest
+         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/BufferForwarderTest)

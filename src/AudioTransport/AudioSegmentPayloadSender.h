@@ -7,7 +7,7 @@ namespace AudioTransport
 class AudioSegmentPayloadSender
 {
   public:
-    virtual bool sendAudioSegment(AudioSegmentPayload *payload) = 0;
+    virtual bool sendAudioSegment(const AudioSegmentPayload *payload) = 0;
 };
 
 }; // namespace AudioTransport

@@ -13,6 +13,11 @@
 
 #define FORWARDER_THREAD_MAX_WAIT_MS 100
 
+#define NUM_PREALLOCATED_BLOCKINFO 16
+#define NUM_PREALLOCATED_COALESCED_PAYLOADS 8
+#define PREALLOCATED_BLOCKINFO_SAMPLE_SIZE 4096
+#define DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE 4096
+
 /**
  * @brief A class that receives AudioBlockInfos from audio thread, and
  * queue them for a coalescing thread to aggregate them into AudioSegmentPayloads,

@@ -30,7 +30,7 @@ void Client::changeDestinationPort(uint32_t port)
     stub = KholorsAudioTransport::NewStub(chan);
 }
 
-bool Client::sendAudioSegment(AudioSegmentPayload *payload)
+bool Client::sendAudioSegment(const AudioSegmentPayload *payload)
 {
     std::shared_lock lock(portChangeMutex);
 
