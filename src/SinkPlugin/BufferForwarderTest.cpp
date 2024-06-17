@@ -5,7 +5,8 @@
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <string>
-int main(int, char **)
+
+void testBufferForwarder01()
 {
     AudioTransport::MockedAudioSegmentPayloadSender fakePayloadSender;
     BufferForwarder audioInfoForwarder(fakePayloadSender);
@@ -52,7 +53,7 @@ int main(int, char **)
     }
     audioInfoForwarder.forwardAudioBlockInfo(blockInfo2);
 
-    sleep(2);
+    sleep(1);
 
     // there should now be a merge of those two buffers
     auto segs = fakePayloadSender.getAllReceivedSegments();
@@ -103,5 +104,140 @@ int main(int, char **)
         }
     }
 
+    // we send another but at a separate location and assert two get sent
+    std::shared_ptr<AudioBlockInfo> blockInfo3 = audioInfoForwarder.getFreeBlockInfoStruct();
+    blockInfo3->bpm = 130;
+    blockInfo3->sampleRate = 44100;
+    blockInfo3->timeSignature = juce::Optional<juce::AudioPlayHead::TimeSignature>();
+    blockInfo3->isLooping = false;
+    blockInfo3->isPlaying = true;
+    blockInfo3->loopBounds = juce::Optional<juce::AudioPlayHead::LoopPoints>();
+    blockInfo3->numUsedSamples = 0;
+    blockInfo3->startSample = 483100;
+    blockInfo3->numChannels = 2;
+    blockInfo3->numTotalSamples = 4096;
+    blockInfo3->firstChannelData.resize(3000);
+    blockInfo3->secondChannelData.resize(3000);
+    for (size_t i = 0; i < 4096; i++)
+    {
+        blockInfo3->firstChannelData[i] = float(i) / 2.0f;
+        blockInfo3->secondChannelData[i] = float(i) / 5.0f;
+    }
+    audioInfoForwarder.forwardAudioBlockInfo(blockInfo3);
+
+    sleep(1);
+
+    segs = fakePayloadSender.getAllReceivedSegments();
+    if (segs.size() != 3)
+    {
+        throw std::runtime_error("unexpected number of segments coalesced: " + std::to_string(segs.size()));
+    }
+
+    if (segs[1]->segment_sample_duration() != DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE)
+    {
+        throw std::runtime_error("unexpected number of samples in audio segment: " +
+                                 std::to_string(segs[1]->segment_sample_duration()));
+    }
+
+    // segment zero should have a size of 4096, with 1904 samples from 1095 to 2999 times the factor
+    for (size_t i = 1095; i < 3000; i++)
+    {
+        auto leftSample = segs[1]->segment_audio_samples()[i - 1095];
+        auto rightSample = segs[1]->segment_audio_samples()[channelShift + i - 1095];
+        if (std::abs(leftSample - float(i) / 2.0f) > std::numeric_limits<float>::epsilon())
+        {
+            std::runtime_error("samples don't match");
+        }
+
+        if (std::abs(rightSample - float(i) / 5.0f) > std::numeric_limits<float>::epsilon())
+        {
+            std::runtime_error("samples don't match");
+        }
+    }
+
+    // segment zero should have a size of 4096, with 1904 samples from 1095 to 2999 times the factor
+    for (size_t i = 1904; i < 4096; i++)
+    {
+        auto leftSample = segs[1]->segment_audio_samples()[i];
+        auto rightSample = segs[1]->segment_audio_samples()[channelShift + i];
+        if (std::abs(leftSample) > std::numeric_limits<float>::epsilon())
+        {
+            std::runtime_error("samples don't match");
+        }
+
+        if (std::abs(rightSample) > std::numeric_limits<float>::epsilon())
+        {
+            std::runtime_error("samples don't match");
+        }
+    }
+
+    // other segment should be a perfect fill of the mocked iterated data from start to finish
+    for (size_t i = 0; i < 4096; i++)
+    {
+        auto leftSample = segs[2]->segment_audio_samples()[i];
+        auto rightSample = segs[2]->segment_audio_samples()[channelShift + i];
+        if (std::abs(leftSample - (float(i) / 2.0f)) > std::numeric_limits<float>::epsilon())
+        {
+            std::runtime_error("samples don't match");
+        }
+
+        if (std::abs(rightSample - (float(i) / 5.0f)) > std::numeric_limits<float>::epsilon())
+        {
+            std::runtime_error("samples don't match");
+        }
+    }
+
+    // we send a last one
+    // we send another but at a separate location and assert two get sent
+    std::shared_ptr<AudioBlockInfo> blockInfo4 = audioInfoForwarder.getFreeBlockInfoStruct();
+    blockInfo4->bpm = 130;
+    blockInfo4->sampleRate = 44100;
+    blockInfo4->timeSignature = juce::Optional<juce::AudioPlayHead::TimeSignature>();
+    blockInfo4->isLooping = false;
+    blockInfo4->isPlaying = true;
+    blockInfo4->loopBounds = juce::Optional<juce::AudioPlayHead::LoopPoints>();
+    blockInfo4->numUsedSamples = 0;
+    blockInfo4->startSample = 483100;
+    blockInfo4->numChannels = 2;
+    blockInfo4->numTotalSamples = 4096;
+    blockInfo4->firstChannelData.resize(3000);
+    blockInfo4->secondChannelData.resize(3000);
+    for (size_t i = 0; i < 4096; i++)
+    {
+        blockInfo4->firstChannelData[i] = float(i) / 2.0f;
+        blockInfo4->secondChannelData[i] = float(i) / 5.0f;
+    }
+    audioInfoForwarder.forwardAudioBlockInfo(blockInfo4);
+
+    sleep(1);
+
+    segs = fakePayloadSender.getAllReceivedSegments();
+    if (segs.size() != 4)
+    {
+        throw std::runtime_error("unexpected number of segments coalesced: " + std::to_string(segs.size()));
+    }
+
+    // other segment should be a perfect fill of the mocked iterated data from start to finish
+    for (size_t i = 0; i < 4096; i++)
+    {
+        auto leftSample = segs[3]->segment_audio_samples()[i];
+        auto rightSample = segs[3]->segment_audio_samples()[channelShift + i];
+        if (std::abs(leftSample - (float(i) / 2.0f)) > std::numeric_limits<float>::epsilon())
+        {
+            std::runtime_error("samples don't match");
+        }
+
+        if (std::abs(rightSample - (float(i) / 5.0f)) > std::numeric_limits<float>::epsilon())
+        {
+            std::runtime_error("samples don't match");
+        }
+    }
+
     spdlog::info("test passed");
+}
+
+int main(int, char **)
+{
+    // testing the basic stereo buffer coalescing
+    testBufferForwarder01();
 }

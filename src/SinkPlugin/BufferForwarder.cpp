@@ -200,7 +200,7 @@ void BufferForwarder::sendPayloadsThreadLoop()
         if (payloadsToSend.size() == 0)
         {
             spdlog::debug("Not payloads are pending transfer to the station");
-            return;
+            continue;
         }
         filledPayloadToSend = payloadsToSend.front();
         payloadsToSend.pop();
@@ -357,7 +357,8 @@ void BufferForwarder::fillPayloadRemainingSpaceWithZeros(std::shared_ptr<AudioTr
 {
     // since we're clearing buffer with zeros before use, filling with zeros is about sizing the segment up the
     // allocated section (two times the size for the two maximum channels)
-    payload->set_segment_sample_duration(DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE * 2);
+    payload->mutable_segment_audio_samples()->Resize(DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE * 2, 0.0f);
+    payload->set_segment_sample_duration(DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE);
 }
 
 void BufferForwarder::allocateCurrentlyFilledPayloadIfNecessary()
