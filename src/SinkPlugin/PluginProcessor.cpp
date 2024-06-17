@@ -13,6 +13,8 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       audioTransportGrpcClient(DEFAULT_SERVER_PORT), audioInfoForwarder(audioTransportGrpcClient)
 {
+    auto uuid = juce::Uuid();
+    audioInfoForwarder.setTrackInfo(uuid.hash());
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()

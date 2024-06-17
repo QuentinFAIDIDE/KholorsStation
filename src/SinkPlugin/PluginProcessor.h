@@ -153,13 +153,10 @@ class AudioPluginAudioProcessor : public juce::AudioProcessor
      */
     void setStateInformation(const void *data, int sizeInBytes) override;
 
-    float getGainBoostDB() const;
-    void setGainBoostDB(float);
-    float getGainReductionDB() const;
-
   private:
     AudioTransport::Client audioTransportGrpcClient;
     BufferForwarder audioInfoForwarder;
+    std::atomic<int64_t> trackIdentifier;
 
     // Juce utility to delete copy constructors
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
