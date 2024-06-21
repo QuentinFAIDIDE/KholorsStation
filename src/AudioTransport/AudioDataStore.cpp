@@ -10,6 +10,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <vector>
 
@@ -180,6 +181,8 @@ void AudioDataStore::parseNewData(const AudioSegmentPayload *payload)
         }
     }
 
+    spdlog::debug("Parsing a new api payload");
+
     if (payload == nullptr)
     {
         throw std::runtime_error("called parseNewData with nullptr payload");
@@ -254,6 +257,19 @@ std::vector<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::extractPayl
     // this block eventually generate audio segments
     if (payload->segment_sample_duration() > 0)
     {
+        // if isPlaying is false, do not generate audio segment
+        if (!payload->daw_is_playing())
+        {
+            spdlog::warn("received a payload to server when track is currently not playing");
+            return extractedAudioBuffers;
+        }
+
+        if (payload->daw_not_supported())
+        {
+            spdlog::warn("received a payload to server when track is currently not playing");
+            return extractedAudioBuffers;
+        }
+
         // if the audio data size matches segment lenght, we generate a segment
         if (payload->segment_audio_samples().size() / payload->segment_no_channels() ==
             payload->segment_sample_duration())

@@ -12,8 +12,6 @@
 class FftDrawingBackend : public juce::Component
 {
   public:
-    virtual ~FftDrawingBackend() = 0;
-
     /**
      * @brief Move the view so that the position at the screenHorizontalPosition (between 0 and 1)
      * matches the samplePosition (audio sample offset of the song).

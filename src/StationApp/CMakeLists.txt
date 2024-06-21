@@ -78,6 +78,7 @@ target_link_libraries(
   PRIVATE GUIToolkit
           juce::juce_gui_extra
           juce::juce_audio_basics
+          juce::juce_opengl
           AudioTransport
           TaskManagement
           Utils

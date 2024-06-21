@@ -1,4 +1,6 @@
 #include "MainComponent.h"
+#include <spdlog/common.h>
+#include <spdlog/spdlog.h>
 
 //==============================================================================
 class GuiAppApplication final : public juce::JUCEApplication
@@ -30,6 +32,15 @@ class GuiAppApplication final : public juce::JUCEApplication
     {
         // This method is where you should put your application's initialisation code..
         juce::ignoreUnused(commandLine);
+
+        // set log level based on envar
+        if (const char *logLevel = std::getenv("KHOLORS_LOG_LEVEL"))
+        {
+            if (std::strcmp(logLevel, "DEBUG") == 0)
+            {
+                spdlog::set_level(spdlog::level::debug);
+            }
+        }
 
         mainWindow.reset(new MainWindow(getApplicationName()));
     }

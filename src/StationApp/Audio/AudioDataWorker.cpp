@@ -40,6 +40,7 @@ void AudioDataWorker::workerThreadLoop()
         auto audioDataUpdate = audioDataServer.waitForDatum();
         if (audioDataUpdate.has_value())
         {
+            spdlog::debug("Received audio datum from server");
             // if it's an audio segment, perform SFFT and update cursor position
             auto audioSegment = std::dynamic_pointer_cast<AudioTransport::AudioSegment>(audioDataUpdate->datum);
             if (audioSegment != nullptr)

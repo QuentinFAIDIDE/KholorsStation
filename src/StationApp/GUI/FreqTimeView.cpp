@@ -1,11 +1,13 @@
 #include "FreqTimeView.h"
 #include "StationApp/Audio/NewFftDataTask.h"
+#include "StationApp/GUI/CpuImageDrawingBackend.h"
 #include <memory>
+#include <spdlog/spdlog.h>
 
 FreqTimeView::FreqTimeView()
 {
-    // TODO: in the future, allow user to switch these and add a mutex
-    // TODO: allocate a FftDrawingBackend implementation
+    fftDrawBackend = std::make_shared<CpuImageDrawingBackend>();
+    addAndMakeVisible(fftDrawBackend.get());
 }
 
 FreqTimeView::~FreqTimeView()
@@ -14,7 +16,6 @@ FreqTimeView::~FreqTimeView()
 
 void FreqTimeView::paint(juce::Graphics &g)
 {
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 }
 
 void FreqTimeView::paintOverChildren(juce::Graphics &)
@@ -24,10 +25,7 @@ void FreqTimeView::paintOverChildren(juce::Graphics &)
 
 void FreqTimeView::resized()
 {
-    if (fftDrawBackend != nullptr)
-    {
-        fftDrawBackend->setBounds(getLocalBounds());
-    }
+    fftDrawBackend->setBounds(getLocalBounds());
 }
 
 bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
@@ -35,6 +33,7 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
     auto newFftDataTask = std::dynamic_pointer_cast<NewFftDataTask>(task);
     if (newFftDataTask != nullptr && !newFftDataTask->isCompleted() && !newFftDataTask->hasFailed())
     {
+        spdlog::debug("Received a NewFftData task in the FreqTimeView");
         // TODO: if inside a loop and crossing the end, also pass the part that is beyond loop end to the beginning of
         // the loop
         // call on the drawing backend to add the FFT data to the displayed textures

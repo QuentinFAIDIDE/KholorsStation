@@ -29,6 +29,8 @@ MainComponent::MainComponent()
 
     setSize(1440, 900);
 
+    taskManager.registerTaskListener(&freqTimeView);
+
     audioDataServer.setTaskManager(&taskManager);
 
     audioDataServer.setServerToListenOnPort(DEFAULT_SERVER_PORT);

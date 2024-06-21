@@ -5,8 +5,6 @@
 #include <cstddef>
 #include <spdlog/spdlog.h>
 
-#define DEFAULT_SERVER_PORT 8991
-
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     : AudioProcessor(BusesProperties()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
@@ -15,6 +13,16 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 {
     auto uuid = juce::Uuid();
     audioInfoForwarder.setTrackInfo(uuid.hash());
+
+    // set log level based on envar
+    if (const char *logLevel = std::getenv("KHOLORS_LOG_LEVEL"))
+    {
+        if (std::strcmp(logLevel, "DEBUG") == 0)
+        {
+            spdlog::set_level(spdlog::level::debug);
+            spdlog::debug("KHOLORS_LOG_LEVEL was set so the Kholors Sink plugin will show debug info");
+        }
+    }
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -117,6 +125,11 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
     if (!positionInfo.hasValue())
     {
         audioInfoForwarder.setDawIsCompatible(false);
+        return;
+    }
+
+    if (!positionInfo->getIsPlaying())
+    {
         return;
     }
 

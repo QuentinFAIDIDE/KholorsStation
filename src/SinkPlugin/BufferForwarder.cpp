@@ -208,9 +208,16 @@ void BufferForwarder::sendPayloadsThreadLoop()
         spdlog::debug("Got a payload to send to the station");
 
         // send payload to the api
-        payloadSender.sendAudioSegment(filledPayloadToSend.get());
+        bool success = payloadSender.sendAudioSegment(filledPayloadToSend.get());
 
-        spdlog::debug("Sent payload to the station");
+        if (success)
+        {
+            spdlog::debug("Successfully payload to the station");
+        }
+        else
+        {
+            spdlog::debug("Failed to send payload to the station, it might not be reachable on this port.");
+        }
 
         // release the payload so it can be reused
         freePayloads.push(filledPayloadToSend);
