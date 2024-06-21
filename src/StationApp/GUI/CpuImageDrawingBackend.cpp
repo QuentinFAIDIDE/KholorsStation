@@ -69,13 +69,26 @@ void CpuImageDrawingBackend::displayNewFftData(std::shared_ptr<NewFftDataTask> f
                 tileEndSample = endSample % VISUAL_SAMPLE_RATE;
             }
             // we can now write the fft into the tile (and eventually create it)
-            drawFftOnTile(fftData->trackIdentifier, j, tileStartSample, tileEndSample, fftSize, fftDataPointer);
+            int channelIndex = 2;              // 0 for left, 1 for right, 2 for both
+            if (fftData->totalNoChannels == 2) // if there are two channel (not mono), this is for one specific
+            {
+                if (fftData->channelIndex == 0)
+                {
+                    channelIndex = 0;
+                }
+                else
+                {
+                    channelIndex = 1;
+                }
+            }
+            drawFftOnTile(fftData->trackIdentifier, j, tileStartSample, tileEndSample, fftSize, fftDataPointer,
+                          channelIndex);
         }
     }
 }
 
 void CpuImageDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin,
-                                           int64_t end, int fftSize, float *data)
+                                           int64_t end, int fftSize, float *data, int channel)
 {
     // if the tile does not exists, create it
     TrackSecondTile *tileToDrawIn = nullptr;
@@ -91,9 +104,41 @@ void CpuImageDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t sec
     }
     // draw the fft inside the tile
     size_t startPixel = (size_t)juce::jlimit(
-        (int)((float(begin) / float(VISUAL_SAMPLE_RATE)) * float(SECOND_TILE_WIDTH)), 0, SECOND_TILE_WIDTH - 1);
-    size_t endPixel = (size_t)juce::jlimit((int)((float(end) / float(VISUAL_SAMPLE_RATE)) * float(SECOND_TILE_WIDTH)),
-                                           0, SECOND_TILE_WIDTH - 1);
+        0, SECOND_TILE_WIDTH - 1, (int)((float(begin) / float(VISUAL_SAMPLE_RATE)) * float(SECOND_TILE_WIDTH)));
+    size_t endPixel = (size_t)juce::jlimit(0, SECOND_TILE_WIDTH - 1,
+                                           (int)((float(end) / float(VISUAL_SAMPLE_RATE)) * float(SECOND_TILE_WIDTH)));
+    // iterate from left to right
+    for (size_t horizontalPixel = startPixel; horizontalPixel <= endPixel; horizontalPixel++)
+    {
+        // iterate from center towards borders
+        for (size_t verticalPos = 0; verticalPos < (SECOND_TILE_HEIGHT >> 1); verticalPos++)
+        {
+            size_t frequencyBinIndex = ((float(verticalPos) * float(fftSize)) / float(SECOND_TILE_HEIGHT >> 1) + 0.5f);
+            frequencyBinIndex = (size_t)juce::jlimit(0, fftSize - 1, (int)frequencyBinIndex);
+            float intensityDb = data[frequencyBinIndex];
+            float intensityNormalized = juce::jmap(intensityDb, MIN_DB, 0.0f, 0.0f, 1.0f);
+            if (channel == 0 || channel == 2)
+            {
+                tileToDrawIn->img.setPixelAt(horizontalPixel, (SECOND_TILE_HEIGHT >> 1) - verticalPos,
+                                             juce::Colour(0.0f, 0.0f, 0.0f, intensityNormalized));
+            }
+            if (channel == 1 || channel == 2)
+            {
+                tileToDrawIn->img.setPixelAt(horizontalPixel, (SECOND_TILE_HEIGHT >> 1) + verticalPos,
+                                             juce::Colour(0.0f, 0.0f, 0.0f, intensityNormalized));
+            }
+        }
+    }
+    // increment the nonce
+    tilesNonce++;
+}
+
+CpuImageDrawingBackend::TrackSecondTile *CpuImageDrawingBackend::createSecondTile(uint64_t trackIdentifier,
+                                                                                  int64_t secondTileIndex)
+{
+    // throw invalid parameters if the tile already exist at that position for this track
+    // if the ring buffer is not full, expand it with a new datum, clear it and return it
+    // if the ring buffer is full, remove nextItem, clear its index and replace it with cleared one before returning it
 }
 
 void CpuImageDrawingBackend::timerCallback()

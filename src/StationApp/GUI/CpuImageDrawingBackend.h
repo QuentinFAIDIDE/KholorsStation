@@ -8,7 +8,8 @@
 #define VISUAL_SAMPLE_RATE 48000
 #define MIN_DB -64.0f
 #define CPU_IMAGE_FFT_BACKEND_UPDATE_INTERVAL_MS 100
-#define SECOND_TILE_WIDTH 200
+#define SECOND_TILE_WIDTH 128
+#define SECOND_TILE_HEIGHT 128
 
 class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
 {
@@ -72,9 +73,10 @@ class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
      * @param end end sample in the tile
      * @param fftSize number of frequency bins in the provided fft
      * @param data pointer to the floats containing fft bins intensities in decibels
+     * @param channel 0 for left, 1 for right, 2 for both
      */
     void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
-                       float *data);
+                       float *data, int channel);
 
     /**
      * @brief Create a Second Tile object in the secondTilesRingBuffer ring buffer, eventually overwriting/deleting
@@ -97,6 +99,6 @@ class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
     std::map<std::pair<uint64_t, int64_t>, size_t>
         tileIndexByTrackIdAndPosition; /**< Index of tiles in secondTilesRingBuffer per track id and second tile index
                                         */
-    int64_t tilesNonce;                /**< A nonce that is incremented when the tiles are updated */
-    int64_t lastDrawTilesNonce;        /**< The last nonce tilesNonce drawn */
+    std::atomic<int64_t> tilesNonce;   /**< A nonce that is incremented when the tiles are updated */
+    std::atomic<int64_t> lastDrawTilesNonce; /**< The last nonce tilesNonce drawn */
 };
