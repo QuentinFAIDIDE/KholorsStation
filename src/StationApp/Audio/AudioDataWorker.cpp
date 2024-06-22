@@ -1,7 +1,9 @@
 #include "AudioDataWorker.h"
 #include "AudioTransport/AudioSegment.h"
 #include "AudioTransport/SyncServer.h"
+#include "AudioTransport/TrackInfo.h"
 #include "StationApp/Audio/NewFftDataTask.h"
+#include "StationApp/Audio/TrackInfoUpdateTask.h"
 #include "TaskManagement/TaskingManager.h"
 #include <memory>
 #include <mutex>
@@ -76,7 +78,15 @@ void AudioDataWorker::workerThreadLoop()
 
                 taskingManager.broadcastTask(newDataTask);
             }
-            // TODO: if it's a TrackInfo, copy it and emit a task
+            // if it's a TrackInfo, copy it and emit a task
+            auto trackInfo = std::dynamic_pointer_cast<AudioTransport::TrackInfo>(audioDataUpdate->datum);
+            if (trackInfo != nullptr)
+            {
+                auto trackudpateTask = std::make_shared<TrackInfoUpdateTask>(
+                    trackInfo->identifier, trackInfo->name, trackInfo->redColorLevel, trackInfo->greenColorLevel,
+                    trackInfo->blueColorLevel);
+                taskingManager.broadcastTask(trackudpateTask);
+            }
             // TODO: if it's a DawInfo, copy it and emit a task
             audioDataServer.freeStoredDatum(audioDataUpdate->storageIdentifier);
         }
