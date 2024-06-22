@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <memory>
 
-#define IMAGES_RING_BUFFER_SIZE 4096
+#define IMAGES_RING_BUFFER_SIZE 128
 #define VISUAL_SAMPLE_RATE 48000
 #define MIN_DB -64.0f
 #define CPU_IMAGE_FFT_BACKEND_UPDATE_INTERVAL_MS 100
@@ -24,6 +24,16 @@ class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
      */
     struct TrackSecondTile
     {
+        TrackSecondTile() : img(juce::Image::PixelFormat::SingleChannel, SECOND_TILE_WIDTH, SECOND_TILE_HEIGHT, false)
+        {
+            for (size_t i = 0; i < SECOND_TILE_WIDTH; i++)
+            {
+                for (size_t j = 0; j < SECOND_TILE_HEIGHT; j++)
+                {
+                    img.setPixelAt(i, j, juce::Colour(0.0f, 0.0f, 0.0f, 0.0f));
+                }
+            }
+        }
         uint64_t trackIdentifer;   /**< Identifier of the track this tile is for */
         int64_t samplePosition;    /**< Position of the tile in samples */
         int64_t tileIndexPosition; /**< Position of the tile in second-tile index */
@@ -98,7 +108,8 @@ class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
     size_t secondTileNextIndex; /**< Index of the next tile to create in the secondTilesRingBuffer */
     std::map<std::pair<uint64_t, int64_t>, size_t>
         tileIndexByTrackIdAndPosition; /**< Index of tiles in secondTilesRingBuffer per track id and second tile index
-                                        */
-    std::atomic<int64_t> tilesNonce;   /**< A nonce that is incremented when the tiles are updated */
-    std::atomic<int64_t> lastDrawTilesNonce; /**< The last nonce tilesNonce drawn */
+                                        std::pair(track_id, tile_index) */
+    int64_t tilesNonce;                /**< A nonce that is incremented when the tiles are updated */
+    int64_t lastDrawTilesNonce;        /**< The last nonce tilesNonce drawn */
+    std::mutex imageAccessMutex;       /**< Mutex to protect image access */
 };
