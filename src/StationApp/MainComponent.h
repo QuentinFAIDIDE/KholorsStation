@@ -32,6 +32,7 @@ class MainComponent final : public juce::Component, public TaskListener
     TopMenuModel menuBarModel;                            /**< Model that populates the menuBar */
     BottomPanel bottomPanel;                              /**< pannel at the bottom with all tabs */
     juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */
+    TrackInfoStore trackInfoStore;                        /**< storing all track info (name, color) */
     FreqTimeView freqTimeView;                            /**< Viewer that display frequencies over time received */
     AudioTransport::SyncServer audioDataServer;           /**< Server that receives audio data */
     AudioDataWorker audioDataWorker; /**< Worker threads to parse audio data from server and emit Tasks accordingly */

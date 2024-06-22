@@ -4,13 +4,15 @@
 #include "GUIToolkit/GUIData.h"
 #include "StationApp/Audio/AudioDataWorker.h"
 #include "StationApp/GUI/BottomPanel.h"
+#include "StationApp/GUI/FreqTimeView.h"
 #include "TaskManagement/TaskingManager.h"
 #include <spdlog/spdlog.h>
 
 #define DEFAULT_SERVER_PORT 7849
 
 MainComponent::MainComponent()
-    : menuBarModel(taskManager), bottomPanel(taskManager), audioDataWorker(audioDataServer, taskManager)
+    : menuBarModel(taskManager), bottomPanel(taskManager), freqTimeView(trackInfoStore),
+      audioDataWorker(audioDataServer, taskManager)
 {
     // Various GUI related initializations
     juce::Typeface::Ptr tface =
@@ -29,6 +31,7 @@ MainComponent::MainComponent()
 
     setSize(1440, 900);
 
+    taskManager.registerTaskListener(&trackInfoStore);
     taskManager.registerTaskListener(&freqTimeView);
 
     audioDataServer.setTaskManager(&taskManager);

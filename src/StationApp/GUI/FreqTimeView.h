@@ -1,7 +1,9 @@
 #pragma once
 
 #include "FftDrawingBackend.h"
+#include "StationApp/Audio/TrackInfoStore.h"
 #include "TaskManagement/TaskListener.h"
+#include "TaskManagement/TaskingManager.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
 /**
@@ -12,12 +14,14 @@
 class FreqTimeView : public juce::Component, public TaskListener
 {
   public:
-    FreqTimeView();
+    FreqTimeView(TrackInfoStore &);
     ~FreqTimeView();
 
     void paint(juce::Graphics &g) override;
     void paintOverChildren(juce::Graphics &g) override;
     void resized() override;
+    void mouseDrag(const juce::MouseEvent &e) override;
+    void mouseDown(const juce::MouseEvent &e) override;
 
     /**
      * @brief Receives tasks from tasking manager and is responsible for
@@ -32,4 +36,8 @@ class FreqTimeView : public juce::Component, public TaskListener
 
   private:
     std::shared_ptr<FftDrawingBackend> fftDrawBackend; /**< Juce component that draws FFTs on screen */
+    TrackInfoStore &trackInfoStore;         /**< Store track names and color for FftDrawingBackend to access */
+    int64_t viewPosition;                   /**< View position in samples */
+    int64_t viewScale;                      /**< View scale in samples per pixels */
+    int64_t lastMouseDragX, lastMouseDragY; /**< Last position of the mouse cursor at last drag iteration */
 };

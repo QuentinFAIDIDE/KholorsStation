@@ -1,12 +1,13 @@
 #include "FreqTimeView.h"
 #include "StationApp/Audio/NewFftDataTask.h"
+#include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/CpuImageDrawingBackend.h"
 #include <memory>
 #include <spdlog/spdlog.h>
 
-FreqTimeView::FreqTimeView()
+FreqTimeView::FreqTimeView(TrackInfoStore &tis) : trackInfoStore(tis), viewPosition(0), viewScale(150)
 {
-    fftDrawBackend = std::make_shared<CpuImageDrawingBackend>();
+    fftDrawBackend = std::make_shared<CpuImageDrawingBackend>(trackInfoStore);
     addAndMakeVisible(fftDrawBackend.get());
 }
 
@@ -46,4 +47,68 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
     }
     // we are not stopping any tasks from being broadcasted further
     return false;
+}
+
+void FreqTimeView::mouseDown(const juce::MouseEvent &e)
+{
+    if (e.mods.isAnyMouseButtonDown())
+    {
+        lastMouseDragX = e.getMouseDownPosition().getX();
+        lastMouseDragY = e.getMouseDownPosition().getY();
+    }
+}
+
+void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
+{
+    if (e.mods.isMiddleButtonDown())
+    {
+        int dragX = e.x - lastMouseDragX;
+        int dragY = e.y - lastMouseDragY;
+
+        lastMouseDragX = e.x;
+        lastMouseDragY = e.y;
+
+        bool needRepaint = false;
+
+        if (dragY != 0)
+        {
+            int64_t oldViewScale = viewScale;
+
+            viewScale = juce::jlimit(MIN_SCALE_SAMPLE_PER_PIXEL, MAX_SCALE_SAMPLE_PER_PIXEL,
+                                     int(float(viewScale) * (1.0f + (float(dragY) * PIXEL_SCALE_SPEED))));
+            fftDrawBackend->updateViewScale(viewScale);
+
+            // we compute view position shift to maintain the same point under cursor after zooming
+            int64_t oldCursorSamplePos = viewPosition + (e.x * oldViewScale);
+            int64_t newCursorSamplePos = viewPosition + (e.x * viewScale);
+            int sampleShiftToAlignZoomToCursor = oldCursorSamplePos - newCursorSamplePos;
+
+            viewPosition += sampleShiftToAlignZoomToCursor;
+            if (viewPosition < 0)
+            {
+                viewPosition = 0;
+            }
+            fftDrawBackend->updateViewPosition(viewPosition);
+
+            needRepaint = true;
+        }
+
+        if (dragX != 0)
+        {
+            int64_t samplesDiff = dragX * viewScale;
+            viewPosition -= samplesDiff;
+            if (viewPosition < 0)
+            {
+                viewPosition = 0;
+            }
+            fftDrawBackend->updateViewPosition(viewPosition);
+
+            needRepaint = true;
+        }
+
+        if (needRepaint)
+        {
+            repaint();
+        }
+    }
 }

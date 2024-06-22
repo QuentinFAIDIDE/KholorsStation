@@ -8,13 +8,16 @@
 #define VISUAL_SAMPLE_RATE 48000
 #define MIN_DB -64.0f
 #define CPU_IMAGE_FFT_BACKEND_UPDATE_INTERVAL_MS 100
-#define SECOND_TILE_WIDTH 128
-#define SECOND_TILE_HEIGHT 128
+#define SECOND_TILE_WIDTH 32
+#define SECOND_TILE_HEIGHT 256
+#define MAX_SCALE_SAMPLE_PER_PIXEL 20000
+#define MIN_SCALE_SAMPLE_PER_PIXEL 40
+#define PIXEL_SCALE_SPEED 0.01f
 
 class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
 {
   public:
-    CpuImageDrawingBackend();
+    CpuImageDrawingBackend(TrackInfoStore &tis);
     ~CpuImageDrawingBackend();
 
     void paint(juce::Graphics &g) override;
@@ -41,23 +44,18 @@ class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
     };
 
     /**
-     * @brief Move the view so that the position at the screenHorizontalPosition (between 0 and 1)
+     * @brief Move the view so that the position at the component left
      * matches the samplePosition (audio sample offset of the song).
      *
      * @param samplePosition audio sample position (audio sample offset of the song) to match
-     * @param screenHorizontalPosition screen horizontal position (between 0 and 1) to match
      */
-    void updateViewPosition(uint32_t samplePosition, float screenHorizontalPosition) override;
+    void updateViewPosition(uint32_t samplePosition) override;
 
     /**
-     * @brief Scale the view (zooming in or out) to samplesPerPixel, and ensure that
-     * referenceHorizontalScreenPosition (a horizontal screen position between 0 and 1) stays
-     * at the same position (allow to zoom on a specific section).
+     * @brief Scale the view
      * @param samplesPerPixel number of audio samples per pixel to display in the viewer
-     * @param referenceHorizontalScreenPosition horizontal screen position between 0 and 1 of a reference point that
-     * should not move
      */
-    void updateViewScale(uint32_t samplesPerPixel, float referenceHorizontalScreenPosition) override;
+    void updateViewScale(uint32_t samplesPerPixel) override;
 
     /**
      * @brief Add the fft data inside the task struct to the currently displayed data.

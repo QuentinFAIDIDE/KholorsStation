@@ -1,5 +1,7 @@
 #include "CpuImageDrawingBackend.h"
 #include "GUIToolkit/Consts.h"
+#include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/GUI/FftDrawingBackend.h"
 #include <cstddef>
 #include <memory>
 #include <mutex>
@@ -7,8 +9,9 @@
 #include <stdexcept>
 #include <string>
 
-CpuImageDrawingBackend::CpuImageDrawingBackend()
-    : viewPosition(0), viewScale(150), secondTileNextIndex(0), tilesNonce(0), lastDrawTilesNonce(0)
+CpuImageDrawingBackend::CpuImageDrawingBackend(TrackInfoStore &tis)
+    : FftDrawingBackend(tis), viewPosition(0), viewScale(150), secondTileNextIndex(0), tilesNonce(0),
+      lastDrawTilesNonce(0)
 {
     startTimer(CPU_IMAGE_FFT_BACKEND_UPDATE_INTERVAL_MS);
 }
@@ -24,8 +27,8 @@ void CpuImageDrawingBackend::paint(juce::Graphics &g)
     int64_t tileWidth = float(VISUAL_SAMPLE_RATE) / viewScale;
     for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
     {
-        // TODO: replace with custom color fetching
-        g.setColour(COLOR_WHITE);
+        auto trackColor = trackInfoStore.getTrackColor(secondTilesRingBuffer[i].trackIdentifer);
+        g.setColour(juce::Colour(trackColor->red, trackColor->green, trackColor->blue));
         TrackSecondTile &tileToDraw = secondTilesRingBuffer[i];
         int64_t horizontalPixelPos = int64_t(float(tileToDraw.samplePosition - viewPosition) / float(viewScale));
         auto imagePosition = getLocalBounds().withX(getLocalBounds().getX() + horizontalPixelPos);
@@ -37,12 +40,14 @@ void CpuImageDrawingBackend::paint(juce::Graphics &g)
     }
 }
 
-void CpuImageDrawingBackend::updateViewPosition(uint32_t samplePosition, float screenHorizontalPosition)
+void CpuImageDrawingBackend::updateViewPosition(uint32_t samplePosition)
 {
+    viewPosition = samplePosition;
 }
 
-void CpuImageDrawingBackend::updateViewScale(uint32_t samplesPerPixel, float referenceHorizontalScreenPosition)
+void CpuImageDrawingBackend::updateViewScale(uint32_t samplesPerPixel)
 {
+    viewScale = samplesPerPixel;
 }
 
 void CpuImageDrawingBackend::displayNewFftData(std::shared_ptr<NewFftDataTask> fftData)

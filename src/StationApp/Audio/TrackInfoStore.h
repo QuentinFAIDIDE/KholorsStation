@@ -7,6 +7,9 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <stdexcept>
+#include <tuple>
+#include <utility>
 
 class TrackInfoStore : public TaskListener
 {
@@ -40,16 +43,21 @@ class TrackInfoStore : public TaskListener
                         existingColor.green != trackinfoUpdate->greenColorLevel ||
                         existingColor.blue != trackinfoUpdate->blueColorLevel)
                     {
-                        colorsPerTrack[trackinfoUpdate->identifier] = AudioTransport::ColorContainer(
-                            trackinfoUpdate->redColorLevel, trackinfoUpdate->greenColorLevel,
-                            trackinfoUpdate->blueColorLevel, 0);
+                        existingColor.red = trackinfoUpdate->redColorLevel;
+                        existingColor.green = trackinfoUpdate->greenColorLevel,
+                        existingColor.blue = trackinfoUpdate->blueColorLevel;
                     }
                 }
                 else
                 {
-                    colorsPerTrack[trackinfoUpdate->identifier] =
-                        AudioTransport::ColorContainer(trackinfoUpdate->redColorLevel, trackinfoUpdate->greenColorLevel,
-                                                       trackinfoUpdate->blueColorLevel, 0);
+                    auto emplacement_tuple = colorsPerTrack.emplace(
+                        std::piecewise_construct, std::forward_as_tuple(trackinfoUpdate->identifier),
+                        std::forward_as_tuple(trackinfoUpdate->redColorLevel, trackinfoUpdate->greenColorLevel,
+                                              trackinfoUpdate->blueColorLevel, 0));
+                    if (!emplacement_tuple.second)
+                    {
+                        throw std::runtime_error("failed to insert color into TrackInfoStore");
+                    }
                 }
             }
 
