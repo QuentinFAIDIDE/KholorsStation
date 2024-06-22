@@ -1,3 +1,4 @@
+#include "GUIToolkit/GUIData.h"
 #include "MainComponent.h"
 #include <spdlog/common.h>
 #include <spdlog/spdlog.h>
@@ -41,15 +42,22 @@ class GuiAppApplication final : public juce::JUCEApplication
                 spdlog::set_level(spdlog::level::debug);
             }
         }
+        // Various GUI related initializations
+        typeface = juce::Typeface::createSystemTypefaceFor(GUIData::RobotoRegular_ttf, GUIData::RobotoRegular_ttfSize);
+        appLookAndFeel.setDefaultSansSerifTypeface(typeface);
+        juce::LookAndFeel::setDefaultLookAndFeel(&appLookAndFeel);
 
         mainWindow.reset(new MainWindow(getApplicationName()));
+        mainWindow->setLookAndFeel(&appLookAndFeel);
     }
 
     void shutdown() override
     {
         // Add your application's shutdown code here..
+        mainWindow->setLookAndFeel(nullptr);
 
         mainWindow = nullptr; // (deletes our window)
+        juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
     }
 
     //==============================================================================
@@ -115,6 +123,8 @@ class GuiAppApplication final : public juce::JUCEApplication
     };
 
   private:
+    juce::Typeface::Ptr typeface;      /**< Default font of the app */
+    KholorsLookAndFeel appLookAndFeel; /**< Defines the app look and feel */
     std::unique_ptr<MainWindow> mainWindow;
 };
 

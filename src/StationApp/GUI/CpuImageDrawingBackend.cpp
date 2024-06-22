@@ -22,6 +22,8 @@ CpuImageDrawingBackend::~CpuImageDrawingBackend()
 
 void CpuImageDrawingBackend::paint(juce::Graphics &g)
 {
+    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+
     std::lock_guard lock(imageAccessMutex);
     lastDrawTilesNonce = tilesNonce;
     int64_t tileWidth = float(VISUAL_SAMPLE_RATE) / viewScale;

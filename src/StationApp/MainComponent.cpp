@@ -14,12 +14,6 @@ MainComponent::MainComponent()
     : menuBarModel(taskManager), bottomPanel(taskManager), freqTimeView(trackInfoStore),
       audioDataWorker(audioDataServer, taskManager)
 {
-    // Various GUI related initializations
-    juce::Typeface::Ptr tface =
-        juce::Typeface::createSystemTypefaceFor(GUIData::RobotoRegular_ttf, GUIData::RobotoRegular_ttfSize);
-    appLookAndFeel.setDefaultSansSerifTypeface(tface);
-    setLookAndFeel(&appLookAndFeel);
-    juce::LookAndFeel::setDefaultLookAndFeel(&appLookAndFeel);
 
     menuBar.setModel(&menuBarModel);
     addAndMakeVisible(menuBar);
@@ -48,9 +42,9 @@ MainComponent::~MainComponent()
     taskManager.stopTaskBroadcast();
 
     menuBar.setModel(nullptr);
-    appLookAndFeel.setDefaultSansSerifTypeface(nullptr);
-    setLookAndFeel(nullptr);
-    juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
+    // appLookAndFeel.setDefaultSansSerifTypeface(nullptr);
+    // setLookAndFeel(nullptr);
+    // juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
 }
 
 void MainComponent::paint(juce::Graphics &g)

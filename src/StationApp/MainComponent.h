@@ -26,7 +26,6 @@ class MainComponent final : public juce::Component, public TaskListener
     bool taskHandler(std::shared_ptr<Task> task) override;
 
   private:
-    KholorsLookAndFeel appLookAndFeel;                    /**< Defines the app look and feel */
     TaskingManager taskManager;                           /**< Object that manages task for actions */
     juce::MenuBarComponent menuBar;                       /**< App menu at the top of the app */
     TopMenuModel menuBarModel;                            /**< Model that populates the menuBar */
