@@ -149,6 +149,8 @@ void CpuImageDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t sec
             frequencyBinIndex = (size_t)juce::jlimit(0, fftSize - 1, (int)frequencyBinIndex);
             float intensityDb = data[frequencyBinIndex];
             float intensityNormalized = juce::jmap(intensityDb, MIN_DB, 0.0f, 0.0f, 1.0f);
+            intensityNormalized = juce::jlimit(0.0f, 1.0f, intensityNormalized);
+            intensityNormalized = intensityTransformer->transformInv(intensityNormalized);
             if (channel == 0 || channel == 2)
             {
                 tileToDrawIn->img.setPixelAt(horizontalPixel, (SECOND_TILE_HEIGHT >> 1) - verticalPos,
