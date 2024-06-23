@@ -2,6 +2,7 @@
 
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <cstdint>
 #include <memory>
@@ -17,6 +18,28 @@ class FftDrawingBackend : public juce::Component
     {
         setInterceptsMouseClicks(false, false);
     };
+
+    /**
+     * @brief Set the Frequency Transformer object that will be applied to frequencies displayed.
+     * Not meant to be changed as not under any lock and used by multiple threads.
+     *
+     * @param ut new frequency transformer
+     */
+    void setFrequencyTransformer(NormalizedUnitTransformer *ut)
+    {
+        freqTransformer = ut;
+    }
+
+    /**
+     * @brief Set the Intensity Transformer object that will be applied to FFT intensities displayed.
+     * Not meant to be changed as not under any lock and used by multiple threads.
+     *
+     * @param it new intensity transformer
+     */
+    void setIntensityTransformer(NormalizedUnitTransformer *it)
+    {
+        intensityTransformer = it;
+    }
 
     /**
      * @brief Move the view so that the position at the component left
@@ -41,4 +64,6 @@ class FftDrawingBackend : public juce::Component
 
   protected:
     TrackInfoStore &trackInfoStore;
+    NormalizedUnitTransformer *freqTransformer;
+    NormalizedUnitTransformer *intensityTransformer;
 };

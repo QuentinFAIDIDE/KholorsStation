@@ -42,9 +42,6 @@ MainComponent::~MainComponent()
     taskManager.stopTaskBroadcast();
 
     menuBar.setModel(nullptr);
-    // appLookAndFeel.setDefaultSansSerifTypeface(nullptr);
-    // setLookAndFeel(nullptr);
-    // juce::LookAndFeel::setDefaultLookAndFeel(nullptr);
 }
 
 void MainComponent::paint(juce::Graphics &g)

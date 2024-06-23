@@ -2,6 +2,7 @@
 
 #include "FftDrawingBackend.h"
 #include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_gui_basics/juce_gui_basics.h"
@@ -35,6 +36,8 @@ class FreqTimeView : public juce::Component, public TaskListener
     bool taskHandler(std::shared_ptr<Task> task) override;
 
   private:
+    NormalizedUnitTransformer frequencyTransformer;    /**< Transformer for the frequency displayed */
+    NormalizedUnitTransformer intensityTransformer;    /**< Transformer for the intensity displayed */
     std::shared_ptr<FftDrawingBackend> fftDrawBackend; /**< Juce component that draws FFTs on screen */
     TrackInfoStore &trackInfoStore;         /**< Store track names and color for FftDrawingBackend to access */
     int64_t viewPosition;                   /**< View position in samples */

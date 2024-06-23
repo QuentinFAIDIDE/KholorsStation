@@ -2,6 +2,7 @@
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/CpuImageDrawingBackend.h"
+#include "StationApp/Maths/NormalizedBijectiveProjection.h"
 #include <memory>
 #include <spdlog/spdlog.h>
 
@@ -9,6 +10,14 @@ FreqTimeView::FreqTimeView(TrackInfoStore &tis) : trackInfoStore(tis), viewPosit
 {
     fftDrawBackend = std::make_shared<CpuImageDrawingBackend>(trackInfoStore);
     addAndMakeVisible(fftDrawBackend.get());
+
+    auto freqProjection = std::make_shared<Log10Projection>(0.005);
+    frequencyTransformer.setProjection(freqProjection);
+    fftDrawBackend->setFrequencyTransformer(&frequencyTransformer);
+
+    auto intensityProjection = std::make_shared<SigmoidProjection>();
+    intensityTransformer.setProjection(intensityProjection);
+    fftDrawBackend->setIntensityTransformer(&intensityTransformer);
 }
 
 FreqTimeView::~FreqTimeView()

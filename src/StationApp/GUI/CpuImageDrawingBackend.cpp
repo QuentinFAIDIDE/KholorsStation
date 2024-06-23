@@ -54,6 +54,11 @@ void CpuImageDrawingBackend::updateViewScale(uint32_t samplesPerPixel)
 
 void CpuImageDrawingBackend::displayNewFftData(std::shared_ptr<NewFftDataTask> fftData)
 {
+    if (freqTransformer == nullptr || intensityTransformer == nullptr)
+    {
+        throw std::invalid_argument("Image drawing backend is being used without freq or intensity transformers set");
+    }
+
     int fftSize = fftData->fftData->size() / fftData->noFFTs;
     int64_t fftSampleWidth = (int64_t)fftData->segmentSampleLength / (int64_t)fftData->noFFTs;
     // for each fft in the received set
@@ -138,7 +143,9 @@ void CpuImageDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t sec
         // iterate from center towards borders
         for (size_t verticalPos = 0; verticalPos < (SECOND_TILE_HEIGHT >> 1); verticalPos++)
         {
-            size_t frequencyBinIndex = ((float(verticalPos) * float(fftSize)) / float(SECOND_TILE_HEIGHT >> 1) + 0.5f);
+            size_t frequencyBinIndex =
+                ((float(fftSize) * freqTransformer->transformInv(float(verticalPos) / float(SECOND_TILE_HEIGHT >> 1))) +
+                 0.5f);
             frequencyBinIndex = (size_t)juce::jlimit(0, fftSize - 1, (int)frequencyBinIndex);
             float intensityDb = data[frequencyBinIndex];
             float intensityNormalized = juce::jmap(intensityDb, MIN_DB, 0.0f, 0.0f, 1.0f);
