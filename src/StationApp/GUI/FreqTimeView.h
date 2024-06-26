@@ -7,6 +7,10 @@
 #include "TaskManagement/TaskingManager.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
+#define MAX_SCALE_SAMPLE_PER_PIXEL 800
+#define MIN_SCALE_SAMPLE_PER_PIXEL 80
+#define PIXEL_SCALE_SPEED 0.01f
+
 /**
  * @brief Describe a class which displays a timeline, and
  * which own a drawing backend that will draw FFT of signal

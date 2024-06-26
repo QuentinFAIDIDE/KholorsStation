@@ -2,13 +2,14 @@
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/CpuImageDrawingBackend.h"
+#include "StationApp/GUI/GpuTextureDrawingBackend.h"
 #include "StationApp/Maths/NormalizedBijectiveProjection.h"
 #include <memory>
 #include <spdlog/spdlog.h>
 
 FreqTimeView::FreqTimeView(TrackInfoStore &tis) : trackInfoStore(tis), viewPosition(0), viewScale(150)
 {
-    fftDrawBackend = std::make_shared<CpuImageDrawingBackend>(trackInfoStore);
+    fftDrawBackend = std::make_shared<GpuTextureDrawingBackend>(trackInfoStore);
     addAndMakeVisible(fftDrawBackend.get());
 
     auto freqProjection = std::make_shared<Log10Projection>(0.005);
@@ -36,6 +37,7 @@ void FreqTimeView::paintOverChildren(juce::Graphics &)
 void FreqTimeView::resized()
 {
     fftDrawBackend->setBounds(getLocalBounds());
+    fftDrawBackend->updateViewPosition(viewPosition);
 }
 
 bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)

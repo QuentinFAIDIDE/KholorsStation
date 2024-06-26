@@ -4,15 +4,7 @@
 #include <cstdint>
 #include <memory>
 
-#define IMAGES_RING_BUFFER_SIZE 128
-#define VISUAL_SAMPLE_RATE 48000
-#define MIN_DB -64.0f
 #define CPU_IMAGE_FFT_BACKEND_UPDATE_INTERVAL_MS 100
-#define SECOND_TILE_WIDTH 32
-#define SECOND_TILE_HEIGHT 256
-#define MAX_SCALE_SAMPLE_PER_PIXEL 20000
-#define MIN_SCALE_SAMPLE_PER_PIXEL 40
-#define PIXEL_SCALE_SPEED 0.01f
 
 class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
 {
@@ -58,33 +50,20 @@ class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
     void updateViewScale(uint32_t samplesPerPixel) override;
 
     /**
-     * @brief Add the fft data inside the task struct to the currently displayed data.
-     *
-     * @param fftData struct containing the FFt data position, length, channel info and data
-     */
-    void displayNewFftData(std::shared_ptr<NewFftDataTask> fftData) override;
-
-    /**
-     * @brief Called every X ms. We use it here for coalescing ffts
-     * into images and eventually repainting.
+     * @brief Called every X ms. We use it here to know when displays need updating.
      * See https://docs.juce.com/master/classTimer.html
      */
     void timerCallback() override;
 
   private:
     /**
-     * @brief Draws the provided FFT (there's only one) on the TrackSecondTile;
+     * @brief Get index of the tile in the tile ring buffer if it exists.
      *
-     * @param trackIdentifier identifier of the track this fft is for
-     * @param secondTileIndex index of the second-tile (in seconds starting at zero)
-     * @param begin start sample in the tile
-     * @param end end sample in the tile
-     * @param fftSize number of frequency bins in the provided fft
-     * @param data pointer to the floats containing fft bins intensities in decibels
-     * @param channel 0 for left, 1 for right, 2 for both
+     * @param trackIdentifier identifier of the track
+     * @param secondTileIndex index in seconds of the tile position
+     * @return tile index of exists, -1 otherwise
      */
-    void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
-                       float *data, int channel);
+    int64_t getTileIndexIfExists(uint64_t trackIdentifier, int64_t secondTileIndex) override;
 
     /**
      * @brief Create a Second Tile object in the secondTilesRingBuffer ring buffer, eventually overwriting/deleting
@@ -94,20 +73,28 @@ class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
      *
      * @param trackIdentifier identifier of the track this tile will be for
      * @param secondTileIndex index of the tile in seconds this tile is positioned at
-     * @return TrackSecondTile* A pointer to the tile
+     * @return index of the new tile in the second-tile ring buffer
      */
-    TrackSecondTile *createSecondTile(uint64_t trackIdentifier, int64_t secondTileIndex);
+    size_t createSecondTile(uint64_t trackIdentifier, int64_t secondTileIndex) override;
 
-    int64_t viewPosition;             /**< Position of the view in samples */
-    int64_t viewScale;                /**< Scale of the view in samples per pixels */
-    std::mutex secondImageTilesMutex; /**< Mutex to prevent concurrent access to the one-second tiles of data */
+    /**
+     * @brief Set a pixel inside an already existing tile
+     *
+     * @param tileRingBufferIndex index of the tile in the ring buffer of tiles
+     * @param x horizontal position in pixels
+     * @param y vertical position in pixels
+     * @param intensity intensity of the FFT at this position, between 0 and 1
+     */
+    void setTilePixelIntensity(size_t tileRingBufferIndex, int x, int y, float intensity) override;
+
+    int64_t viewPosition; /**< Position of the view in samples */
+    int64_t viewScale;    /**< Scale of the view in samples per pixels */
 
     std::vector<TrackSecondTile> secondTilesRingBuffer; /**< Array of tiles that represent one second of track signal */
     size_t secondTileNextIndex; /**< Index of the next tile to create in the secondTilesRingBuffer */
     std::map<std::pair<uint64_t, int64_t>, size_t>
         tileIndexByTrackIdAndPosition; /**< Index of tiles in secondTilesRingBuffer per track id and second tile index
                                         std::pair(track_id, tile_index) */
-    int64_t tilesNonce;                /**< A nonce that is incremented when the tiles are updated */
-    int64_t lastDrawTilesNonce;        /**< The last nonce tilesNonce drawn */
-    std::mutex imageAccessMutex;       /**< Mutex to protect image access */
+
+    int64_t lastDrawTilesNonce; /**< The last nonce tilesNonce drawn */
 };
