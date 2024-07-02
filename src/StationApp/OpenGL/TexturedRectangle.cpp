@@ -1,7 +1,6 @@
 #include "TexturedRectangle.h"
 #include "StationApp/OpenGL/GLInfoLogger.h"
 #include "juce_opengl/opengl/juce_gl.h"
-#include <mutex>
 
 TexturedRectangle::TexturedRectangle(int64_t width, int64_t height, juce::Colour col)
     : textureWidth(width), textureHeight(height)
@@ -46,7 +45,6 @@ TexturedRectangle::~TexturedRectangle()
 
 void TexturedRectangle::registerGlObjects()
 {
-    std::lock_guard lock(mutex);
     spdlog::debug("Registering an OpenGL textured mesh");
 
     // generate objects
@@ -54,18 +52,15 @@ void TexturedRectangle::registerGlObjects()
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &ebo);
 
-    spdlog::debug("Allocated vao, vbo and ebo against openGL");
-
     printAllOpenGlError();
 
     glBindVertexArray(vao);
 
     // register and upload the vertices data
-    spdlog::debug("Registering vertice data against openGL");
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
     // register and upload indices of the vertices to form the triangles
-    spdlog::debug("Registering triangles data against openGL");
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(unsigned int) * triangleIds.size()), triangleIds.data(),
                  GL_STATIC_DRAW);
@@ -96,9 +91,6 @@ void TexturedRectangle::registerGlObjects()
 
 void TexturedRectangle::drawGlObjects()
 {
-    std::lock_guard lock(mutex);
-    spdlog::debug("Drawing a textured mesh");
-
     glActiveTexture(GL_TEXTURE0); // <- might only be necessary on some GPUs
     glBindTexture(GL_TEXTURE_2D, tbo);
     glBindVertexArray(vao);
@@ -109,8 +101,6 @@ void TexturedRectangle::drawGlObjects()
 
 void TexturedRectangle::freeGlObjects()
 {
-    std::lock_guard lock(mutex);
-
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
@@ -119,7 +109,6 @@ void TexturedRectangle::freeGlObjects()
 
 void TexturedRectangle::refreshGpuTextureIfChanged()
 {
-    std::lock_guard lock(mutex);
     if (textureNonce != lastUploadedTextureNonce)
     {
         lastUploadedTextureNonce = textureNonce;
@@ -131,8 +120,6 @@ void TexturedRectangle::refreshGpuTextureIfChanged()
 
 void TexturedRectangle::changeColor(juce::Colour newColor)
 {
-    std::lock_guard lock(mutex);
-
     for (size_t i = 0; i < 4; i++)
     {
         vertices[i].colour[0] = newColor.getFloatRed();
@@ -149,8 +136,6 @@ void TexturedRectangle::changeColor(juce::Colour newColor)
 
 void TexturedRectangle::setPosition(int64_t viewPositionSamples, int64_t width)
 {
-    std::lock_guard lock(mutex);
-
     // upper left corner 0
     vertices[0].position[0] = viewPositionSamples;
 
@@ -171,7 +156,6 @@ void TexturedRectangle::setPosition(int64_t viewPositionSamples, int64_t width)
 
 void TexturedRectangle::setPixelAt(int x, int y, float intensity)
 {
-    std::lock_guard lock(mutex);
     size_t openGlTexelIndex = (size_t)((y * textureWidth) + x);
     // NOTE: we only modify the alpha value (last of the four float)
     texture[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = juce::jlimit(0.0f, 1.0f, intensity);

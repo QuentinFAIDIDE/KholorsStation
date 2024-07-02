@@ -3,6 +3,7 @@
 #include "GUIToolkit/Consts.h"
 #include "GUIToolkit/GUIData.h"
 #include "StationApp/Audio/AudioDataWorker.h"
+#include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/BottomPanel.h"
 #include "StationApp/GUI/FreqTimeView.h"
 #include "TaskManagement/TaskingManager.h"
@@ -11,7 +12,7 @@
 #define DEFAULT_SERVER_PORT 7849
 
 MainComponent::MainComponent()
-    : menuBarModel(taskManager), bottomPanel(taskManager), freqTimeView(trackInfoStore),
+    : menuBarModel(taskManager), bottomPanel(taskManager), trackInfoStore(taskManager), freqTimeView(trackInfoStore),
       audioDataWorker(audioDataServer, taskManager)
 {
 

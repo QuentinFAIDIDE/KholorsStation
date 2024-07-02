@@ -33,7 +33,7 @@
 #define FFT_INPUT_NO_INTENSITIES 2048 // always choose a power of two!
 
 /***< What is the overlap of subsequent FFT windows. 2 = 50% overlap, 3 = 66.666% overlap, 4=25% ... */
-#define FFT_OVERLAP_DIVISION 2
+#define FFT_OVERLAP_DIVISION 4
 
 /**< Size of the output, as the number of frequencies bins */
 #define FFT_OUTPUT_NO_FREQS (((FFT_INPUT_NO_INTENSITIES * FFT_ZERO_PADDING_FACTOR) >> 1) + 1)

@@ -38,21 +38,21 @@ class LinearProjection : public NormalizedBijectiveProjection
 class InvertProjection : public NormalizedBijectiveProjection
 {
   public:
-    InvertProjection(NormalizedBijectiveProjection &proj) : projToInvert(proj)
+    InvertProjection(std::shared_ptr<NormalizedBijectiveProjection> proj) : projToInvert(proj)
     {
     }
 
     float projectIn(float input) const override
     {
-        return projToInvert.projectOut(input);
+        return projToInvert->projectOut(input);
     }
     float projectOut(float input) const override
     {
-        return projToInvert.projectIn(input);
+        return projToInvert->projectIn(input);
     }
 
   private:
-    NormalizedBijectiveProjection &projToInvert;
+    std::shared_ptr<NormalizedBijectiveProjection> projToInvert;
 };
 
 /**

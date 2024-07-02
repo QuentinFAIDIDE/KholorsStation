@@ -31,11 +31,11 @@ out vec4 FragColor;
 in vec4 ourColor;
 in vec2 TexCoord;
 
-uniform sampler2D ourTexture;
+uniform sampler2D sfftTexture;
 
 void main()
 {
-    vec4 sampleWaveform = texture(ourTexture, TexCoord);
+    vec4 sampleWaveform = texture(sfftTexture, TexCoord);
     FragColor = vec4(ourColor.x, ourColor.y, ourColor.z, sampleWaveform.a);
 }
 )";

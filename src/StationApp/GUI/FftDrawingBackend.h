@@ -10,8 +10,8 @@
 #define VISUAL_SAMPLE_RATE 48000
 #define IMAGES_RING_BUFFER_SIZE 128
 #define MIN_DB -64.0f
-#define SECOND_TILE_WIDTH 32
-#define SECOND_TILE_HEIGHT 256
+#define SECOND_TILE_WIDTH 64
+#define SECOND_TILE_HEIGHT 512
 
 /**
  * @brief Abstract class that receives the audio data (sfft freqs intensities) to display
@@ -131,6 +131,16 @@ class FftDrawingBackend : public juce::Component
         }
     }
 
+    /**
+     * @brief Set the color of a track. Used only by GPU drawing backend.
+     *
+     * @param trackIdentifier identifier of the track to change color of
+     * @param col color to apply to the track
+     */
+    virtual void setTrackColor(uint64_t trackIdentifier, juce::Colour col)
+    {
+    }
+
   protected:
     /**
      * @brief Draws the provided FFT (there's only one) on the TrackSecondTile;
@@ -143,87 +153,8 @@ class FftDrawingBackend : public juce::Component
      * @param data pointer to the floats containing fft bins intensities in decibels
      * @param channel 0 for left, 1 for right, 2 for both
      */
-    void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
-                       float *data, int channel)
-    {
-        std::lock_guard lock(imageAccessMutex);
-        // if the tile does not exists, create it
-        size_t tileToDrawIn;
-        auto existingTrackTile = getTileIndexIfExists(trackIdentifier, secondTileIndex);
-        if (existingTrackTile >= 0)
-        {
-            tileToDrawIn = (size_t)existingTrackTile;
-        }
-        else
-        {
-            tileToDrawIn = createSecondTile(trackIdentifier, secondTileIndex);
-        }
-        // draw the fft inside the tile
-        size_t startPixel = (size_t)juce::jlimit(
-            0, SECOND_TILE_WIDTH - 1, (int)((float(begin) / float(VISUAL_SAMPLE_RATE)) * float(SECOND_TILE_WIDTH)));
-        size_t endPixel = (size_t)juce::jlimit(
-            0, SECOND_TILE_WIDTH - 1, (int)((float(end) / float(VISUAL_SAMPLE_RATE)) * float(SECOND_TILE_WIDTH)));
-        // iterate from left to right
-        for (size_t horizontalPixel = startPixel; horizontalPixel <= endPixel; horizontalPixel++)
-        {
-            // iterate from center towards borders
-            for (size_t verticalPos = 0; verticalPos < (SECOND_TILE_HEIGHT >> 1); verticalPos++)
-            {
-                size_t frequencyBinIndex =
-                    ((float(fftSize) *
-                      freqTransformer->transformInv(float(verticalPos) / float(SECOND_TILE_HEIGHT >> 1))) +
-                     0.5f);
-                frequencyBinIndex = (size_t)juce::jlimit(0, fftSize - 1, (int)frequencyBinIndex);
-                float intensityDb = data[frequencyBinIndex];
-                float intensityNormalized = juce::jmap(intensityDb, MIN_DB, 0.0f, 0.0f, 1.0f);
-                intensityNormalized = juce::jlimit(0.0f, 1.0f, intensityNormalized);
-                intensityNormalized = intensityTransformer->transformInv(intensityNormalized);
-                if (channel == 0 || channel == 2)
-                {
-                    setTilePixelIntensity(tileToDrawIn, horizontalPixel, (SECOND_TILE_HEIGHT >> 1) - verticalPos,
-                                          intensityNormalized);
-                }
-                if (channel == 1 || channel == 2)
-                {
-                    setTilePixelIntensity(tileToDrawIn, horizontalPixel, (SECOND_TILE_HEIGHT >> 1) + verticalPos,
-                                          intensityNormalized);
-                }
-            }
-        }
-        // increment the nonce to let timer know we need to trigger an update
-        tilesNonce++;
-    }
-
-    /**
-     * @brief Get index of the tile in the tile ring buffer if it exists.
-     *
-     * @param trackIdentifier identifier of the track
-     * @param secondTileIndex index in seconds of the tile position
-     * @return tile index of exists, -1 otherwise
-     */
-    virtual int64_t getTileIndexIfExists(uint64_t trackIdentifier, int64_t secondTileIndex) = 0;
-
-    /**
-     * @brief Create a Second Tile object in the secondTilesRingBuffer ring buffer, eventually overwriting/deleting
-     * a previous tile, and clear the tile. Return a pointer to the tile.
-     *
-     * @throws std::invalid_argument when the tile already exist for this track at that position
-     *
-     * @param trackIdentifier identifier of the track this tile will be for
-     * @param secondTileIndex index of the tile in seconds this tile is positioned at
-     * @return index of the new tile in the second-tile ring buffer
-     */
-    virtual size_t createSecondTile(uint64_t trackIdentifier, int64_t secondTileIndex) = 0;
-
-    /**
-     * @brief Set a pixel inside an already existing tile
-     *
-     * @param tileRingBufferIndex index of the tile in the ring buffer of tiles
-     * @param x horizontal position in pixels
-     * @param y vertical position in pixels
-     * @param intensity intensity of the FFT at this position, between 0 and 1
-     */
-    virtual void setTilePixelIntensity(size_t tileRingBufferIndex, int x, int y, float intensity) = 0;
+    virtual void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end,
+                               int fftSize, float *data, int channel) = 0;
 
     TrackInfoStore &trackInfoStore;
     NormalizedUnitTransformer *freqTransformer;

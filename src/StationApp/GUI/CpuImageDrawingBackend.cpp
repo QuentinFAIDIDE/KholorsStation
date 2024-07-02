@@ -131,3 +131,53 @@ void CpuImageDrawingBackend::timerCallback()
         imageAccessMutex.unlock();
     }
 }
+
+void CpuImageDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin,
+                                           int64_t end, int fftSize, float *data, int channel)
+{
+    std::lock_guard lock(imageAccessMutex);
+    // if the tile does not exists, create it
+    size_t tileToDrawIn;
+    auto existingTrackTile = getTileIndexIfExists(trackIdentifier, secondTileIndex);
+    if (existingTrackTile >= 0)
+    {
+        tileToDrawIn = (size_t)existingTrackTile;
+    }
+    else
+    {
+        tileToDrawIn = createSecondTile(trackIdentifier, secondTileIndex);
+    }
+    // draw the fft inside the tile
+    size_t startPixel = (size_t)juce::jlimit(
+        0, SECOND_TILE_WIDTH - 1, (int)((float(begin) / float(VISUAL_SAMPLE_RATE)) * float(SECOND_TILE_WIDTH)));
+    size_t endPixel = (size_t)juce::jlimit(0, SECOND_TILE_WIDTH - 1,
+                                           (int)((float(end) / float(VISUAL_SAMPLE_RATE)) * float(SECOND_TILE_WIDTH)));
+    // iterate from left to right
+    for (size_t horizontalPixel = startPixel; horizontalPixel <= endPixel; horizontalPixel++)
+    {
+        // iterate from center towards borders
+        for (size_t verticalPos = 0; verticalPos < (SECOND_TILE_HEIGHT >> 1); verticalPos++)
+        {
+            size_t frequencyBinIndex =
+                ((float(fftSize) * freqTransformer->transformInv(float(verticalPos) / float(SECOND_TILE_HEIGHT >> 1))) +
+                 0.5f);
+            frequencyBinIndex = (size_t)juce::jlimit(0, fftSize - 1, (int)frequencyBinIndex);
+            float intensityDb = data[frequencyBinIndex];
+            float intensityNormalized = juce::jmap(intensityDb, MIN_DB, 0.0f, 0.0f, 1.0f);
+            intensityNormalized = juce::jlimit(0.0f, 1.0f, intensityNormalized);
+            intensityNormalized = intensityTransformer->transformInv(intensityNormalized);
+            if (channel == 0 || channel == 2)
+            {
+                setTilePixelIntensity(tileToDrawIn, horizontalPixel, (SECOND_TILE_HEIGHT >> 1) - verticalPos,
+                                      intensityNormalized);
+            }
+            if (channel == 1 || channel == 2)
+            {
+                setTilePixelIntensity(tileToDrawIn, horizontalPixel, (SECOND_TILE_HEIGHT >> 1) + verticalPos,
+                                      intensityNormalized);
+            }
+        }
+    }
+    // increment the nonce to let timer know we need to trigger an update
+    tilesNonce++;
+}

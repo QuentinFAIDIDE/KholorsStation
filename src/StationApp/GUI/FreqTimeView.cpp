@@ -1,5 +1,7 @@
 #include "FreqTimeView.h"
+#include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/NewFftDataTask.h"
+#include "StationApp/Audio/TrackColorUpdateTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/CpuImageDrawingBackend.h"
 #include "StationApp/GUI/GpuTextureDrawingBackend.h"
@@ -10,6 +12,7 @@
 FreqTimeView::FreqTimeView(TrackInfoStore &tis) : trackInfoStore(tis), viewPosition(0), viewScale(150)
 {
     fftDrawBackend = std::make_shared<GpuTextureDrawingBackend>(trackInfoStore);
+    // fftDrawBackend = std::make_shared<CpuImageDrawingBackend>(trackInfoStore);
     addAndMakeVisible(fftDrawBackend.get());
 
     auto freqProjection = std::make_shared<Log10Projection>(0.005);
@@ -17,7 +20,8 @@ FreqTimeView::FreqTimeView(TrackInfoStore &tis) : trackInfoStore(tis), viewPosit
     fftDrawBackend->setFrequencyTransformer(&frequencyTransformer);
 
     auto intensityProjection = std::make_shared<SigmoidProjection>();
-    intensityTransformer.setProjection(intensityProjection);
+    auto invertIntensity = std::make_shared<InvertProjection>(intensityProjection);
+    intensityTransformer.setProjection(invertIntensity);
     fftDrawBackend->setIntensityTransformer(&intensityTransformer);
 }
 
@@ -29,9 +33,8 @@ void FreqTimeView::paint(juce::Graphics &g)
 {
 }
 
-void FreqTimeView::paintOverChildren(juce::Graphics &)
+void FreqTimeView::paintOverChildren(juce::Graphics &g)
 {
-    // TODO: draw labels here
 }
 
 void FreqTimeView::resized()
@@ -55,7 +58,18 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
         }
         newFftDataTask->setCompleted(true);
         // TODO: under lock, update if necessary latest data location
+        return false;
     }
+
+    auto colorUpdateTask = std::dynamic_pointer_cast<TrackColorUpdateTask>(task);
+    if (colorUpdateTask != nullptr)
+    {
+        juce::Colour col(colorUpdateTask->redColorLevel, colorUpdateTask->greenColorLevel,
+                         colorUpdateTask->blueColorLevel);
+        fftDrawBackend->setTrackColor(colorUpdateTask->identifier, col);
+        colorUpdateTask->setCompleted(true);
+    }
+
     // we are not stopping any tasks from being broadcasted further
     return false;
 }

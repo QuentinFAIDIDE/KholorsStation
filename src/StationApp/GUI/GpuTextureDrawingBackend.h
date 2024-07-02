@@ -6,11 +6,10 @@
 #include "StationApp/OpenGL/SolidRectangle.h"
 #include "StationApp/OpenGL/TexturedRectangle.h"
 #include "juce_opengl/juce_opengl.h"
+#include <cstdint>
 #include <memory>
 
-#define CPU_IMAGE_FFT_BACKEND_UPDATE_INTERVAL_MS 100
-
-class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::Timer, public juce::OpenGLRenderer
+class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRenderer
 {
   public:
     GpuTextureDrawingBackend(TrackInfoStore &tis);
@@ -29,7 +28,31 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::Timer, p
         int64_t tileIndexPosition; /**< Position of the tile in second-tile index */
     };
 
+    struct FftToDraw
+    {
+        FftToDraw(uint64_t _trackIdentifier, int64_t _secondTileIndex, int64_t _begin, int64_t _end, int fftSize,
+                  float *data, int _channel)
+        {
+            fftData.resize((size_t)fftSize);
+            for (size_t i = 0; i < (size_t)fftSize; i++)
+            {
+                fftData[i] = data[i];
+            }
+            channel = _channel;
+            trackIdentifier = _trackIdentifier;
+            secondTileIndex = _secondTileIndex;
+            begin = _begin;
+            end = _end;
+        }
+        std::vector<float> fftData; /**< data to draw inside the tile */
+        uint64_t trackIdentifier;   /**< identifier of the track tied to the track */
+        int64_t secondTileIndex;    /**< index of the tile to draw in */
+        int64_t begin, end;         /**< begin and end horizontal pixel coordinates */
+        int channel;                /**< 0 for left, 1 for right, 2 for both */
+    };
+
     void paint(juce::Graphics &g) override;
+    void resized() override;
 
     /**
      * @brief Move the view so that the position at the component left
@@ -60,25 +83,21 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::Timer, p
      */
     void openGLContextClosing() override;
 
-    /**
-     * @brief Called every X ms. We use it here to know when displays need updating.
-     * See https://docs.juce.com/master/classTimer.html
-     */
-    void timerCallback() override;
-
   private:
     /**
      * @brief Get index of the tile in the tile ring buffer if it exists.
+     * Called only from the OpenGL thread.
      *
      * @param trackIdentifier identifier of the track
      * @param secondTileIndex index in seconds of the tile position
      * @return tile index of exists, -1 otherwise
      */
-    int64_t getTileIndexIfExists(uint64_t trackIdentifier, int64_t secondTileIndex) override;
+    int64_t getTileIndexIfExists(uint64_t trackIdentifier, int64_t secondTileIndex);
 
     /**
      * @brief Create a Second Tile object in the secondTilesRingBuffer ring buffer, eventually overwriting/deleting
      * a previous tile, and clear the tile. Return a pointer to the tile.
+     * Called only from the OpenGL thread.
      *
      * @throws std::invalid_argument when the tile already exist for this track at that position
      *
@@ -86,17 +105,18 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::Timer, p
      * @param secondTileIndex index of the tile in seconds this tile is positioned at
      * @return index of the new tile in the second-tile ring buffer
      */
-    size_t createSecondTile(uint64_t trackIdentifier, int64_t secondTileIndex) override;
+    size_t createSecondTile(uint64_t trackIdentifier, int64_t secondTileIndex);
 
     /**
-     * @brief Set a pixel inside an already existing tile
+     * @brief Set a pixel inside an already existing tile.
+     * Called only from the OpenGL thread.
      *
      * @param tileRingBufferIndex index of the tile in the ring buffer of tiles
      * @param x horizontal position in pixels
      * @param y vertical position in pixels
      * @param intensity intensity of the FFT at this position, between 0 and 1
      */
-    void setTilePixelIntensity(size_t tileRingBufferIndex, int x, int y, float intensity) override;
+    void setTilePixelIntensity(size_t tileRingBufferIndex, int x, int y, float intensity);
 
     /**
      * @brief build the opengl shaders programs
@@ -119,26 +139,44 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::Timer, p
                      std::string fragmentShader);
 
     /**
-     * @brief wrap the updateShadersViewAndGridUniforms function with a boolean
-     * that tells if necessary to switch to switch to using the openGL thread.
-     * The wrapped function upload the uniform (opengl variables) that are used
-     * by the shaders to draw background or FFT tiles.
-     *
-     * @param fromGlThread if false, will wrap call to updateShadersViewAndGridUniforms with executeOnGlThread, if true,
-     * called directly
-     */
-    void shaderUniformUpdateThreadWrapper(bool fromGlThread);
-
-    /**
      * @brief Recompute and send uniform (opengl variables) that are used
      * by the shaders to draw background or FFT tiles.
+     * MUST BE CALLED FROM THE OPENGL THREAD.
      */
-    void updateShadersViewAndGridUniforms();
+    void uploadShadersUniforms();
 
     /**
-     * @brief Recomputes the uniform variables to draw the beat grid.
+     * @brief Draws the provided FFT (there's only one) on the TrackSecondTile.
+     * In this GPU version of the drawing backend, we just push a task on a queue.
+     * This function is not called from the openGL thread.
+     * The queue is then readed by the openGL thread which will call drawFftOnOpenGlThread
+     *
+     * @param trackIdentifier identifier of the track this fft is for
+     * @param secondTileIndex index of the second-tile (in seconds starting at zero)
+     * @param begin start sample in the tile
+     * @param end end sample in the tile
+     * @param fftSize number of frequency bins in the provided fft
+     * @param data pointer to the floats containing fft bins intensities in decibels
+     * @param channel 0 for left, 1 for right, 2 for both
      */
-    void computeShadersGridUniformsVars();
+    void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
+                       float *data, int channel) override;
+
+    /**
+     * @brief Called by the openGL thread to draw an fft isnide a GPU texture tile.
+     *
+     * @param fftData Struct with the FFt and position data.
+     */
+    void drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> fftData);
+
+    /**
+     * @brief Set the color of a track. Or rather push a color update to the queue
+     * so that the openGL Renderer thread can pick it.
+     *
+     * @param trackIdentifier identifier of the track to change color of
+     * @param col color to apply to the track
+     */
+    void setTrackColor(uint64_t trackIdentifier, juce::Colour col) override;
 
     std::vector<TrackSecondTile> secondTilesRingBuffer; /**< Array of tiles that represent one second of track signal */
     size_t secondTileNextIndex; /**< Index of the next tile to create in the secondTilesRingBuffer */
@@ -154,13 +192,22 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::Timer, p
 
     SolidRectangle background; /**< OpenGL Mesh for background */
 
-    std::atomic<int64_t>
-        viewPosition; /**< position of the view in samples (using FftDrawingBackend VISUAL_SAMPLE_RATE) */
-    std::atomic<int64_t>
-        viewScale; /**< zoom level of the view in samples per pixels (using FftDrawingBackend VISUAL_SAMPLE_RATE) */
-
-    std::atomic<float> bpm;          /**< beats per minutes of the DAW */
     std::atomic<bool> ignoreNewData; /**< after the openGL thread closes, prevent access to openGL resources */
+
+    int64_t viewPosition, viewScale, viewHeight, viewWidth; /*< read by gl thread to update uniforms and view */
+    float bpm;                         /**< values read by openGL thread to update uniforms and view */
+    std::mutex glThreadUniformsMutex;  /* to lock modifications of position, scale or bpm */
+    int64_t glThreadUniformsNonce;     /* to know if we need to update position and  */
+    int64_t lastUsedGlThreadUnifNonce; /*< the last nonce value when the uniforms got updated*/
+
+    std::queue<std::shared_ptr<FftToDraw>>
+        fftsToDrawQueue;        /**< queue of FFT to be drawn. Depends on the fftsToDrawLock */
+    std::mutex fftsToDrawMutex; /**< protect concurrent acces to the queue of ffts to draw */
+
+    std::mutex openGlThreadColorsMutex; /**< Locking color updates queues and color map for the openGL thread */
+    std::queue<std::pair<uint64_t, juce::Colour>>
+        colorUpdatesToApply; /**< track colors to be applied by openGL thread, need the lock */
+    std::map<uint64_t, juce::Colour> knownTrackColors; /**< track colors known to the openGL thread */
 
     float grid0FrameWidth, grid1FrameWidth, grid2FrameWidth; /**< width of the viewer grid levels in audio samples */
     float grid0PixelWidth, grid1PixelWidth, grid2PixelWidth; /**< width of the viewer grid levels in pixels */

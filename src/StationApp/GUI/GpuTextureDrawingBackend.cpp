@@ -4,6 +4,9 @@
 
 #include "../OpenGL/OpenGlShaders.h"
 #include "StationApp/OpenGL/GLInfoLogger.h"
+#include <cstdint>
+#include <memory>
+#include <mutex>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 
@@ -13,27 +16,42 @@ GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis)
     openGLContext.setRenderer(this);
     openGLContext.attachTo(*this);
     secondTileNextIndex = 0;
-    startTimer(CPU_IMAGE_FFT_BACKEND_UPDATE_INTERVAL_MS);
 }
 
 GpuTextureDrawingBackend::~GpuTextureDrawingBackend()
 {
 }
 
-void GpuTextureDrawingBackend::paint(juce::Graphics &)
+void GpuTextureDrawingBackend::paint(juce::Graphics &g)
 {
+    g.setColour(COLOR_WHITE.withAlpha(0.2f));
+    g.fillRect(getLocalBounds().removeFromTop(1));
+}
+
+void GpuTextureDrawingBackend::resized()
+{
+    std::lock_guard lock(glThreadUniformsMutex);
+    viewHeight = getLocalBounds().getHeight();
+    viewWidth = getLocalBounds().getWidth();
+    glThreadUniformsNonce++;
 }
 
 void GpuTextureDrawingBackend::updateViewPosition(uint32_t samplePosition)
 {
+    std::lock_guard lock(glThreadUniformsMutex);
     viewPosition = samplePosition;
-    shaderUniformUpdateThreadWrapper(false);
+    glThreadUniformsNonce++;
+    const juce::MessageManagerLock mmlock;
+    repaint();
 }
 
 void GpuTextureDrawingBackend::updateViewScale(uint32_t samplesPerPixel)
 {
+    std::lock_guard lock(glThreadUniformsMutex);
     viewScale = samplesPerPixel;
-    shaderUniformUpdateThreadWrapper(false);
+    glThreadUniformsNonce++;
+    const juce::MessageManagerLock mmlock;
+    repaint();
 }
 
 void GpuTextureDrawingBackend::newOpenGLContextCreated()
@@ -48,9 +66,7 @@ void GpuTextureDrawingBackend::newOpenGLContextCreated()
         spdlog::info("Sucessfully compiled OpenGL shaders");
 
         texturedPositionedShader->use();
-        texturedPositionedShader->setUniform("ourTexture", 0);
-
-        shaderUniformUpdateThreadWrapper(true);
+        texturedPositionedShader->setUniform("sfftTexture", 0);
 
         // log some info about openGL version and all
         logOpenGLInfoCallback(openGLContext);
@@ -93,81 +109,112 @@ bool GpuTextureDrawingBackend::buildShader(std::unique_ptr<juce::OpenGLShaderPro
     return sh->addVertexShader(vertexShader) && sh->addFragmentShader(fragmentShader) && sh->link();
 }
 
-void GpuTextureDrawingBackend::shaderUniformUpdateThreadWrapper(bool fromGlThread)
+void GpuTextureDrawingBackend::uploadShadersUniforms()
 {
-    // send the new view positions to opengl thread
-    if (!fromGlThread)
+    std::lock_guard lock(glThreadUniformsMutex);
+    if (lastUsedGlThreadUnifNonce != glThreadUniformsNonce)
     {
-        openGLContext.executeOnGLThread([this](juce::OpenGLContext &) { updateShadersViewAndGridUniforms(); }, false);
+
+        texturedPositionedShader->use();
+        texturedPositionedShader->setUniform("viewPosition", (GLfloat)viewPosition);
+        texturedPositionedShader->setUniform("viewWidth", (GLfloat)(viewWidth * viewScale));
+
+        int framesPerMinutes = (60 * VISUAL_SAMPLE_RATE);
+
+        grid0FrameWidth = (float(framesPerMinutes) / bpm);
+        grid1FrameWidth = (float(framesPerMinutes) / (bpm * 4));
+        grid2FrameWidth = (float(framesPerMinutes) / (bpm * 16));
+
+        grid2PixelWidth = grid2FrameWidth / float(viewScale);
+        grid1PixelWidth = grid2PixelWidth * 4;
+        grid0PixelWidth = grid1PixelWidth * 4;
+
+        grid0PixelShift = (int(grid0FrameWidth + 0.5f) - (viewPosition % int(grid0FrameWidth + 0.5f))) / viewScale;
+        grid1PixelShift = int(grid0PixelShift + 0.5f) % int(grid1PixelWidth + 0.5f);
+        grid2PixelShift = int(grid1PixelShift + 0.5f) % int(grid2PixelWidth + 0.5f);
+
+        backgroundGridShader->use();
+        backgroundGridShader->setUniform("grid0PixelShift", (GLint)grid0PixelShift);
+        backgroundGridShader->setUniform("grid0PixelWidth", (GLfloat)grid0PixelWidth);
+
+        backgroundGridShader->setUniform("grid1PixelShift", (GLint)grid1PixelShift);
+        backgroundGridShader->setUniform("grid1PixelWidth", (GLfloat)grid1PixelWidth);
+
+        backgroundGridShader->setUniform("grid2PixelShift", (GLint)grid2PixelShift);
+        backgroundGridShader->setUniform("grid2PixelWidth", (GLfloat)grid2PixelWidth);
+
+        backgroundGridShader->setUniform("viewHeightPixels", (GLfloat)(viewHeight));
+
+        lastUsedGlThreadUnifNonce = glThreadUniformsNonce;
     }
-    else
-    {
-        updateShadersViewAndGridUniforms();
-    }
-}
-
-void GpuTextureDrawingBackend::updateShadersViewAndGridUniforms()
-{
-
-    texturedPositionedShader->use();
-    texturedPositionedShader->setUniform("viewPosition", (GLfloat)viewPosition);
-    texturedPositionedShader->setUniform("viewWidth", (GLfloat)(getLocalBounds().getWidth() * viewScale));
-
-    computeShadersGridUniformsVars();
-
-    backgroundGridShader->use();
-    backgroundGridShader->setUniform("grid0PixelShift", (GLint)grid0PixelShift);
-    backgroundGridShader->setUniform("grid0PixelWidth", (GLfloat)grid0PixelWidth);
-
-    backgroundGridShader->setUniform("grid1PixelShift", (GLint)grid1PixelShift);
-    backgroundGridShader->setUniform("grid1PixelWidth", (GLfloat)grid1PixelWidth);
-
-    backgroundGridShader->setUniform("grid2PixelShift", (GLint)grid2PixelShift);
-    backgroundGridShader->setUniform("grid2PixelWidth", (GLfloat)grid2PixelWidth);
-
-    // BUG: could there be a race condition here with getLocalBounds with the Juce message manager thread (we're from
-    // openGL thread here)
-    backgroundGridShader->setUniform("viewHeightPixels", (GLfloat)(getLocalBounds().getHeight()));
-}
-
-void GpuTextureDrawingBackend::computeShadersGridUniformsVars()
-{
-    int framesPerMinutes = (60 * VISUAL_SAMPLE_RATE);
-
-    grid0FrameWidth = (float(framesPerMinutes) / bpm);
-    grid1FrameWidth = (float(framesPerMinutes) / (bpm * 4));
-    grid2FrameWidth = (float(framesPerMinutes) / (bpm * 16));
-
-    grid2PixelWidth = grid2FrameWidth / float(viewScale);
-    grid1PixelWidth = grid2PixelWidth * 4;
-    grid0PixelWidth = grid1PixelWidth * 4;
-
-    grid0PixelShift = (int(grid0FrameWidth + 0.5f) - (viewPosition % int(grid0FrameWidth + 0.5f))) / viewScale;
-    grid1PixelShift = int(grid0PixelShift + 0.5f) % int(grid1PixelWidth + 0.5f);
-    grid2PixelShift = int(grid1PixelShift + 0.5f) % int(grid2PixelWidth + 0.5f);
 }
 
 void GpuTextureDrawingBackend::renderOpenGL()
 {
-    std::lock_guard lock(imageAccessMutex);
-    if (ignoreNewData)
+    // process queue of ffts to draw inside tiles
+    std::vector<std::shared_ptr<FftToDraw>> currentFftsToDraw;
     {
-        return;
+        std::lock_guard lock(fftsToDrawMutex);
+        while (fftsToDrawQueue.size() > 0)
+        {
+            currentFftsToDraw.push_back(fftsToDrawQueue.front());
+            fftsToDrawQueue.pop();
+        }
     }
+    for (size_t i = 0; i < currentFftsToDraw.size(); i++)
+    {
+        drawFftOnOpenGlThread(currentFftsToDraw[i]);
+    }
+    // upload texture that changed
+    for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+    {
+        secondTilesRingBuffer[i].mesh->refreshGpuTextureIfChanged();
+    }
+
+    // apply color updates
+    std::vector<std::pair<uint64_t, juce::Colour>> colorUpdates;
+    {
+        std::lock_guard lock(openGlThreadColorsMutex);
+        while (colorUpdatesToApply.size() > 0)
+        {
+            colorUpdates.push_back(colorUpdatesToApply.front());
+            colorUpdatesToApply.pop();
+        }
+    }
+    // for each color update to apply, check if indeed is new and apply to all track tiles
+    for (size_t i = 0; i < colorUpdates.size(); i++)
+    {
+        auto existingTrackColor = knownTrackColors.find(colorUpdates[i].first);
+        if (existingTrackColor == knownTrackColors.end() || existingTrackColor->second != colorUpdates[i].second)
+        {
+            knownTrackColors[colorUpdates[i].first] = colorUpdates[i].second;
+            for (size_t j = 0; j < secondTilesRingBuffer.size(); j++)
+            {
+                if (secondTilesRingBuffer[j].trackIdentifer == colorUpdates[i].first)
+                {
+                    secondTilesRingBuffer[j].mesh->changeColor(colorUpdates[i].second);
+                }
+            }
+        }
+    }
+
+    // update GLSL uniforms if necessary (component height, view position or zoom) updates
+    uploadShadersUniforms();
+
     // enable the damn blending
     juce::gl::glEnable(juce::gl::GL_BLEND);
     juce::gl::glBlendFunc(juce::gl::GL_SRC_ALPHA, juce::gl::GL_ONE_MINUS_SRC_ALPHA);
 
+    // clear screen
     juce::gl::glClearColor(0.078f, 0.078f, 0.078f, 1.0f);
     juce::gl::glClear(juce::gl::GL_COLOR_BUFFER_BIT);
 
+    // draw background
     backgroundGridShader->use();
     background.drawGlObjects();
 
+    // draw tiles with FFTs
     texturedPositionedShader->use();
-
-    spdlog::debug("Drawing OpenGL textured meshes...");
-
     for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
     {
         if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
@@ -177,9 +224,15 @@ void GpuTextureDrawingBackend::renderOpenGL()
     }
 }
 
+void GpuTextureDrawingBackend::setTrackColor(uint64_t trackIdentifier, juce::Colour col)
+{
+    std::pair<uint64_t, juce::Colour> colorToPush(trackIdentifier, col);
+    std::lock_guard lock(openGlThreadColorsMutex);
+    colorUpdatesToApply.push(colorToPush);
+}
+
 void GpuTextureDrawingBackend::openGLContextClosing()
 {
-    std::lock_guard lock(imageAccessMutex);
     for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
     {
         secondTilesRingBuffer[i].mesh->freeGlObjects();
@@ -188,36 +241,67 @@ void GpuTextureDrawingBackend::openGLContextClosing()
     ignoreNewData = true;
 }
 
-void GpuTextureDrawingBackend::timerCallback()
+void GpuTextureDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin,
+                                             int64_t end, int fftSize, float *data, int channel)
 {
-    if (ignoreNewData)
     {
-        return;
+        auto newFftToDraw =
+            std::make_shared<FftToDraw>(trackIdentifier, secondTileIndex, begin, end, fftSize, data, channel);
+        std::lock_guard lock(fftsToDrawMutex);
+        fftsToDrawQueue.push(newFftToDraw);
     }
-
-    if (imageAccessMutex.try_lock())
     {
-        // if some textures have been updated, re-upload textures to GPU
-        if (lastDrawTilesNonce != tilesNonce)
+        const juce::MessageManagerLock mmlock;
+        repaint();
+    }
+}
+
+void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> fftData)
+{
+    // if the tile does not exists, create it
+    size_t tileToDrawIn;
+    auto existingTrackTile = getTileIndexIfExists(fftData->trackIdentifier, fftData->secondTileIndex);
+    if (existingTrackTile >= 0)
+    {
+        tileToDrawIn = (size_t)existingTrackTile;
+    }
+    else
+    {
+        tileToDrawIn = createSecondTile(fftData->trackIdentifier, fftData->secondTileIndex);
+    }
+    // draw the fft inside the tile
+    size_t startPixel =
+        (size_t)juce::jlimit(0, SECOND_TILE_WIDTH - 1,
+                             (int)((float(fftData->begin) / float(VISUAL_SAMPLE_RATE)) * float(SECOND_TILE_WIDTH)));
+    size_t endPixel = (size_t)juce::jlimit(
+        0, SECOND_TILE_WIDTH - 1, (int)((float(fftData->end) / float(VISUAL_SAMPLE_RATE)) * float(SECOND_TILE_WIDTH)));
+    // iterate from left to right
+    for (size_t horizontalPixel = startPixel; horizontalPixel <= endPixel; horizontalPixel++)
+    {
+        // iterate from center towards borders
+        for (size_t verticalPos = 0; verticalPos < (SECOND_TILE_HEIGHT >> 1); verticalPos++)
         {
-            openGLContext.executeOnGLThread(
-                [this](juce::OpenGLContext &) {
-                    for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
-                    {
-                        if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
-                        {
-                            spdlog::debug("Trying to update GPU texture");
-                            secondTilesRingBuffer[i].mesh->refreshGpuTextureIfChanged();
-                        }
-                    }
-                },
-                true);
+            size_t frequencyBinIndex =
+                ((float(fftData->fftData.size()) *
+                  freqTransformer->transformInv(float(verticalPos) / float(SECOND_TILE_HEIGHT >> 1))) +
+                 0.5f);
+            frequencyBinIndex = (size_t)juce::jlimit(0, (int)fftData->fftData.size() - 1, (int)frequencyBinIndex);
+            float intensityDb = fftData->fftData[frequencyBinIndex];
+            float intensityNormalized = juce::jmap(intensityDb, MIN_DB, 0.0f, 0.0f, 1.0f);
+            intensityNormalized = juce::jlimit(0.0f, 1.0f, intensityNormalized);
+            intensityNormalized = intensityTransformer->transformInv(intensityNormalized);
 
-            lastDrawTilesNonce = tilesNonce;
-            repaint();
+            if (fftData->channel == 0 || fftData->channel == 2)
+            {
+                setTilePixelIntensity(tileToDrawIn, horizontalPixel, (SECOND_TILE_HEIGHT >> 1) - verticalPos,
+                                      intensityNormalized);
+            }
+            if (fftData->channel == 1 || fftData->channel == 2)
+            {
+                setTilePixelIntensity(tileToDrawIn, horizontalPixel, (SECOND_TILE_HEIGHT >> 1) + verticalPos,
+                                      intensityNormalized);
+            }
         }
-
-        imageAccessMutex.unlock();
     }
 }
 
@@ -265,13 +349,10 @@ size_t GpuTextureDrawingBackend::createSecondTile(uint64_t trackIdentifier, int6
         }
         newTileIndex = secondTileNextIndex;
         // register the vertice, textures and triangle ids against openGL
-        openGLContext.executeOnGLThread(
-            [this, newTileIndex](juce::OpenGLContext &) {
-                secondTilesRingBuffer[newTileIndex].mesh->registerGlObjects();
-            },
-            true);
+        secondTilesRingBuffer[newTileIndex].mesh->registerGlObjects();
     }
-    // if the ring buffer is full, remove nextItem, clear its index and replace it with cleared one before returning it
+    // if the ring buffer is full, remove nextItem, clear its index and replace it with cleared one before returning
+    // it
     else
     {
         newTileIndex = secondTileNextIndex;
@@ -291,19 +372,18 @@ size_t GpuTextureDrawingBackend::createSecondTile(uint64_t trackIdentifier, int6
     secondTilesRingBuffer[newTileIndex].tileIndexPosition = secondTileIndex;
     secondTilesRingBuffer[newTileIndex].samplePosition = secondTileIndex * VISUAL_SAMPLE_RATE;
     secondTilesRingBuffer[newTileIndex].trackIdentifer = trackIdentifier;
-    auto optionalColor = trackInfoStore.getTrackColor(trackIdentifier);
+
     juce::Colour col = COLOR_WHITE;
-    if (optionalColor.has_value())
+    auto optionalColor = knownTrackColors.find(trackIdentifier);
+    if (optionalColor != knownTrackColors.end())
     {
-        col.fromFloatRGBA(optionalColor->red, optionalColor->green, optionalColor->blue, optionalColor->alpha);
+        col = optionalColor->second;
     }
-    openGLContext.executeOnGLThread(
-        [this, newTileIndex, col](juce::OpenGLContext &) {
-            secondTilesRingBuffer[newTileIndex].mesh->changeColor(col);
-            secondTilesRingBuffer[newTileIndex].mesh->setPosition(secondTilesRingBuffer[newTileIndex].samplePosition,
-                                                                  VISUAL_SAMPLE_RATE);
-        },
-        true);
+
+    secondTilesRingBuffer[newTileIndex].mesh->changeColor(col);
+    secondTilesRingBuffer[newTileIndex].mesh->setPosition(secondTilesRingBuffer[newTileIndex].samplePosition,
+                                                          VISUAL_SAMPLE_RATE);
+
     auto newIndex = std::pair<uint64_t, int64_t>(trackIdentifier, secondTileIndex);
     auto newSetEntry = std::pair<std::pair<uint64_t, int64_t>, size_t>(newIndex, newTileIndex);
     tileIndexByTrackIdAndPosition.insert(newSetEntry);

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "AudioTransport/ColorBytes.h"
+#include "StationApp/Audio/TrackColorUpdateTask.h"
 #include "StationApp/Audio/TrackInfoUpdateTask.h"
 #include "TaskManagement/TaskListener.h"
+#include "TaskManagement/TaskingManager.h"
 #include <map>
 #include <memory>
 #include <mutex>
@@ -14,6 +16,10 @@
 class TrackInfoStore : public TaskListener
 {
   public:
+    TrackInfoStore(TaskingManager &tm) : taskingManager(tm)
+    {
+    }
+
     bool taskHandler(std::shared_ptr<Task> task)
     {
         auto trackinfoUpdate = std::dynamic_pointer_cast<TrackInfoUpdateTask>(task);
@@ -46,6 +52,10 @@ class TrackInfoStore : public TaskListener
                         existingColor.red = trackinfoUpdate->redColorLevel;
                         existingColor.green = trackinfoUpdate->greenColorLevel,
                         existingColor.blue = trackinfoUpdate->blueColorLevel;
+
+                        auto colorUpdateTask = std::make_shared<TrackColorUpdateTask>(
+                            trackinfoUpdate->identifier, existingColor.red, existingColor.green, existingColor.blue);
+                        taskingManager.broadcastNestedTaskNow(colorUpdateTask);
                     }
                 }
                 else
@@ -58,6 +68,11 @@ class TrackInfoStore : public TaskListener
                     {
                         throw std::runtime_error("failed to insert color into TrackInfoStore");
                     }
+
+                    auto colorUpdateTask = std::make_shared<TrackColorUpdateTask>(
+                        trackinfoUpdate->identifier, trackinfoUpdate->redColorLevel, trackinfoUpdate->greenColorLevel,
+                        trackinfoUpdate->blueColorLevel);
+                    taskingManager.broadcastNestedTaskNow(colorUpdateTask);
                 }
             }
 
@@ -94,4 +109,5 @@ class TrackInfoStore : public TaskListener
     std::map<uint64_t, AudioTransport::ColorContainer> colorsPerTrack;
     std::map<uint64_t, std::string> namesPerTrack;
     std::mutex mutex;
+    TaskingManager &taskingManager;
 };

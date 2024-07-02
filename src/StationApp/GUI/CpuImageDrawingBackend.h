@@ -63,7 +63,7 @@ class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
      * @param secondTileIndex index in seconds of the tile position
      * @return tile index of exists, -1 otherwise
      */
-    int64_t getTileIndexIfExists(uint64_t trackIdentifier, int64_t secondTileIndex) override;
+    int64_t getTileIndexIfExists(uint64_t trackIdentifier, int64_t secondTileIndex);
 
     /**
      * @brief Create a Second Tile object in the secondTilesRingBuffer ring buffer, eventually overwriting/deleting
@@ -75,7 +75,7 @@ class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
      * @param secondTileIndex index of the tile in seconds this tile is positioned at
      * @return index of the new tile in the second-tile ring buffer
      */
-    size_t createSecondTile(uint64_t trackIdentifier, int64_t secondTileIndex) override;
+    size_t createSecondTile(uint64_t trackIdentifier, int64_t secondTileIndex);
 
     /**
      * @brief Set a pixel inside an already existing tile
@@ -85,7 +85,21 @@ class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
      * @param y vertical position in pixels
      * @param intensity intensity of the FFT at this position, between 0 and 1
      */
-    void setTilePixelIntensity(size_t tileRingBufferIndex, int x, int y, float intensity) override;
+    void setTilePixelIntensity(size_t tileRingBufferIndex, int x, int y, float intensity);
+
+    /**
+     * @brief Draws the provided FFT (there's only one) on the TrackSecondTile;
+     *
+     * @param trackIdentifier identifier of the track this fft is for
+     * @param secondTileIndex index of the second-tile (in seconds starting at zero)
+     * @param begin start sample in the tile
+     * @param end end sample in the tile
+     * @param fftSize number of frequency bins in the provided fft
+     * @param data pointer to the floats containing fft bins intensities in decibels
+     * @param channel 0 for left, 1 for right, 2 for both
+     */
+    void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
+                       float *data, int channel) override;
 
     int64_t viewPosition; /**< Position of the view in samples */
     int64_t viewScale;    /**< Scale of the view in samples per pixels */

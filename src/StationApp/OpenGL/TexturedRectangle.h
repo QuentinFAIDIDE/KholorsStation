@@ -15,6 +15,7 @@
 
 /**
  * @brief An opengl mesh for a rectangle without texture.
+ * This object should only be used within the OpenGL renderer thread.
  */
 class TexturedRectangle : public GlMesh
 {
@@ -29,21 +30,18 @@ class TexturedRectangle : public GlMesh
     /**
      * @brief If the texture has been changed since last upload
      * will reupload the texture to GPU.
-     * Warning: this is meant to be called from the openGL thread !
      */
     void refreshGpuTextureIfChanged();
 
     /**
      * @brief Change the vertice colors inside the GPU.
      * @param col The color to apply (alpha channel is ignored).
-     * Warning, you need to execute this on the openGL thread!
      */
     void changeColor(juce::Colour col);
 
     /**
      * @brief Set a pixel inside the texture.
-     * Note that it's not meant to be called by openGL thread, it just
-     * write to a buffer that the timer will periodically check on.
+     * It just write to a buffer and we bulk upload on refreshGpuTextureIfChanged.
      *
      * @param x horizontal position in the texture
      * @param y vertical position in the texture
@@ -55,7 +53,6 @@ class TexturedRectangle : public GlMesh
      * @brief Set position of the rectangle and its width.
      * Its height is assumed to be full height.
      * This is the height in audio samples given the VISUAL_SAMPLE_RATE.
-     * WARNING: call this from openGL thread !
      *
      * @param viewPositionSamples samples the objects starts at
      * @param width width of the object in audio samples
@@ -67,8 +64,7 @@ class TexturedRectangle : public GlMesh
     std::vector<float> texture;          /**< Raw intensities to use as texture */
     int64_t textureNonce;                /**< A number changed everytime the texture gets modified */
     int64_t lastUploadedTextureNonce;    /**< Last nonce where the texture was uploaded to GPU */
-    std::mutex mutex; /**< protect concurrent access to member, especially used for nonces, or for locking texture
-                         upload/display */
+
     std::vector<Vertex> vertices;          /**< List of vertices with position, texture pos, and color */
     std::vector<unsigned int> triangleIds; /**< List of vertice ids to draw each triangle */
 
