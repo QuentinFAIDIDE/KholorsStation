@@ -10,6 +10,7 @@
 #define MAX_SCALE_SAMPLE_PER_PIXEL 800
 #define MIN_SCALE_SAMPLE_PER_PIXEL 80
 #define PIXEL_SCALE_SPEED 0.01f
+#define MAX_IDLE_MS_TIME_BEFORE_CLEAR 500
 
 /**
  * @brief Describe a class which displays a timeline, and
@@ -47,4 +48,5 @@ class FreqTimeView : public juce::Component, public TaskListener
     int64_t viewPosition;                   /**< View position in samples */
     int64_t viewScale;                      /**< View scale in samples per pixels */
     int64_t lastMouseDragX, lastMouseDragY; /**< Last position of the mouse cursor at last drag iteration */
+    int64_t lastFftDrawTimeMs;              /**< Last millisecond timestamp at when something was drawn */
 };

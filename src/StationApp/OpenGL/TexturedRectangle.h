@@ -50,6 +50,12 @@ class TexturedRectangle : public GlMesh
     void setPixelAt(int x, int y, float intensity);
 
     /**
+     * @brief Clears all the texture data. It just clear the buffer
+     * so calling refreshGpuTextureIfChanged is necessary after.
+     */
+    void clearAllData();
+
+    /**
      * @brief Set position of the rectangle and its width.
      * Its height is assumed to be full height.
      * This is the height in audio samples given the VISUAL_SAMPLE_RATE.

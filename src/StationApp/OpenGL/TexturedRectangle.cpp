@@ -161,3 +161,14 @@ void TexturedRectangle::setPixelAt(int x, int y, float intensity)
     texture[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = juce::jlimit(0.0f, 1.0f, intensity);
     textureNonce++;
 }
+
+void TexturedRectangle::clearAllData()
+{
+    for (size_t i = 0; i < (size_t)textureWidth; i++)
+    {
+        for (size_t j = 0; j < (size_t)textureHeight; j++)
+        {
+            setPixelAt(i, j, 0.0f);
+        }
+    }
+}

@@ -141,6 +141,11 @@ class FftDrawingBackend : public juce::Component
     {
     }
 
+    /**
+     * @brief clears on screen data.
+     */
+    virtual void clearDisplayedFFTs(){};
+
   protected:
     /**
      * @brief Draws the provided FFT (there's only one) on the TrackSecondTile;

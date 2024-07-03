@@ -11,7 +11,7 @@
 #include <stdexcept>
 
 GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis)
-    : FftDrawingBackend(tis), viewPosition(0), viewScale(150), bpm(120), ignoreNewData(true)
+    : FftDrawingBackend(tis), ignoreNewData(true), viewPosition(0), viewScale(150), bpm(120), needToResetTiles(false)
 {
     openGLContext.setRenderer(this);
     openGLContext.attachTo(*this);
@@ -151,6 +151,23 @@ void GpuTextureDrawingBackend::uploadShadersUniforms()
 
 void GpuTextureDrawingBackend::renderOpenGL()
 {
+    // if necessary, clear all tiles first
+    {
+        std::lock_guard lock(tilesResetMutex);
+        if (needToResetTiles)
+        {
+            for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+            {
+                if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
+                {
+                    secondTilesRingBuffer[i].mesh->clearAllData();
+                    secondTilesRingBuffer[i].mesh->refreshGpuTextureIfChanged();
+                }
+            }
+            needToResetTiles = false;
+        }
+    }
+
     // process queue of ffts to draw inside tiles
     std::vector<std::shared_ptr<FftToDraw>> currentFftsToDraw;
     {
@@ -229,6 +246,12 @@ void GpuTextureDrawingBackend::setTrackColor(uint64_t trackIdentifier, juce::Col
     std::pair<uint64_t, juce::Colour> colorToPush(trackIdentifier, col);
     std::lock_guard lock(openGlThreadColorsMutex);
     colorUpdatesToApply.push(colorToPush);
+}
+
+void GpuTextureDrawingBackend::clearDisplayedFFTs()
+{
+    std::lock_guard lock(tilesResetMutex);
+    needToResetTiles = true;
 }
 
 void GpuTextureDrawingBackend::openGLContextClosing()

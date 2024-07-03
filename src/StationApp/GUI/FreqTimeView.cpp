@@ -55,6 +55,16 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
         if (fftDrawBackend != nullptr)
         {
             fftDrawBackend->displayNewFftData(newFftDataTask);
+
+            // if time since last drawing was too large, clear all past data
+            int64_t currentTime = juce::Time().getCurrentTime().toMilliseconds();
+            if ((currentTime - lastFftDrawTimeMs) > MAX_IDLE_MS_TIME_BEFORE_CLEAR)
+            {
+                fftDrawBackend->clearDisplayedFFTs();
+            }
+
+            // record last drawing time
+            lastFftDrawTimeMs = currentTime;
         }
         newFftDataTask->setCompleted(true);
         // TODO: under lock, update if necessary latest data location

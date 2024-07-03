@@ -69,6 +69,12 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     void updateViewScale(uint32_t samplesPerPixel) override;
 
     /**
+     * @brief clears on screen data.
+     * In this openGL version, queue clearing to be done by openGL Thread.
+     */
+    void clearDisplayedFFTs() override;
+
+    /**
      * @brief      Called when opengl context is created.
      */
     void newOpenGLContextCreated() override;
@@ -196,9 +202,9 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
 
     int64_t viewPosition, viewScale, viewHeight, viewWidth; /*< read by gl thread to update uniforms and view */
     float bpm;                         /**< values read by openGL thread to update uniforms and view */
-    std::mutex glThreadUniformsMutex;  /* to lock modifications of position, scale or bpm */
-    int64_t glThreadUniformsNonce;     /* to know if we need to update position and  */
-    int64_t lastUsedGlThreadUnifNonce; /*< the last nonce value when the uniforms got updated*/
+    std::mutex glThreadUniformsMutex;  /**< to lock modifications of position, scale or bpm */
+    int64_t glThreadUniformsNonce;     /**< to know if we need to update position and  */
+    int64_t lastUsedGlThreadUnifNonce; /**< the last nonce value when the uniforms got updated*/
 
     std::queue<std::shared_ptr<FftToDraw>>
         fftsToDrawQueue;        /**< queue of FFT to be drawn. Depends on the fftsToDrawLock */
@@ -208,6 +214,9 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     std::queue<std::pair<uint64_t, juce::Colour>>
         colorUpdatesToApply; /**< track colors to be applied by openGL thread, need the lock */
     std::map<uint64_t, juce::Colour> knownTrackColors; /**< track colors known to the openGL thread */
+
+    bool needToResetTiles;      /**< true when the openGL thread is expected to clear all tiles */
+    std::mutex tilesResetMutex; /**< mutex to protect acces to clearAllTiles */
 
     float grid0FrameWidth, grid1FrameWidth, grid2FrameWidth; /**< width of the viewer grid levels in audio samples */
     float grid0PixelWidth, grid1PixelWidth, grid2PixelWidth; /**< width of the viewer grid levels in pixels */
