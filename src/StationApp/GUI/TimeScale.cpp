@@ -43,7 +43,7 @@ void TimeScale::paint(juce::Graphics &g)
 
     g.setFont(juce::Font(TITLE_PIXELS_HEIGHT));
     g.setColour(COLOR_WHITE);
-    g.drawText(TRANS("Track Time").toUpperCase(), getLocalBounds().withTrimmedBottom(TITLE_PIXELS_FROM_BOTTOM),
+    g.drawText(TRANS("Song Time").toUpperCase(), getLocalBounds().withTrimmedBottom(TITLE_PIXELS_FROM_BOTTOM),
                juce::Justification::centredBottom, false);
 }
 

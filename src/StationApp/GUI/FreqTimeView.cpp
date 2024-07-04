@@ -39,6 +39,7 @@ FreqTimeView::FreqTimeView(TrackInfoStore &tis)
 
     addAndMakeVisible(frequencyScale);
     addAndMakeVisible(timeScale);
+    addAndMakeVisible(trackList);
 
     startTimer(VIEW_MOVE_TIME_INTERVAL_MS);
 }
@@ -59,11 +60,13 @@ void FreqTimeView::resized()
 {
 
     auto fftBounds = getLocalBounds();
+    auto trackListBounds = fftBounds.removeFromRight(TRACK_LIST_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
     auto frequencyGridBounds = fftBounds.removeFromLeft(FREQUENCY_GRID_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
     auto timeGridBounds = fftBounds.removeFromBottom(TIME_GRID_HEIGHT);
     fftDrawBackend->setBounds(fftBounds);
     frequencyScale.setBounds(frequencyGridBounds);
     timeScale.setBounds(timeGridBounds);
+    trackList.setBounds(trackListBounds);
 
     std::lock_guard lock(viewMutex);
     fftDrawBackend->updateViewPosition(viewPosition);
