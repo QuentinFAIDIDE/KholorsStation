@@ -35,20 +35,25 @@ void FrequencyScale::paint(juce::Graphics &g)
     {
         labelsToDraw.push_back(labs100Hz[i]);
     }
+    auto labs350Hz = generateLabelBox(350, "350", "Hz");
+    for (size_t i = 0; i < labs350Hz.size(); i++)
+    {
+        labelsToDraw.push_back(labs350Hz[i]);
+    }
     auto labs1kHz = generateLabelBox(1000, "1", "kHz");
     for (size_t i = 0; i < labs1kHz.size(); i++)
     {
         labelsToDraw.push_back(labs1kHz[i]);
     }
+    auto labs35kHz = generateLabelBox(3500, "3.5", "kHz");
+    for (size_t i = 0; i < labs35kHz.size(); i++)
+    {
+        labelsToDraw.push_back(labs35kHz[i]);
+    }
     auto labs10kHz = generateLabelBox(10000, "10", "kHz");
     for (size_t i = 0; i < labs10kHz.size(); i++)
     {
         labelsToDraw.push_back(labs10kHz[i]);
-    }
-    auto labs20kHz = generateLabelBox(20000, "20", "kHz");
-    for (size_t i = 0; i < labs20kHz.size(); i++)
-    {
-        labelsToDraw.push_back(labs20kHz[i]);
     }
 
     drawLabels(g, labelsToDraw);
