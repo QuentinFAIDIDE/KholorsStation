@@ -18,19 +18,19 @@ SolidRectangle::SolidRectangle()
 
     // upper left corner 0
     vertices.push_back(
-        {{-1.0f, -1.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue(), 1.0f}, {0.0f, 1.0f}});
+        {{-1.0f, -1.0f, -1.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue()}, {0.0f, 1.0f}});
 
     // upper right corner 1
     vertices.push_back(
-        {{1.0f, -1.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue(), 1.0f}, {1.0f, 1.0f}});
+        {{1.0f, -1.0f, -1.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue()}, {1.0f, 1.0f}});
 
     // lower right corner 2
     vertices.push_back(
-        {{1.0f, 1.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue(), 1.0f}, {1.0f, 0.0f}});
+        {{1.0f, 1.0f, -1.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue()}, {1.0f, 0.0f}});
 
     // lower left corner 3
     vertices.push_back(
-        {{-1.0f, 1.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue(), 1.0f}, {0.0f, 0.0f}});
+        {{-1.0f, 1.0f, -1.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue()}, {0.0f, 0.0f}});
 
     // lower left triangle
     triangleIds.push_back(0);

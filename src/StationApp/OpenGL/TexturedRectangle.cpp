@@ -11,19 +11,19 @@ TexturedRectangle::TexturedRectangle(int64_t width, int64_t height, juce::Colour
 
     // upper left corner 0
     vertices.push_back(
-        {{-1.0f, -1.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue(), 1.0f}, {0.0f, 1.0f}});
+        {{-1.0f, -1.0f, 0.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue()}, {0.0f, 1.0f}});
 
     // upper right corner 1
     vertices.push_back(
-        {{1.0f, -1.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue(), 1.0f}, {1.0f, 1.0f}});
+        {{1.0f, -1.0f, 0.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue()}, {1.0f, 1.0f}});
 
     // lower right corner 2
     vertices.push_back(
-        {{1.0f, 1.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue(), 1.0f}, {1.0f, 0.0f}});
+        {{1.0f, 1.0f, 0.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue()}, {1.0f, 0.0f}});
 
     // lower left corner 3
     vertices.push_back(
-        {{-1.0f, 1.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue(), 1.0f}, {0.0f, 0.0f}});
+        {{-1.0f, 1.0f, 0.0f}, {col.getFloatRed(), col.getFloatGreen(), col.getFloatBlue()}, {0.0f, 0.0f}});
 
     // lower left triangle
     triangleIds.push_back(0);
@@ -125,7 +125,6 @@ void TexturedRectangle::changeColor(juce::Colour newColor)
         vertices[i].colour[0] = newColor.getFloatRed();
         vertices[i].colour[1] = newColor.getFloatGreen();
         vertices[i].colour[2] = newColor.getFloatBlue();
-        vertices[i].colour[3] = 0.0f;
     }
 
     glBindVertexArray(vao);
@@ -134,19 +133,26 @@ void TexturedRectangle::changeColor(juce::Colour newColor)
     printAllOpenGlError();
 }
 
-void TexturedRectangle::setPosition(int64_t viewPositionSamples, int64_t width)
+void TexturedRectangle::setPosition(int64_t viewPositionSamples, int64_t width, uint64_t trackIdentifier)
 {
+    uint64_t maxUint64 = 0;
+    maxUint64 -= 1;
+
     // upper left corner 0
     vertices[0].position[0] = viewPositionSamples;
+    vertices[0].position[2] = (float)trackIdentifier / (float)maxUint64;
 
     // upper right corner 1
     vertices[1].position[0] = viewPositionSamples + width;
+    vertices[1].position[2] = (float)trackIdentifier / (float)maxUint64;
 
     // lower right corner 2
     vertices[2].position[0] = viewPositionSamples + width;
+    vertices[2].position[2] = (float)trackIdentifier / (float)maxUint64;
 
     // lower left corner 3
     vertices[3].position[0] = viewPositionSamples;
+    vertices[3].position[2] = (float)trackIdentifier / (float)maxUint64;
 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);

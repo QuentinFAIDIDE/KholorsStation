@@ -437,7 +437,7 @@ size_t GpuTextureDrawingBackend::createSecondTile(uint64_t trackIdentifier, int6
 
     secondTilesRingBuffer[newTileIndex].mesh->changeColor(col);
     secondTilesRingBuffer[newTileIndex].mesh->setPosition(secondTilesRingBuffer[newTileIndex].samplePosition,
-                                                          VISUAL_SAMPLE_RATE);
+                                                          VISUAL_SAMPLE_RATE, trackIdentifier);
 
     auto newIndex = std::pair<uint64_t, int64_t>(trackIdentifier, secondTileIndex);
     auto newSetEntry = std::pair<std::pair<uint64_t, int64_t>, size_t>(newIndex, newTileIndex);

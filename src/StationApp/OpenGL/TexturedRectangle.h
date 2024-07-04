@@ -59,11 +59,13 @@ class TexturedRectangle : public GlMesh
      * @brief Set position of the rectangle and its width.
      * Its height is assumed to be full height.
      * This is the height in audio samples given the VISUAL_SAMPLE_RATE.
+     * The trackIdentifier will serve as a height to decide on drawing order.
      *
      * @param viewPositionSamples samples the objects starts at
      * @param width width of the object in audio samples
+     * @param trackIdentifier identifier of the track to draw
      */
-    void setPosition(int64_t viewPositionSamples, int64_t width);
+    void setPosition(int64_t viewPositionSamples, int64_t width, uint64_t trackIdentifer);
 
   private:
     int64_t textureWidth, textureHeight; /**< Dimensions of texture */

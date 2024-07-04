@@ -6,8 +6,8 @@ using namespace juce::gl;
 // a structure to pass data to openGL as buffers
 struct Vertex
 {
-    float position[2];
-    float colour[4];
+    float position[3];
+    float colour[3];
     float texturePosition[2];
 
     /**
@@ -18,10 +18,10 @@ struct Vertex
     static void registerVertexFormat()
     {
         // position
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
         glEnableVertexAttribArray(0);
         // color
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(2 * sizeof(float)));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
         // texture
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
