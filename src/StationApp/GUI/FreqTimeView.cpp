@@ -33,7 +33,12 @@ FreqTimeView::FreqTimeView(TrackInfoStore &tis)
 
     lastTimerCallMs = juce::Time().getCurrentTime().toMilliseconds();
 
+    timeScale.setBpm(120);
+    timeScale.setViewScale(viewScale);
+    timeScale.setViewPosition(viewScale);
+
     addAndMakeVisible(frequencyScale);
+    addAndMakeVisible(timeScale);
 
     startTimer(VIEW_MOVE_TIME_INTERVAL_MS);
 }
@@ -52,10 +57,13 @@ void FreqTimeView::paintOverChildren(juce::Graphics &g)
 
 void FreqTimeView::resized()
 {
+
     auto fftBounds = getLocalBounds();
-    auto frequencyGridBounds = fftBounds.removeFromLeft(FREQUENCY_GRID_WIDTH);
+    auto frequencyGridBounds = fftBounds.removeFromLeft(FREQUENCY_GRID_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
+    auto timeGridBounds = fftBounds.removeFromBottom(TIME_GRID_HEIGHT);
     fftDrawBackend->setBounds(fftBounds);
     frequencyScale.setBounds(frequencyGridBounds);
+    timeScale.setBounds(timeGridBounds);
 
     std::lock_guard lock(viewMutex);
     fftDrawBackend->updateViewPosition(viewPosition);
@@ -89,6 +97,8 @@ void FreqTimeView::timerCallback()
                 viewPosition = 0;
             }
             fftDrawBackend->updateViewPosition(viewPosition);
+            timeScale.setViewPosition(viewPosition);
+            repaint();
         }
         // if play cursor is between 3/4 of view and right side, apply constant view moving speed
         else if (lastPlayCursorPos >= (rightScreenSideSamplePos - screenQuarter + 1))
@@ -99,6 +109,8 @@ void FreqTimeView::timerCallback()
                 viewPosition = 0;
             }
             fftDrawBackend->updateViewPosition(viewPosition);
+            timeScale.setViewPosition(viewPosition);
+            repaint();
         }
     }
     lastTimerCallMs = currentTime;
@@ -161,6 +173,7 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
         if (std::abs(lastReceivedBpm - bpmUpdateTask->bpm) >= std::numeric_limits<float>::epsilon())
         {
             fftDrawBackend->updateBpm(bpmUpdateTask->bpm);
+            timeScale.setBpm(bpmUpdateTask->bpm);
             lastReceivedBpm = bpmUpdateTask->bpm;
         }
         bpmUpdateTask->setCompleted(true);
@@ -213,6 +226,7 @@ void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
             viewScale = juce::jlimit(MIN_SCALE_SAMPLE_PER_PIXEL, MAX_SCALE_SAMPLE_PER_PIXEL,
                                      int(float(viewScale) * (1.0f + (float(dragY) * PIXEL_SCALE_SPEED))));
             fftDrawBackend->updateViewScale(viewScale);
+            timeScale.setViewScale(viewScale);
 
             // we compute view position shift to maintain the same point under cursor after zooming
             int64_t oldCursorSamplePos = viewPosition + (e.x * oldViewScale);
@@ -225,6 +239,7 @@ void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
                 viewPosition = 0;
             }
             fftDrawBackend->updateViewPosition(viewPosition);
+            timeScale.setViewPosition(viewPosition);
 
             needRepaint = true;
         }
@@ -238,6 +253,7 @@ void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
                 viewPosition = 0;
             }
             fftDrawBackend->updateViewPosition(viewPosition);
+            timeScale.setViewPosition(viewPosition);
 
             needRepaint = true;
         }

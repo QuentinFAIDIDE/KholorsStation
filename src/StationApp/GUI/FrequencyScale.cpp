@@ -68,7 +68,7 @@ void FrequencyScale::drawRotatedTitle(juce::Graphics &g)
     // nice trick from https://forum.juce.com/t/draw-rotated-text/14695/11
 
     juce::GlyphArrangement ga;
-    ga.addLineOfText(juce::Font(TITLE_PIXELS_HEIGHT), TRANS("Frequencies").toUpperCase(), 0, 0);
+    ga.addLineOfText(juce::Font(TITLE_PIXELS_HEIGHT), TRANS("Frequency").toUpperCase(), 0, 0);
     juce::Path p;
     ga.createPath(p);
 

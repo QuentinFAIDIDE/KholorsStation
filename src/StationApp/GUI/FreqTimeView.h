@@ -4,6 +4,7 @@
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FrequencyScale.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
+#include "StationApp/GUI/TimeScale.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_gui_basics/juce_gui_basics.h"
@@ -15,6 +16,7 @@
 #define MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS 250
 #define VIEW_MOVE_TIME_INTERVAL_MS 10
 #define FREQUENCY_GRID_WIDTH 80
+#define TIME_GRID_HEIGHT 50
 
 /**
  * @brief Describe a class which displays a timeline, and
@@ -66,6 +68,7 @@ class FreqTimeView : public juce::Component, public TaskListener, public juce::T
     int64_t viewScale;    /**< View scale in samples per pixels */
 
     FrequencyScale frequencyScale;
+    TimeScale timeScale;
 
     float lastReceivedBpm;
 };

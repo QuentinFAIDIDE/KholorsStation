@@ -180,11 +180,11 @@ void main()
             
     // vertical grid tempo bars
     } else if ( abs( grid0position - round(grid0position) )*grid0PixelWidth < 1.5 && grid0PixelWidth > 25 ) {
-        FragColor = vec4(0.4,0.4,0.4,1.0);
+        FragColor = vec4(0.25,0.25,0.25,1.0);
     } else if ( abs( grid1position - round(grid1position) )*grid1PixelWidth < 1.5 && grid1PixelWidth > 25 ) {
-        FragColor = vec4(0.2,0.2,0.2,1.0);
-    } else if ( abs( grid2position - round(grid2position) )*grid2PixelWidth < 1.5 && grid2PixelWidth > 15 ) {
         FragColor = vec4(0.15,0.15,0.15,1.0);
+    } else if ( abs( grid2position - round(grid2position) )*grid2PixelWidth < 1.5 && grid2PixelWidth > 25 ) {
+        FragColor = vec4(0.10,0.10,0.10,1.0);
 
     // background
     } else {
