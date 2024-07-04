@@ -6,12 +6,15 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <cstdint>
 #include <memory>
+#include <mutex>
 
 #define VISUAL_SAMPLE_RATE 48000
+#define MIN_SAMPLE_PLAY_CURSOR_BACKWARD_MOVEMENT 24000
 #define IMAGES_RING_BUFFER_SIZE 128
 #define MIN_DB -64.0f
 #define SECOND_TILE_WIDTH 64
 #define SECOND_TILE_HEIGHT 512
+#define PLAY_CURSOR_WIDTH 2
 
 /**
  * @brief Abstract class that receives the audio data (sfft freqs intensities) to display
@@ -20,7 +23,7 @@
 class FftDrawingBackend : public juce::Component
 {
   public:
-    FftDrawingBackend(TrackInfoStore &tis) : trackInfoStore(tis)
+    FftDrawingBackend(TrackInfoStore &tis) : trackInfoStore(tis), playCursorPosition(0)
     {
         setInterceptsMouseClicks(false, false);
     };
@@ -142,6 +145,37 @@ class FftDrawingBackend : public juce::Component
     }
 
     /**
+     * @brief Submit a new play cursor position to the drawing backend, which
+     * may or may not accept it. It will first be converted to a position in
+     * with a sample rate of VISUAL_SAMPLE_RATE.
+     *
+     * @param samplePosition sample position of the play cursor
+     * @param sampleRate sample rate in which the cursor position is given
+     */
+    void submitNewPlayCursorPosition(int64_t samplePosition, uint32_t sampleRate)
+    {
+        std::lock_guard lock(playCursorMutex);
+        int64_t newPlayCursorPos = samplePosition;
+        if (sampleRate != VISUAL_SAMPLE_RATE)
+        {
+            newPlayCursorPos = (int64_t)(float(samplePosition) * ((float)VISUAL_SAMPLE_RATE / (float)samplePosition));
+        }
+        // only update the play cursor pos if it's bigger than previous one,
+        // or if it's smaller and beyond a certain distance
+        if (newPlayCursorPos > playCursorPosition ||
+            std::abs(playCursorPosition - newPlayCursorPos) > MIN_SAMPLE_PLAY_CURSOR_BACKWARD_MOVEMENT)
+        {
+            playCursorPosition = newPlayCursorPos;
+        }
+    }
+
+    int64_t getPlayCursorPosition()
+    {
+        std::lock_guard lock(playCursorMutex);
+        return playCursorPosition;
+    }
+
+    /**
      * @brief clears on screen data.
      */
     virtual void clearDisplayedFFTs(){};
@@ -164,6 +198,9 @@ class FftDrawingBackend : public juce::Component
     TrackInfoStore &trackInfoStore;
     NormalizedUnitTransformer *freqTransformer;
     NormalizedUnitTransformer *intensityTransformer;
+
+    int64_t playCursorPosition; /**< position of the play cursor to draw */
+    std::mutex playCursorMutex; /**< Mutex to protect access to play cursor */
 
     int64_t tilesNonce;          /**< A nonce that is incremented when the tiles are updated */
     std::mutex imageAccessMutex; /**< Mutex to protect image access */

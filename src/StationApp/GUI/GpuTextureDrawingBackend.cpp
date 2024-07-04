@@ -26,6 +26,23 @@ void GpuTextureDrawingBackend::paint(juce::Graphics &g)
 {
     g.setColour(COLOR_WHITE.withAlpha(0.2f));
     g.fillRect(getLocalBounds().removeFromTop(1));
+
+    int64_t viewPositionCopy, viewScaleCopy;
+    {
+        std::lock_guard lock(glThreadUniformsMutex);
+        viewPositionCopy = viewPosition;
+        viewScaleCopy = viewScale;
+    }
+    int playCursorStartPixel = 0;
+    {
+        std::lock_guard lock(playCursorMutex);
+        playCursorStartPixel = (float)(playCursorPosition - viewPositionCopy) / (float)viewScaleCopy;
+    }
+    auto areaRightToCursor = getLocalBounds().withTrimmedLeft(playCursorStartPixel);
+    auto playCursorBounds = areaRightToCursor.withWidth(PLAY_CURSOR_WIDTH);
+
+    g.setColour(COLOR_WHITE);
+    g.fillRect(playCursorBounds);
 }
 
 void GpuTextureDrawingBackend::resized()

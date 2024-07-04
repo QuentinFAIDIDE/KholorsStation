@@ -11,13 +11,15 @@
 #define MIN_SCALE_SAMPLE_PER_PIXEL 80
 #define PIXEL_SCALE_SPEED 0.01f
 #define MAX_IDLE_MS_TIME_BEFORE_CLEAR 500
+#define MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS 250
+#define VIEW_MOVE_TIME_INTERVAL_MS 10
 
 /**
  * @brief Describe a class which displays a timeline, and
  * which own a drawing backend that will draw FFT of signal
  * received. It will draw labels and eventually more info over drawing widgets.
  */
-class FreqTimeView : public juce::Component, public TaskListener
+class FreqTimeView : public juce::Component, public TaskListener, public juce::Timer
 {
   public:
     FreqTimeView(TrackInfoStore &);
@@ -28,6 +30,9 @@ class FreqTimeView : public juce::Component, public TaskListener
     void resized() override;
     void mouseDrag(const juce::MouseEvent &e) override;
     void mouseDown(const juce::MouseEvent &e) override;
+    void mouseUp(const juce::MouseEvent &e) override;
+
+    void timerCallback() override;
 
     /**
      * @brief Receives tasks from tasking manager and is responsible for
@@ -45,8 +50,16 @@ class FreqTimeView : public juce::Component, public TaskListener
     NormalizedUnitTransformer intensityTransformer;    /**< Transformer for the intensity displayed */
     std::shared_ptr<FftDrawingBackend> fftDrawBackend; /**< Juce component that draws FFTs on screen */
     TrackInfoStore &trackInfoStore;         /**< Store track names and color for FftDrawingBackend to access */
-    int64_t viewPosition;                   /**< View position in samples */
-    int64_t viewScale;                      /**< View scale in samples per pixels */
     int64_t lastMouseDragX, lastMouseDragY; /**< Last position of the mouse cursor at last drag iteration */
     int64_t lastFftDrawTimeMs;              /**< Last millisecond timestamp at when something was drawn */
+    std::mutex lastFftDrawTimeMutex;
+
+    int64_t lastTimerCallMs; /**< time since last timer call */
+
+    bool isViewMoving; /**< tells if user is dragging the view around. Beware not to access outside of juce message
+                          thread */
+
+    std::mutex viewMutex; /**< Mutex for view position and scale */
+    int64_t viewPosition; /**< View position in samples */
+    int64_t viewScale;    /**< View scale in samples per pixels */
 };
