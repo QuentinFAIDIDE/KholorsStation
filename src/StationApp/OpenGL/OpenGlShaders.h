@@ -32,6 +32,7 @@ in vec4 ourColor;
 in vec2 TexCoord;
 
 uniform sampler2D sfftTexture;
+uniform int convolutionId;
 
 // Define kernels
 #define identity mat3(0, 0, 0, 0, 1, 0, 0, 0, 0)
@@ -99,8 +100,40 @@ float convolution(mat3 kernel, sampler2D sampler, vec2 uv)
 
 void main()
 {
-    float intensity = convolution(emboss, sfftTexture, TexCoord);
-    FragColor = vec4(ourColor.x, ourColor.y, ourColor.z, intensity);
+    if (convolutionId == 0)
+    {
+        float intensity = texture(sfftTexture, TexCoord).a;
+        FragColor = vec4(ourColor.x, ourColor.y, ourColor.z, intensity);
+    }
+    else
+    {
+        mat3 convolutionMat;
+        switch (convolutionId) {
+            case 1:
+              convolutionMat = edge0;
+              break;
+            case 2:
+              convolutionMat = edge1;
+              break;
+            case 3:
+              convolutionMat = edge2;
+              break;
+            case 4:
+              convolutionMat = sharpen;
+              break;
+            case 5:
+              convolutionMat = box_blur;
+              break;
+            case 6:
+              convolutionMat = gaussian_blur;
+              break;
+            case 7:
+              convolutionMat = emboss;
+              break;
+        }
+        float intensity = convolution(convolutionMat, sfftTexture, TexCoord);
+        FragColor = vec4(ourColor.x, ourColor.y, ourColor.z, intensity);
+    }
 }
 )";
 

@@ -51,6 +51,22 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
         int channel;                /**< 0 for left, 1 for right, 2 for both */
     };
 
+    /**
+     * @brief An identifier for the GPU convolution
+     * performed at openGL rendering time.
+     */
+    enum GpuConvolution
+    {
+        Identity = 0,
+        Edge0 = 1,
+        Edge1 = 2,
+        Edge2 = 3,
+        Sharpen = 4,
+        BoxBlur = 5,
+        GaussianBlur = 6,
+        Emboss = 7,
+    };
+
     void paint(juce::Graphics &g) override;
     void resized() override;
 
@@ -208,6 +224,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     std::atomic<bool> ignoreNewData; /**< after the openGL thread closes, prevent access to openGL resources */
 
     int64_t viewPosition, viewScale, viewHeight, viewWidth; /*< read by gl thread to update uniforms and view */
+    GpuConvolution convolutionId;                           /**< Identifier of the GLSL convolution to apply with GPU */
     float bpm;                         /**< values read by openGL thread to update uniforms and view */
     std::mutex glThreadUniformsMutex;  /**< to lock modifications of position, scale or bpm */
     int64_t glThreadUniformsNonce;     /**< to know if we need to update position and  */

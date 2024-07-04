@@ -4,6 +4,7 @@
 
 #include "../OpenGL/OpenGlShaders.h"
 #include "StationApp/OpenGL/GLInfoLogger.h"
+#include "juce_opengl/opengl/juce_gl.h"
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -12,8 +13,8 @@
 
 GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft,
                                                    NormalizedUnitTransformer &it)
-    : FftDrawingBackend(tis, ft, it), ignoreNewData(true), viewPosition(0), viewScale(150), bpm(120),
-      needToResetTiles(false)
+    : FftDrawingBackend(tis, ft, it), ignoreNewData(true), viewPosition(0), viewScale(150), convolutionId(Emboss),
+      bpm(120), needToResetTiles(false)
 {
     openGLContext.setRenderer(this);
     openGLContext.attachTo(*this);
@@ -150,6 +151,7 @@ void GpuTextureDrawingBackend::uploadShadersUniforms()
         texturedPositionedShader->use();
         texturedPositionedShader->setUniform("viewPosition", (GLfloat)viewPosition);
         texturedPositionedShader->setUniform("viewWidth", (GLfloat)(viewWidth * viewScale));
+        texturedPositionedShader->setUniform("convolutionId", (GLint)convolutionId);
 
         int framesPerMinutes = (60 * VISUAL_SAMPLE_RATE);
 
