@@ -1,13 +1,15 @@
 #include "CpuImageDrawingBackend.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
+#include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include <cstddef>
 #include <mutex>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 
-CpuImageDrawingBackend::CpuImageDrawingBackend(TrackInfoStore &tis)
-    : FftDrawingBackend(tis), viewPosition(0), viewScale(150), secondTileNextIndex(0), lastDrawTilesNonce(0)
+CpuImageDrawingBackend::CpuImageDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft,
+                                               NormalizedUnitTransformer &it)
+    : FftDrawingBackend(tis, ft, it), viewPosition(0), viewScale(150), secondTileNextIndex(0), lastDrawTilesNonce(0)
 {
     startTimer(CPU_IMAGE_FFT_BACKEND_UPDATE_INTERVAL_MS);
 }
@@ -159,13 +161,13 @@ void CpuImageDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t sec
         for (size_t verticalPos = 0; verticalPos < (SECOND_TILE_HEIGHT >> 1); verticalPos++)
         {
             size_t frequencyBinIndex =
-                ((float(fftSize) * freqTransformer->transformInv(float(verticalPos) / float(SECOND_TILE_HEIGHT >> 1))) +
+                ((float(fftSize) * freqTransformer.transformInv(float(verticalPos) / float(SECOND_TILE_HEIGHT >> 1))) +
                  0.5f);
             frequencyBinIndex = (size_t)juce::jlimit(0, fftSize - 1, (int)frequencyBinIndex);
             float intensityDb = data[frequencyBinIndex];
             float intensityNormalized = juce::jmap(intensityDb, MIN_DB, 0.0f, 0.0f, 1.0f);
             intensityNormalized = juce::jlimit(0.0f, 1.0f, intensityNormalized);
-            intensityNormalized = intensityTransformer->transformInv(intensityNormalized);
+            intensityNormalized = intensityTransformer.transformInv(intensityNormalized);
             if (channel == 0 || channel == 2)
             {
                 setTilePixelIntensity(tileToDrawIn, horizontalPixel, (SECOND_TILE_HEIGHT >> 1) - verticalPos,

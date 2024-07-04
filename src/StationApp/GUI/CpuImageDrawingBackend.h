@@ -9,7 +9,7 @@
 class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
 {
   public:
-    CpuImageDrawingBackend(TrackInfoStore &tis);
+    CpuImageDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft, NormalizedUnitTransformer &it);
     ~CpuImageDrawingBackend();
 
     void paint(juce::Graphics &g) override;

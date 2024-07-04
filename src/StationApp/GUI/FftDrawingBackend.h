@@ -2,6 +2,7 @@
 
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/GUI/FrequencyLinesDrawer.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <cstdint>
@@ -23,32 +24,13 @@
 class FftDrawingBackend : public juce::Component
 {
   public:
-    FftDrawingBackend(TrackInfoStore &tis) : trackInfoStore(tis), playCursorPosition(0)
+    FftDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft, NormalizedUnitTransformer &it)
+        : trackInfoStore(tis), freqTransformer(ft), intensityTransformer(it), playCursorPosition(0),
+          freqLines(ft, VISUAL_SAMPLE_RATE >> 1)
     {
         setInterceptsMouseClicks(false, false);
+        addAndMakeVisible(freqLines);
     };
-
-    /**
-     * @brief Set the Frequency Transformer object that will be applied to frequencies displayed.
-     * Not meant to be changed as not under any lock and used by multiple threads.
-     *
-     * @param ut new frequency transformer
-     */
-    void setFrequencyTransformer(NormalizedUnitTransformer *ut)
-    {
-        freqTransformer = ut;
-    }
-
-    /**
-     * @brief Set the Intensity Transformer object that will be applied to FFT intensities displayed.
-     * Not meant to be changed as not under any lock and used by multiple threads.
-     *
-     * @param it new intensity transformer
-     */
-    void setIntensityTransformer(NormalizedUnitTransformer *it)
-    {
-        intensityTransformer = it;
-    }
 
     /**
      * @brief Move the view so that the position at the component left
@@ -65,17 +47,27 @@ class FftDrawingBackend : public juce::Component
     virtual void updateViewScale(uint32_t samplesPerPixel) = 0;
 
     /**
+     * @brief Update the bpm. Default to nothing as the grid drawing is implementation specific and some
+     * implementation are inherently unused and can decide not to implement it.
+     *
+     * @param newBpm new bpm value to use to draw the grid
+     */
+    virtual void updateBpm(float newBpm)
+    {
+    }
+
+    virtual void resized() override
+    {
+        freqLines.setBounds(getLocalBounds());
+    }
+
+    /**
      * @brief Add the fft data inside the task struct to the currently displayed data.
      *
      * @param fftData struct containing the FFt data position, length, channel info and data
      */
     void displayNewFftData(std::shared_ptr<NewFftDataTask> fftData)
     {
-        if (freqTransformer == nullptr || intensityTransformer == nullptr)
-        {
-            throw std::invalid_argument(
-                "Image drawing backend is being used without freq or intensity transformers set");
-        }
 
         int fftSize = fftData->fftData->size() / fftData->noFFTs;
         int64_t fftSampleWidth = (int64_t)fftData->segmentSampleLength / (int64_t)fftData->noFFTs;
@@ -196,12 +188,14 @@ class FftDrawingBackend : public juce::Component
                                int fftSize, float *data, int channel) = 0;
 
     TrackInfoStore &trackInfoStore;
-    NormalizedUnitTransformer *freqTransformer;
-    NormalizedUnitTransformer *intensityTransformer;
+    NormalizedUnitTransformer &freqTransformer;
+    NormalizedUnitTransformer &intensityTransformer;
 
     int64_t playCursorPosition; /**< position of the play cursor to draw */
     std::mutex playCursorMutex; /**< Mutex to protect access to play cursor */
 
     int64_t tilesNonce;          /**< A nonce that is incremented when the tiles are updated */
     std::mutex imageAccessMutex; /**< Mutex to protect image access */
+
+    FrequencyLinesDrawer freqLines; /**< A frequency line drawer object */
 };

@@ -12,7 +12,7 @@
 class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRenderer
 {
   public:
-    GpuTextureDrawingBackend(TrackInfoStore &tis);
+    GpuTextureDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft, NormalizedUnitTransformer &it);
     ~GpuTextureDrawingBackend();
 
     struct TrackSecondTile
@@ -67,6 +67,13 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      * @param samplesPerPixel number of audio samples per pixel to display in the viewer
      */
     void updateViewScale(uint32_t samplesPerPixel) override;
+
+    /**
+     * @brief Update the bpm.
+     *
+     * @param newBpm new bpm value to use to draw the grid
+     */
+    void updateBpm(float newBpm) override;
 
     /**
      * @brief clears on screen data.

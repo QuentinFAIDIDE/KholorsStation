@@ -5,6 +5,7 @@
 #include "StationApp/Audio/TrackInfoUpdateTask.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
+#include <limits>
 #include <map>
 #include <memory>
 #include <mutex>

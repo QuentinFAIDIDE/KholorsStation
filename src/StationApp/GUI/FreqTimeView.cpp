@@ -1,32 +1,39 @@
 #include "FreqTimeView.h"
 #include "GUIToolkit/Consts.h"
+#include "StationApp/Audio/BpmUpdateTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/TrackColorUpdateTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/CpuImageDrawingBackend.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
+#include "StationApp/GUI/FrequencyScale.h"
 #include "StationApp/GUI/GpuTextureDrawingBackend.h"
 #include "StationApp/Maths/NormalizedBijectiveProjection.h"
+#include <cstddef>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <spdlog/spdlog.h>
 
-FreqTimeView::FreqTimeView(TrackInfoStore &tis) : trackInfoStore(tis), viewPosition(0), viewScale(150)
+FreqTimeView::FreqTimeView(TrackInfoStore &tis)
+    : trackInfoStore(tis), viewPosition(0), viewScale(150),
+      frequencyScale(frequencyTransformer, VISUAL_SAMPLE_RATE >> 1)
 {
-    fftDrawBackend = std::make_shared<GpuTextureDrawingBackend>(trackInfoStore);
+    fftDrawBackend =
+        std::make_shared<GpuTextureDrawingBackend>(trackInfoStore, frequencyTransformer, intensityTransformer);
     // fftDrawBackend = std::make_shared<CpuImageDrawingBackend>(trackInfoStore);
     addAndMakeVisible(fftDrawBackend.get());
 
     auto freqProjection = std::make_shared<Log10Projection>(0.005);
     frequencyTransformer.setProjection(freqProjection);
-    fftDrawBackend->setFrequencyTransformer(&frequencyTransformer);
 
     auto intensityProjection = std::make_shared<SigmoidProjection>();
     auto invertIntensity = std::make_shared<InvertProjection>(intensityProjection);
     intensityTransformer.setProjection(invertIntensity);
-    fftDrawBackend->setIntensityTransformer(&intensityTransformer);
 
     lastTimerCallMs = juce::Time().getCurrentTime().toMilliseconds();
+
+    addAndMakeVisible(frequencyScale);
 
     startTimer(VIEW_MOVE_TIME_INTERVAL_MS);
 }
@@ -45,7 +52,11 @@ void FreqTimeView::paintOverChildren(juce::Graphics &g)
 
 void FreqTimeView::resized()
 {
-    fftDrawBackend->setBounds(getLocalBounds());
+    auto fftBounds = getLocalBounds();
+    auto frequencyGridBounds = fftBounds.removeFromLeft(FREQUENCY_GRID_WIDTH);
+    fftDrawBackend->setBounds(fftBounds);
+    frequencyScale.setBounds(frequencyGridBounds);
+
     std::lock_guard lock(viewMutex);
     fftDrawBackend->updateViewPosition(viewPosition);
 }
@@ -141,6 +152,19 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
                          colorUpdateTask->blueColorLevel);
         fftDrawBackend->setTrackColor(colorUpdateTask->identifier, col);
         colorUpdateTask->setCompleted(true);
+        return true;
+    }
+
+    auto bpmUpdateTask = std::dynamic_pointer_cast<BpmUpdateTask>(task);
+    if (bpmUpdateTask != nullptr && !bpmUpdateTask->isCompleted())
+    {
+        if (std::abs(lastReceivedBpm - bpmUpdateTask->bpm) >= std::numeric_limits<float>::epsilon())
+        {
+            fftDrawBackend->updateBpm(bpmUpdateTask->bpm);
+            lastReceivedBpm = bpmUpdateTask->bpm;
+        }
+        bpmUpdateTask->setCompleted(true);
+        return false;
     }
 
     // we are not stopping any tasks from being broadcasted further

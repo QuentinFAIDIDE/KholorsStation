@@ -1,7 +1,8 @@
 #pragma once
 
-#include "FftDrawingBackend.h"
 #include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/GUI/FftDrawingBackend.h"
+#include "StationApp/GUI/FrequencyScale.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
@@ -13,6 +14,7 @@
 #define MAX_IDLE_MS_TIME_BEFORE_CLEAR 500
 #define MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS 250
 #define VIEW_MOVE_TIME_INTERVAL_MS 10
+#define FREQUENCY_GRID_WIDTH 80
 
 /**
  * @brief Describe a class which displays a timeline, and
@@ -40,7 +42,7 @@ class FreqTimeView : public juce::Component, public TaskListener, public juce::T
      * with Short Time Fast Fourier Transforms or track name/colors updates.
      *
      * @param task the task to be casted, we may or may not be interested by it
-     * @return true if we want to stop the task from broacasting to further listeners
+     * @return true if we want to stop the dtask from broacasting to further listeners
      * @return false if we don't care if the tasks keep on going to other Listeners.
      */
     bool taskHandler(std::shared_ptr<Task> task) override;
@@ -62,4 +64,8 @@ class FreqTimeView : public juce::Component, public TaskListener, public juce::T
     std::mutex viewMutex; /**< Mutex for view position and scale */
     int64_t viewPosition; /**< View position in samples */
     int64_t viewScale;    /**< View scale in samples per pixels */
+
+    FrequencyScale frequencyScale;
+
+    float lastReceivedBpm;
 };

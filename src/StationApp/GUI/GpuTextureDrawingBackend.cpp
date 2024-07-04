@@ -10,8 +10,10 @@
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 
-GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis)
-    : FftDrawingBackend(tis), ignoreNewData(true), viewPosition(0), viewScale(150), bpm(120), needToResetTiles(false)
+GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft,
+                                                   NormalizedUnitTransformer &it)
+    : FftDrawingBackend(tis, ft, it), ignoreNewData(true), viewPosition(0), viewScale(150), bpm(120),
+      needToResetTiles(false)
 {
     openGLContext.setRenderer(this);
     openGLContext.attachTo(*this);
@@ -47,6 +49,8 @@ void GpuTextureDrawingBackend::paint(juce::Graphics &g)
 
 void GpuTextureDrawingBackend::resized()
 {
+    freqLines.setBounds(getLocalBounds());
+
     std::lock_guard lock(glThreadUniformsMutex);
     viewHeight = getLocalBounds().getHeight();
     viewWidth = getLocalBounds().getWidth();
@@ -69,6 +73,17 @@ void GpuTextureDrawingBackend::updateViewScale(uint32_t samplesPerPixel)
     glThreadUniformsNonce++;
     const juce::MessageManagerLock mmlock;
     repaint();
+}
+
+void GpuTextureDrawingBackend::updateBpm(float nbpm)
+{
+    std::lock_guard lock(glThreadUniformsMutex);
+    bpm = nbpm;
+    glThreadUniformsNonce++;
+    // note that since this is called by the tasking thread,
+    // I don't repaint and lock mmthread because if the message manager
+    // thread is waiting for the tasking thread to finish its task in order
+    // to post one... we get a nasty hierarchical lock.
 }
 
 void GpuTextureDrawingBackend::newOpenGLContextCreated()
@@ -323,13 +338,13 @@ void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> 
         {
             size_t frequencyBinIndex =
                 ((float(fftData->fftData.size()) *
-                  freqTransformer->transformInv(float(verticalPos) / float(SECOND_TILE_HEIGHT >> 1))) +
+                  freqTransformer.transformInv(float(verticalPos) / float(SECOND_TILE_HEIGHT >> 1))) +
                  0.5f);
             frequencyBinIndex = (size_t)juce::jlimit(0, (int)fftData->fftData.size() - 1, (int)frequencyBinIndex);
             float intensityDb = fftData->fftData[frequencyBinIndex];
             float intensityNormalized = juce::jmap(intensityDb, MIN_DB, 0.0f, 0.0f, 1.0f);
             intensityNormalized = juce::jlimit(0.0f, 1.0f, intensityNormalized);
-            intensityNormalized = intensityTransformer->transformInv(intensityNormalized);
+            intensityNormalized = intensityTransformer.transformInv(intensityNormalized);
 
             if (fftData->channel == 0 || fftData->channel == 2)
             {
