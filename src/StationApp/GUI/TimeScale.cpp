@@ -6,6 +6,7 @@
 
 TimeScale::TimeScale()
 {
+    setOpaque(true);
 }
 
 void TimeScale::setViewPosition(int64_t nviewPosition)

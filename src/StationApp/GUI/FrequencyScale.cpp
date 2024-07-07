@@ -8,6 +8,7 @@
 FrequencyScale::FrequencyScale(NormalizedUnitTransformer &ut, float maxDrawableFreqArg)
     : unitTransformer(ut), maxDrawableFreq(maxDrawableFreqArg)
 {
+    setOpaque(true);
 }
 
 FrequencyScale::~FrequencyScale()

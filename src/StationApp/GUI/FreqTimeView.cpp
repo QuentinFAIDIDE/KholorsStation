@@ -20,6 +20,8 @@ FreqTimeView::FreqTimeView(TrackInfoStore &tis)
     : trackInfoStore(tis), viewPosition(0), viewScale(150),
       frequencyScale(frequencyTransformer, VISUAL_SAMPLE_RATE >> 1), trackList(trackInfoStore, frequencyTransformer)
 {
+    setOpaque(true);
+
     fftDrawBackend =
         std::make_shared<GpuTextureDrawingBackend>(trackInfoStore, frequencyTransformer, intensityTransformer);
     // fftDrawBackend = std::make_shared<CpuImageDrawingBackend>(trackInfoStore);
@@ -54,6 +56,9 @@ FreqTimeView::~FreqTimeView()
 
 void FreqTimeView::paint(juce::Graphics &g)
 {
+    g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    g.fillRect(unpaintedArea1);
+    g.fillRect(unpaintedArea2);
 }
 
 void FreqTimeView::paintOverChildren(juce::Graphics &g)
@@ -76,6 +81,12 @@ void FreqTimeView::resized()
 
     std::lock_guard lock(viewMutex);
     fftDrawBackend->updateViewPosition(viewPosition);
+
+    unpaintedArea1 = frequencyGridBounds.withY(frequencyGridBounds.getY() + frequencyGridBounds.getHeight());
+    unpaintedArea1.setHeight(getLocalBounds().getHeight() - frequencyGridBounds.getHeight());
+
+    unpaintedArea2 = trackListBounds.withY(trackListBounds.getY() + trackListBounds.getHeight());
+    unpaintedArea2.setHeight(getLocalBounds().getHeight() - trackListBounds.getHeight());
 }
 
 void FreqTimeView::timerCallback()

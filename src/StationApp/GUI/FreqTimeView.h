@@ -74,5 +74,7 @@ class FreqTimeView : public juce::Component, public TaskListener, public juce::T
 
     TrackList trackList;
 
+    juce::Rectangle<int> unpaintedArea1, unpaintedArea2; /**< Area left unpainted that FreqView needs to paint */
+
     float lastReceivedBpm;
 };

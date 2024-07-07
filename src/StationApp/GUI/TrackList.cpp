@@ -4,6 +4,7 @@
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
+#include <cstdlib>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -19,6 +20,7 @@
 TrackList::TrackList(TrackInfoStore &tis, NormalizedUnitTransformer &nut)
     : viewPosition(0), viewScale(200), freqViewWidth(1000), trackInfoStore(tis), frequencyTransformer(nut)
 {
+    setOpaque(true);
     tilesRingBuffer.reserve(TILES_RING_BUFFER_SIZE);
     nextTileIndex = 0;
 }
@@ -280,43 +282,59 @@ void TrackList::setFreqViewWidth(int64_t newFVW)
 
 void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
 {
-
     size_t fftNumFreqBins = newSffts->fftData->size() / newSffts->noFFTs;
     int64_t fftSampleWidth = (int64_t)newSffts->segmentSampleLength / (int64_t)newSffts->noFFTs;
 
-    // compute width of each FFT bin shown on screen given
+    // if new, compute width of each FFT bin shown on screen given
     // the frequency transformation in order to correct
     // average frequency (right now bass are underrepresented)
-    std::vector<float> freqWeight;
-    freqWeight.reserve(fftNumFreqBins);
-    float linearBinWidth = 1.0f / float(fftNumFreqBins);
-    for (size_t j = 0; j < fftNumFreqBins; j++)
+    // and compute the bin position in frequency.
+
+    if (lastUsedFftSize != fftNumFreqBins || lastUsedSampleRate != newSffts->sampleRate ||
+        lastUsedTransformerNonce != frequencyTransformer.getNonce())
     {
-        float lowerBinBound = frequencyTransformer.transform(j * linearBinWidth);
-        float upperBinBound = frequencyTransformer.transform((j + 1) * linearBinWidth);
-        float binWidth = upperBinBound - lowerBinBound;
-        freqWeight.push_back(binWidth);
+
+        lastUsedFftSize = fftNumFreqBins;
+        lastUsedSampleRate = newSffts->sampleRate;
+        lastUsedTransformerNonce = frequencyTransformer.getNonce();
+
+        freqWeight.resize(fftNumFreqBins);
+        binFrequencies.resize(fftNumFreqBins);
+
+        float linearBinWidth = 1.0f / float(fftNumFreqBins);
+        float maxFreq = float(newSffts->sampleRate) / 2.0f;
+
+        for (size_t j = 0; j < fftNumFreqBins; j++)
+        {
+            float lowerBinBound = frequencyTransformer.transform((float)(j)*linearBinWidth);
+            float upperBinBound = frequencyTransformer.transform((float)(j + 1) * linearBinWidth);
+            float binWidth = upperBinBound - lowerBinBound;
+            freqWeight[j] = binWidth;
+            binFrequencies[j] = maxFreq * ((float(j) + 0.5f) / float(fftNumFreqBins));
+        }
     }
+
+    float absMinDb = std::abs(MIN_DB);
 
     // for each sfft
     for (size_t i = 0; i < newSffts->noFFTs; i++)
     {
         float avgIntensity = 0.0f;
         float avgFreq = 0.0f;
-        float totalIntensity = 0.0f;
 
-        for (size_t j = 0; j < fftNumFreqBins; j++)
+        for (size_t j = 0; j < fftNumFreqBins; j += 4)
         {
             // we normalize the db intensity between 0 and 1
             float dbIntensity = (*newSffts->fftData)[(i * fftNumFreqBins) + j];
-            float intensityAtFreqBin = (std::abs(MIN_DB) + dbIntensity) / std::abs(MIN_DB);
-            intensityAtFreqBin = juce::jlimit(0.0f, 1.0f, intensityAtFreqBin);
+            float intensityAtFreqBin = absMinDb + dbIntensity;
             float weightedIntensity = intensityAtFreqBin * freqWeight[j];
             avgIntensity += weightedIntensity;
-
-            float binFrequency = float(VISUAL_SAMPLE_RATE >> 1) * ((float(j) + 0.5f) / float(fftNumFreqBins));
-            avgFreq += binFrequency * weightedIntensity;
+            avgFreq += binFrequencies[j] * weightedIntensity;
         }
+        // we moved this division of dbIntensity out of the loop to save perf
+        avgIntensity = avgIntensity / absMinDb;
+        avgFreq = avgFreq / absMinDb;
+
         avgFreq = avgFreq / avgIntensity;
 
         //   if below a thresold of volume, skip it
@@ -356,30 +374,18 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
             }
             // add tile summed intensities to the channel(s)
             // add tile average freq to the channel(s)
-            // note for summing to average that if we got previous count, we have:
-            // previous avg value A = (1/n) + sum_n(a_i)
-            // if new value is a_n+1
-            // new avg value B = (1/(n+1)) + sum_n+1(a_i) = (n/n+1)*A + (1/(n+1))*a_n+1
-            // We will use that to keep it averaged so that channel with different
-            // number of FFT per left/right channels can be compared on the spot safely and efficiently.
             TracksPlaybackInfoTile &tile = tilesRingBuffer[tileIndex];
             if (newSffts->totalNoChannels == 1 || newSffts->channelIndex == 0)
             {
                 tile.summedLeftChanIntensities[trackIndexInTile] += avgIntensity;
-                float n = float(tile.leftChanFftCount[trackIndexInTile]);
-                tile.averageLeftChanFrequencies[trackIndexInTile] =
-                    ((1.0f / (n + 1.0f)) * avgFreq) +
-                    ((n / (n + 1.0f)) * tile.averageLeftChanFrequencies[trackIndexInTile]);
+                tile.averageLeftChanFrequencies[trackIndexInTile] += avgFreq;
                 tile.leftChanFftCount[trackIndexInTile] += 1;
             }
 
             if (newSffts->totalNoChannels == 1 || newSffts->channelIndex == 1)
             {
                 tile.summedRightChanIntensities[trackIndexInTile] += avgIntensity;
-                float n = float(tile.rightChanFftCount[trackIndexInTile]);
-                tile.averageRightChanFrequencies[trackIndexInTile] =
-                    ((1.0f / (n + 1.0f)) * avgFreq) +
-                    ((n / (n + 1.0f)) * tile.averageRightChanFrequencies[trackIndexInTile]);
+                tile.averageRightChanFrequencies[trackIndexInTile] += avgFreq;
                 tile.rightChanFftCount[trackIndexInTile] += 1;
             }
         }
@@ -411,15 +417,6 @@ size_t TrackList::getOrCreateTile(int64_t tilePosition)
         // clear all values from the tile
         tilesRingBuffer[newTileIndex].tilePosition = tilePosition;
         tilesRingBuffer[newTileIndex].numSeenTracks = 0;
-        for (size_t i = 0; i < MAX_TRACKS_PER_TILE; i++)
-        {
-            tilesRingBuffer[newTileIndex].summedLeftChanIntensities[i] = 0.0f;
-            tilesRingBuffer[newTileIndex].summedRightChanIntensities[i] = 0.0f;
-            tilesRingBuffer[newTileIndex].averageLeftChanFrequencies[i] = 0.0f;
-            tilesRingBuffer[newTileIndex].averageRightChanFrequencies[i] = 0.0f;
-            tilesRingBuffer[newTileIndex].leftChanFftCount[i] = 0;
-            tilesRingBuffer[newTileIndex].rightChanFftCount[i] = 0;
-        }
 
         nextTileIndex++;
         if (nextTileIndex >= TILES_RING_BUFFER_SIZE)
@@ -511,12 +508,14 @@ std::vector<TrackList::TrackPresenceSummary> TrackList::getVisibleTracks(int64_t
             if (tile.leftChanFftCount[i] != 0)
             {
                 trackSummary.noFreqsAveragedLeft++;
-                trackSummary.leftChannelAvgFreq += tile.averageLeftChanFrequencies[i];
+                trackSummary.leftChannelAvgFreq +=
+                    (tile.averageLeftChanFrequencies[i] / (float)(tile.leftChanFftCount[i]));
             }
             if (tile.rightChanFftCount[i] != 0)
             {
                 trackSummary.noFreqsAveragedRight++;
-                trackSummary.rightChannelAvgFreq += tile.averageRightChanFrequencies[i];
+                trackSummary.rightChannelAvgFreq +=
+                    (tile.averageRightChanFrequencies[i] / (float)(tile.leftChanFftCount[i]));
             }
         }
     }

@@ -8,7 +8,7 @@
 #define MAX_TRACKS_PER_TILE 16
 #define TILES_RING_BUFFER_SIZE 128 // it's better if matches FftDrawingBackend bufsize
 // thresold between 0 and 1 corresponding to range from MIN_DB to 0
-#define ACTIVE_TRACK_THRESOLD_PER_BIN 0.01
+#define ACTIVE_TRACK_THRESOLD_PER_BIN 0.0001
 #define BALANCE_SWITCH_THRESOLD 0.5
 
 #define LABELS_AREA_X_PADDING 6
@@ -185,6 +185,14 @@ class TrackList : public juce::Component
     std::mutex tilesMutex;
     int64_t viewPosition, viewScale, freqViewWidth;
     std::mutex viewMutex;
+
+    std::vector<float>
+        freqWeight; /**< weight representing width of each freq bin with current freq transfo. Sums to 1 */
+    std::vector<float> binFrequencies; /**< frequency of each bin */
+
+    size_t lastUsedFftSize;            /**< if these change, we need to recompute freqWeight and binFreqs */
+    int64_t lastUsedSampleRate;        /**< if these change, we need to recompute freqWeight and binFreqs */
+    uint64_t lastUsedTransformerNonce; /**< if these change, we need to recompute freqWeight and binFreqs */
 
     TrackInfoStore &trackInfoStore;
     NormalizedUnitTransformer &frequencyTransformer;

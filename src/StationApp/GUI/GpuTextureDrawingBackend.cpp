@@ -13,8 +13,8 @@
 
 GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft,
                                                    NormalizedUnitTransformer &it)
-    : FftDrawingBackend(tis, ft, it), ignoreNewData(true), viewPosition(0), viewScale(150), convolutionId(Emboss),
-      bpm(120), needToResetTiles(false)
+    : FftDrawingBackend(tis, ft, it), ignoreNewData(true), viewPosition(0), viewScale(150),
+      convolutionId(GpuConvolution::Emboss), bpm(120), needToResetTiles(false)
 {
     openGLContext.setRenderer(this);
     openGLContext.attachTo(*this);

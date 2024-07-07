@@ -6,6 +6,7 @@
 
 BottomPanel::BottomPanel(TaskingManager &tm) : tabs(juce::TabbedButtonBar::Orientation::TabsAtTop)
 {
+    setOpaque(true);
     sizeConstrainer = std::make_shared<juce::ComponentBoundsConstrainer>();
     sizeConstrainer->setMinimumHeight(BOTTOM_BAR_MINIMUM_HEIGHT);
     sizeConstrainer->setMaximumHeight(BOTTOM_BAR_MAXIMUM_HEIGHT);
