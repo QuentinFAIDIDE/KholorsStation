@@ -11,7 +11,7 @@
 
 #define VISUAL_SAMPLE_RATE 48000
 #define MIN_SAMPLE_PLAY_CURSOR_BACKWARD_MOVEMENT 24000
-#define IMAGES_RING_BUFFER_SIZE 128 // it's better if matches TrackList bufsize
+#define IMAGES_RING_BUFFER_SIZE 128
 #define MIN_DB -64.0f
 #define PLAY_CURSOR_WIDTH 2
 
@@ -19,7 +19,7 @@
 // Warning! It is hardcoded as well in the openGL shaders
 // for now, but I should soon rely on textureSize instead
 // and remove this comment. If I forget well, do it!
-#define SECOND_TILE_WIDTH 128
+#define SECOND_TILE_WIDTH 64
 #define SECOND_TILE_HEIGHT 512
 
 /**
