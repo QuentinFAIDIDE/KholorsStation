@@ -13,9 +13,14 @@
 #define MIN_SAMPLE_PLAY_CURSOR_BACKWARD_MOVEMENT 24000
 #define IMAGES_RING_BUFFER_SIZE 128 // it's better if matches TrackList bufsize
 #define MIN_DB -64.0f
+#define PLAY_CURSOR_WIDTH 2
+
+// Dimensions of a one-second tile.
+// Warning! It is hardcoded as well in the openGL shaders
+// for now, but I should soon rely on textureSize instead
+// and remove this comment. If I forget well, do it!
 #define SECOND_TILE_WIDTH 64
 #define SECOND_TILE_HEIGHT 512
-#define PLAY_CURSOR_WIDTH 2
 
 /**
  * @brief Abstract class that receives the audio data (sfft freqs intensities) to display
@@ -171,6 +176,27 @@ class FftDrawingBackend : public juce::Component
      * @brief clears on screen data.
      */
     virtual void clearDisplayedFFTs(){};
+
+    /**
+     * @brief Retains information about a track on a range
+     * to be cleared.
+     */
+    struct ClearTrackInfoRange
+    {
+        uint64_t trackIdentifier;
+        int64_t startSample;
+        uint64_t length;
+    };
+
+    /**
+     * @brief Return a list of ranges where specific tracks should be
+     * cleared from.
+     * @return std::vector<ClearTrackInfoRange> vector of ranges to clear with trackIdentifiers.
+     */
+    virtual std::vector<ClearTrackInfoRange> getClearedTrackRanges()
+    {
+        return std::vector<ClearTrackInfoRange>();
+    }
 
   protected:
     /**

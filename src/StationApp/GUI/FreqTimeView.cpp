@@ -8,6 +8,7 @@
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FrequencyScale.h"
 #include "StationApp/GUI/GpuTextureDrawingBackend.h"
+#include "StationApp/GUI/TrackList.h"
 #include "StationApp/Maths/NormalizedBijectiveProjection.h"
 #include <cstddef>
 #include <limits>
@@ -17,7 +18,7 @@
 
 FreqTimeView::FreqTimeView(TrackInfoStore &tis)
     : trackInfoStore(tis), viewPosition(0), viewScale(150),
-      frequencyScale(frequencyTransformer, VISUAL_SAMPLE_RATE >> 1)
+      frequencyScale(frequencyTransformer, VISUAL_SAMPLE_RATE >> 1), trackList(trackInfoStore, frequencyTransformer)
 {
     fftDrawBackend =
         std::make_shared<GpuTextureDrawingBackend>(trackInfoStore, frequencyTransformer, intensityTransformer);
@@ -36,6 +37,9 @@ FreqTimeView::FreqTimeView(TrackInfoStore &tis)
     timeScale.setBpm(120);
     timeScale.setViewScale(viewScale);
     timeScale.setViewPosition(viewScale);
+
+    trackList.setViewPosition(viewPosition);
+    trackList.setViewScale(viewScale);
 
     addAndMakeVisible(frequencyScale);
     addAndMakeVisible(timeScale);
@@ -67,6 +71,8 @@ void FreqTimeView::resized()
     frequencyScale.setBounds(frequencyGridBounds);
     timeScale.setBounds(timeGridBounds);
     trackList.setBounds(trackListBounds);
+
+    trackList.setFreqViewWidth(fftBounds.getWidth());
 
     std::lock_guard lock(viewMutex);
     fftDrawBackend->updateViewPosition(viewPosition);
@@ -101,6 +107,7 @@ void FreqTimeView::timerCallback()
             }
             fftDrawBackend->updateViewPosition(viewPosition);
             timeScale.setViewPosition(viewPosition);
+            trackList.setViewPosition(viewPosition);
             repaint();
         }
         // if play cursor is between 3/4 of view and right side, apply constant view moving speed
@@ -113,8 +120,17 @@ void FreqTimeView::timerCallback()
             }
             fftDrawBackend->updateViewPosition(viewPosition);
             timeScale.setViewPosition(viewPosition);
+            trackList.setViewPosition(viewPosition);
             repaint();
         }
+    }
+    // if some tracks have been cleared from some ranges on fftDrawing backend, replicate that
+    // on other related components
+    auto tracksClearedInMainView = fftDrawBackend->getClearedTrackRanges();
+    for (size_t i = 0; i < tracksClearedInMainView.size(); i++)
+    {
+        trackList.clearTrackFromRange(tracksClearedInMainView[i].trackIdentifier,
+                                      tracksClearedInMainView[i].startSample, tracksClearedInMainView[i].length);
     }
     lastTimerCallMs = currentTime;
 }
@@ -142,6 +158,7 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
             if ((currentTime - lastFftDrawTimeMsCopy) > MAX_IDLE_MS_TIME_BEFORE_CLEAR)
             {
                 fftDrawBackend->clearDisplayedFFTs();
+                trackList.clear();
             }
 
             // send fft data to drawing backend and update play cursor
@@ -149,6 +166,9 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
             fftDrawBackend->submitNewPlayCursorPosition((int64_t)newFftDataTask->segmentStartSample +
                                                             (int64_t)newFftDataTask->segmentSampleLength,
                                                         newFftDataTask->sampleRate);
+
+            // record which track is playing and where to display labels
+            trackList.recordSfft(newFftDataTask);
 
             // record last drawing time
             {
@@ -230,6 +250,7 @@ void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
                                      int(float(viewScale) * (1.0f + (float(dragY) * PIXEL_SCALE_SPEED))));
             fftDrawBackend->updateViewScale(viewScale);
             timeScale.setViewScale(viewScale);
+            trackList.setViewScale(viewScale);
 
             // we compute view position shift to maintain the same point under cursor after zooming
             int64_t oldCursorSamplePos = viewPosition + (e.x * oldViewScale);
@@ -243,6 +264,7 @@ void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
             }
             fftDrawBackend->updateViewPosition(viewPosition);
             timeScale.setViewPosition(viewPosition);
+            trackList.setViewPosition(viewPosition);
 
             needRepaint = true;
         }

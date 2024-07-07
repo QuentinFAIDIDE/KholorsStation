@@ -190,6 +190,17 @@ void GpuTextureDrawingBackend::renderOpenGL()
         std::lock_guard lock(tilesResetMutex);
         if (needToResetTiles)
         {
+            {
+                // clear the queues of track ranges to clear as
+                // everything will be cleared in other components anyway
+                // when a full clearing is performed here
+                std::lock_guard lock2(clearedRangesMutex);
+                while (clearedRanges.size() > 0)
+                {
+                    clearedRanges.pop();
+                }
+            }
+
             for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
             {
                 if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
@@ -416,6 +427,16 @@ size_t GpuTextureDrawingBackend::createSecondTile(uint64_t trackIdentifier, int6
         // remove the indexing by track id and position for the previous tile
         tileIndexByTrackIdAndPosition.erase(std::pair<uint64_t, int64_t>(
             secondTilesRingBuffer[newTileIndex].trackIdentifer, secondTilesRingBuffer[newTileIndex].tileIndexPosition));
+        // notify FreqView that a range was cleared for a track
+        // in order for related components to keep up with what's on screen
+        ClearTrackInfoRange clearedRange;
+        clearedRange.startSample = VISUAL_SAMPLE_RATE * secondTilesRingBuffer[newTileIndex].tileIndexPosition;
+        clearedRange.length = VISUAL_SAMPLE_RATE;
+        clearedRange.trackIdentifier = secondTilesRingBuffer[newTileIndex].trackIdentifer;
+        {
+            std::lock_guard lock(clearedRangesMutex);
+            clearedRanges.push(clearedRange);
+        }
         // clear signal from the previous object
         for (size_t i = 0; i < SECOND_TILE_WIDTH; i++)
         {
@@ -460,4 +481,17 @@ void GpuTextureDrawingBackend::setTilePixelIntensity(size_t tileRingBufferIndex,
         return;
     }
     secondTilesRingBuffer[tileRingBufferIndex].mesh->setPixelAt(x, y, intensity);
+}
+
+std::vector<FftDrawingBackend::ClearTrackInfoRange> GpuTextureDrawingBackend::getClearedTrackRanges()
+{
+    std::lock_guard lock(clearedRangesMutex);
+    std::vector<ClearTrackInfoRange> response;
+    response.reserve(clearedRanges.size());
+    while (clearedRanges.size() > 0)
+    {
+        response.push_back(clearedRanges.front());
+        clearedRanges.pop();
+    }
+    return response;
 }

@@ -112,6 +112,13 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      */
     void openGLContextClosing() override;
 
+    /**
+     * @brief Return a list of ranges where specific tracks have been
+     * cleared from.
+     * @return std::vector<ClearTrackInfoRange> vector of ranges to clear with trackIdentifiers.
+     */
+    std::vector<ClearTrackInfoRange> getClearedTrackRanges() override;
+
   private:
     /**
      * @brief Get index of the tile in the tile ring buffer if it exists.
@@ -245,4 +252,8 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     float grid0FrameWidth, grid1FrameWidth, grid2FrameWidth; /**< width of the viewer grid levels in audio samples */
     float grid0PixelWidth, grid1PixelWidth, grid2PixelWidth; /**< width of the viewer grid levels in pixels */
     int grid0PixelShift, grid1PixelShift, grid2PixelShift;   /**< Pixel shift from left side in pixels of grid levels */
+
+    std::mutex clearedRangesMutex;
+    std::queue<ClearTrackInfoRange> clearedRanges; /**< A list of ranges on which specific tracks were cleared. Here to
+                                                      prevent TrackList from showing info about deleted data. */
 };
