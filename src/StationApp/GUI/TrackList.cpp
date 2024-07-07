@@ -155,15 +155,17 @@ void TrackList::drawLabel(juce::Graphics &g, juce::Rectangle<int> bounds, std::s
                           juce::Colour trackColor)
 {
     auto reducedBounds = bounds.reduced(LABELS_INNER_PADDING);
+
     g.setColour(trackColor);
-    g.fillRoundedRectangle(reducedBounds.toFloat(), LABELS_BOX_CORNER_SIZE);
+    auto circleBounds = reducedBounds.removeFromLeft(reducedBounds.getHeight() + LABELS_CIRCLE_TEXT_PADDING);
+    circleBounds.removeFromRight(LABELS_CIRCLE_TEXT_PADDING);
+    circleBounds.reduce(CIRCLE_PADDING, CIRCLE_PADDING);
+    g.fillEllipse(circleBounds.toFloat());
+
     g.setColour(COLOR_WHITE);
-    if (trackColor.getLightness() < 0.5)
-    {
-        g.setColour(COLOR_BLACK);
-    }
-    g.drawRoundedRectangle(reducedBounds.toFloat(), LABELS_BOX_CORNER_SIZE, 1.0f);
-    g.drawText(trackName, reducedBounds, juce::Justification::centred, true);
+    g.drawEllipse(circleBounds.toFloat(), 1.0f);
+
+    g.drawText(trackName, reducedBounds, juce::Justification::centredLeft, true);
 }
 
 std::optional<juce::Rectangle<int>> TrackList::tryPositioningTrackLabel(
@@ -282,11 +284,26 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
     size_t fftNumFreqBins = newSffts->fftData->size() / newSffts->noFFTs;
     int64_t fftSampleWidth = (int64_t)newSffts->segmentSampleLength / (int64_t)newSffts->noFFTs;
 
+    // compute width of each FFT bin shown on screen given
+    // the frequency transformation in order to correct
+    // average frequency (right now bass are underrepresented)
+    std::vector<float> freqWeight;
+    freqWeight.reserve(fftNumFreqBins);
+    float linearBinWidth = 1.0f / float(fftNumFreqBins);
+    for (size_t j = 0; j < fftNumFreqBins; j++)
+    {
+        float lowerBinBound = frequencyTransformer.transform(j * linearBinWidth);
+        float upperBinBound = frequencyTransformer.transform((j + 1) * linearBinWidth);
+        float binWidth = upperBinBound - lowerBinBound;
+        freqWeight.push_back(binWidth);
+    }
+
     // for each sfft
     for (size_t i = 0; i < newSffts->noFFTs; i++)
     {
         float avgIntensity = 0.0f;
         float avgFreq = 0.0f;
+        float totalIntensity = 0.0f;
 
         for (size_t j = 0; j < fftNumFreqBins; j++)
         {
@@ -294,24 +311,14 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
             float dbIntensity = (*newSffts->fftData)[(i * fftNumFreqBins) + j];
             float intensityAtFreqBin = (std::abs(MIN_DB) + dbIntensity) / std::abs(MIN_DB);
             intensityAtFreqBin = juce::jlimit(0.0f, 1.0f, intensityAtFreqBin);
-            float binAvgFrequency = float(VISUAL_SAMPLE_RATE >> 1) * ((float(j) + 0.5f) / float(fftNumFreqBins));
-            avgIntensity += intensityAtFreqBin;
-            avgFreq += binAvgFrequency * intensityAtFreqBin;
-        }
-        if (avgIntensity > std::numeric_limits<float>::epsilon())
-        {
-            avgFreq = avgFreq / avgIntensity;
-        }
-        else
-        {
-            avgFreq = VISUAL_SAMPLE_RATE >> 2;
-        }
+            float weightedIntensity = intensityAtFreqBin * freqWeight[j];
+            avgIntensity += weightedIntensity;
 
-        // BUG: Frequency bins are equidistant from each other and linear
-        // to frequencies and therefore when we average with a log10 kind of freq transformation
-        // on screen, the high frequencies are over represented in what we see :/
+            float binFrequency = float(VISUAL_SAMPLE_RATE >> 1) * ((float(j) + 0.5f) / float(fftNumFreqBins));
+            avgFreq += binFrequency * weightedIntensity;
+        }
+        avgFreq = avgFreq / avgIntensity;
 
-        avgIntensity = avgIntensity / float(fftNumFreqBins);
         //   if below a thresold of volume, skip it
         if (avgIntensity < ACTIVE_TRACK_THRESOLD_PER_BIN)
         {

@@ -19,7 +19,7 @@
 // Warning! It is hardcoded as well in the openGL shaders
 // for now, but I should soon rely on textureSize instead
 // and remove this comment. If I forget well, do it!
-#define SECOND_TILE_WIDTH 64
+#define SECOND_TILE_WIDTH 128
 #define SECOND_TILE_HEIGHT 512
 
 /**
