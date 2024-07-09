@@ -67,7 +67,6 @@ void FreqTimeView::paintOverChildren(juce::Graphics &g)
 
 void FreqTimeView::resized()
 {
-
     auto fftBounds = getLocalBounds();
     auto trackListBounds = fftBounds.removeFromRight(TRACK_LIST_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
     auto frequencyGridBounds = fftBounds.removeFromLeft(FREQUENCY_GRID_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
@@ -122,7 +121,8 @@ void FreqTimeView::timerCallback()
             repaint();
         }
         // if play cursor is between 3/4 of view and right side, apply constant view moving speed
-        else if (lastPlayCursorPos >= (rightScreenSideSamplePos - screenQuarter + 1))
+        else if (lastPlayCursorPos >= (rightScreenSideSamplePos - screenQuarter + 1) &&
+                 lastPlayCursorPos < (rightScreenSideSamplePos - (screenQuarter >> 1)))
         {
             viewPosition += (int64_t)((float(elapsedSinceLastCallMs) / 1000.0) * float(VISUAL_SAMPLE_RATE) + 0.5f);
             if (viewPosition < 0)
@@ -152,7 +152,7 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
     if (newFftDataTask != nullptr && !newFftDataTask->isCompleted() && !newFftDataTask->hasFailed())
     {
         spdlog::debug("Received a NewFftData task in the FreqTimeView");
-        // TODO: if inside a loop and crossing the end, also pass the part that is beyond loop end to the beginning of
+        // TODO: if inside a loop and crossing the end, move the part that is beyond loop end to the beginning of
         // the loop
         // call on the drawing backend to add the FFT data to the displayed textures
         if (fftDrawBackend != nullptr)

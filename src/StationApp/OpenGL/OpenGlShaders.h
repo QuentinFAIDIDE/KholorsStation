@@ -174,12 +174,9 @@ void main()
     float grid1position = (gl_FragCoord.x - float(grid1PixelShift)) / grid1PixelWidth;
     float grid2position = (gl_FragCoord.x - float(grid2PixelShift)) / grid2PixelWidth;
 
-    // horizontal bars
-    if (abs(gl_FragCoord.y - 0.5 - (viewHeightPixels/2)) < 0.5 ) {
-        FragColor = vec4(0.4,0.4,0.4,1.0);
-            
+
     // vertical grid tempo bars
-    } else if ( abs( grid0position - round(grid0position) )*grid0PixelWidth < 1.5 && grid0PixelWidth > 25 ) {
+    if ( abs( grid0position - round(grid0position) )*grid0PixelWidth < 1.5 && grid0PixelWidth > 25 ) {
         FragColor = vec4(0.25,0.25,0.25,1.0);
     } else if ( abs( grid1position - round(grid1position) )*grid1PixelWidth < 1.5 && grid1PixelWidth > 25 ) {
         FragColor = vec4(0.15,0.15,0.15,1.0);

@@ -1,4 +1,5 @@
 #include "GUIToolkit/GUIData.h"
+#include "GUIToolkit/KholorsLookAndFeel.h"
 #include "MainComponent.h"
 #include <spdlog/common.h>
 #include <spdlog/spdlog.h>

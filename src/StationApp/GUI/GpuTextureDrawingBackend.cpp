@@ -318,6 +318,8 @@ void GpuTextureDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t s
         std::lock_guard lock(fftsToDrawMutex);
         fftsToDrawQueue.push(newFftToDraw);
     }
+    // TODO: remove that, it creates deadlock and takes much unecessary tasking threa time.
+    // It just takes the FreqTimeView timer to trigger the redraw instead.
     {
         const juce::MessageManagerLock mmlock;
         repaint();

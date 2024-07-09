@@ -4,7 +4,6 @@
 #include "GUIToolkit/GUIData.h"
 #include "StationApp/Audio/AudioDataWorker.h"
 #include "StationApp/Audio/TrackInfoStore.h"
-#include "StationApp/GUI/BottomPanel.h"
 #include "StationApp/GUI/FreqTimeView.h"
 #include "TaskManagement/TaskingManager.h"
 #include <spdlog/spdlog.h>
@@ -12,19 +11,11 @@
 #define DEFAULT_SERVER_PORT 7849
 
 MainComponent::MainComponent()
-    : menuBarModel(taskManager), bottomPanel(taskManager), trackInfoStore(taskManager), freqTimeView(trackInfoStore),
-      audioDataWorker(audioDataServer, taskManager)
+    : trackInfoStore(taskManager), freqTimeView(trackInfoStore), audioDataWorker(audioDataServer, taskManager)
 {
-
-    menuBar.setModel(&menuBarModel);
-    addAndMakeVisible(menuBar);
-
-    bottomPanel.setSize(getWidth(), 210);
-    addAndMakeVisible(bottomPanel);
-
     addAndMakeVisible(freqTimeView);
 
-    setSize(1440, 900);
+    setSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 
     taskManager.registerTaskListener(&trackInfoStore);
     taskManager.registerTaskListener(&freqTimeView);
@@ -53,8 +44,7 @@ void MainComponent::paint(juce::Graphics &g)
 void MainComponent::resized()
 {
     juce::Rectangle<int> localBounds = getLocalBounds();
-    menuBar.setBounds(localBounds.removeFromTop(MENU_BAR_HEIGHT));
-    bottomPanel.setBounds(localBounds.removeFromBottom(bottomPanel.getHeight()));
+    localBounds.removeFromTop(MENU_BAR_HEIGHT); // note that we don't show top bar anymore
     freqTimeView.setBounds(localBounds);
 }
 

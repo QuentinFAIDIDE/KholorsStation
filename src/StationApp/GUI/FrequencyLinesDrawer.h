@@ -17,6 +17,7 @@ class FrequencyLinesDrawer : public juce::Component
         setOpaque(false);
         setInterceptsMouseClicks(false, false);
 
+        frequenciesToDraw.push_back(0);
         frequenciesToDraw.push_back(100);
         frequenciesToDrawThinner.push_back(350);
         frequenciesToDraw.push_back(1000);

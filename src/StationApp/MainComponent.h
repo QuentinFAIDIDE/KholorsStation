@@ -2,17 +2,16 @@
 
 #include "AudioTransport/SyncServer.h"
 #include "GUIToolkit/FontsLoader.h"
-#include "GUIToolkit/KholorsLookAndFeel.h"
 #include "StationApp/Audio/AudioDataWorker.h"
-#include "StationApp/GUI/BottomPanel.h"
 #include "StationApp/GUI/FreqTimeView.h"
-#include "StationApp/GUI/TopMenuModel.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
 #include <juce_gui_extra/juce_gui_extra.h>
 
 #define MENU_BAR_HEIGHT 30
 #define TOP_LOGO_WIDTH 200
+#define DEFAULT_WINDOW_WIDTH 1440
+#define DEFAULT_WINDOW_HEIGHT 700
 
 class MainComponent final : public juce::Component, public TaskListener
 {
@@ -28,8 +27,6 @@ class MainComponent final : public juce::Component, public TaskListener
   private:
     TaskingManager taskManager;                           /**< Object that manages task for actions */
     juce::MenuBarComponent menuBar;                       /**< App menu at the top of the app */
-    TopMenuModel menuBarModel;                            /**< Model that populates the menuBar */
-    BottomPanel bottomPanel;                              /**< pannel at the bottom with all tabs */
     juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */
     TrackInfoStore trackInfoStore;                        /**< storing all track info (name, color) */
     FreqTimeView freqTimeView;                            /**< Viewer that display frequencies over time received */
