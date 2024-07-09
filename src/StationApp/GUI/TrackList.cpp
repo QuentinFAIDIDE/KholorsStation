@@ -151,6 +151,12 @@ void TrackList::paint(juce::Graphics &g)
             }
         }
     }
+    lastRedrawMs = juce::Time().getCurrentTime().toMilliseconds();
+}
+
+int64_t TrackList::getLastRedrawMs()
+{
+    return lastRedrawMs;
 }
 
 void TrackList::drawLabel(juce::Graphics &g, juce::Rectangle<int> bounds, std::string trackName,

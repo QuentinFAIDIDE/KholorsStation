@@ -119,6 +119,15 @@ class TrackList : public juce::Component
     void setViewScale(int64_t newVS);
     void setFreqViewWidth(int64_t newFVW);
 
+    /**
+     * @brief Return time when last painting completed.
+     * ONLY GET IT FROM THE JUCE MESSAGE MANAGER THREAD.
+     * It's designed to be used inside the FreqView timer callback.
+     *
+     * @return int64_t timestamp in MS at which last drawing completed.
+     */
+    int64_t getLastRedrawMs();
+
   private:
     /**
      * @brief Tries to position labelRectangle into drawableBounds,
@@ -193,6 +202,8 @@ class TrackList : public juce::Component
     size_t lastUsedFftSize;            /**< if these change, we need to recompute freqWeight and binFreqs */
     int64_t lastUsedSampleRate;        /**< if these change, we need to recompute freqWeight and binFreqs */
     uint64_t lastUsedTransformerNonce; /**< if these change, we need to recompute freqWeight and binFreqs */
+
+    int64_t lastRedrawMs = 0;
 
     TrackInfoStore &trackInfoStore;
     NormalizedUnitTransformer &frequencyTransformer;

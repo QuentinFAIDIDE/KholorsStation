@@ -90,7 +90,7 @@ void FreqTimeView::resized()
 
 void FreqTimeView::timerCallback()
 {
-    // if last fft draw time is less than MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS ms ago
+
     int64_t currentTime = juce::Time().getCurrentTime().toMilliseconds();
     int64_t elapsedSinceLastCallMs = currentTime - lastTimerCallMs;
     int64_t lastFftDrawTimeMsCopy;
@@ -98,6 +98,13 @@ void FreqTimeView::timerCallback()
         std::lock_guard lock(lastFftDrawTimeMutex);
         lastFftDrawTimeMsCopy = lastFftDrawTimeMs;
     }
+
+    // if last FFT was recent but last redraw of track names was not
+    if ((currentTime - trackList.getLastRedrawMs()) > MAX_TIME_WITHOUT_TRACK_LIST_PAINT_MS)
+    {
+        trackList.repaint();
+    }
+
     // if user is not currently moving the view and that last fft was received recently enough
     if (!isViewMoving && (currentTime - lastFftDrawTimeMsCopy) < MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS)
     {
