@@ -16,8 +16,9 @@
 #define LABEL_HEIGHT 40
 #define LABELS_INNER_PADDING 6
 #define LABELS_BOX_CORNER_SIZE 3
-#define LABELS_CIRCLE_TEXT_PADDING 4
+#define LABELS_CIRCLE_TEXT_PADDING 10
 #define CIRCLE_PADDING 2
+#define LABELS_FONT_HEIGHT 18
 
 // max proportion (between 0 and 1) of screen height taken
 // by labels we allow to be drawn with one label per stereo

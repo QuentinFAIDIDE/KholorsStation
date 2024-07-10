@@ -18,7 +18,7 @@ struct DawInfo : public AudioTransportData
 
     double loopStartQuarterNotePos;    /**< Start position of the loop in quarter notes fractions */
     double loopEndQuarterNotePos;      /**< End position of the loop in quarter notes fractions */
-    uint32_t bpm;                      /**< Beats per minute in the daw */
+    float bpm;                         /**< Beats per minute in the daw */
     uint32_t timeSignatureNumerator;   /**< Time signature numerator from the daw */
     uint32_t timeSignatureDenominator; /**< Time signature denominator in the daw */
     bool isLooping;                    /**< is the daw currently looping ? */

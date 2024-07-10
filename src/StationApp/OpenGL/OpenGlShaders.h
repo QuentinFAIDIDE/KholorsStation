@@ -168,6 +168,10 @@ uniform int grid1PixelShift;
 uniform float grid2PixelWidth;
 uniform int grid2PixelShift;
 
+uniform vec4 gridColorLevel0;
+uniform vec4 gridColorLevel1;
+uniform vec4 gridColorLevel2;
+
 void main()
 {
     float grid0position = (gl_FragCoord.x - float(grid0PixelShift)) / grid0PixelWidth;
@@ -177,11 +181,11 @@ void main()
 
     // vertical grid tempo bars
     if ( abs( grid0position - round(grid0position) )*grid0PixelWidth < 1.5 && grid0PixelWidth > 25 ) {
-        FragColor = vec4(0.25,0.25,0.25,1.0);
+        FragColor = vec4(gridColorLevel0.r, gridColorLevel0.g, gridColorLevel0.b, gridColorLevel0.a);
     } else if ( abs( grid1position - round(grid1position) )*grid1PixelWidth < 1.5 && grid1PixelWidth > 25 ) {
-        FragColor = vec4(0.15,0.15,0.15,1.0);
+        FragColor = vec4(gridColorLevel1.r, gridColorLevel1.g, gridColorLevel1.b, gridColorLevel1.a);
     } else if ( abs( grid2position - round(grid2position) )*grid2PixelWidth < 1.5 && grid2PixelWidth > 25 ) {
-        FragColor = vec4(0.10,0.10,0.10,1.0);
+        FragColor = vec4(gridColorLevel2.r, gridColorLevel2.g, gridColorLevel2.b, gridColorLevel2.a);
 
     // background
     } else {

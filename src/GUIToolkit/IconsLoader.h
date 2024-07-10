@@ -20,6 +20,7 @@ struct IconsLoader
     std::unique_ptr<juce::Drawable> audioIcon;
     std::unique_ptr<juce::Drawable> closedCaret;
     std::unique_ptr<juce::Drawable> openedCaret;
+    std::unique_ptr<juce::Drawable> artifaktNdLogo;
 
   private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(IconsLoader)

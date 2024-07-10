@@ -58,10 +58,6 @@ void FrequencyScale::paint(juce::Graphics &g)
     }
 
     drawLabels(g, labelsToDraw);
-
-    // draw a line to the right side
-    g.setColour(COLOR_WHITE.withAlpha(0.2f));
-    g.fillRect(getLocalBounds().removeFromRight(1));
 }
 
 void FrequencyScale::drawRotatedTitle(juce::Graphics &g)

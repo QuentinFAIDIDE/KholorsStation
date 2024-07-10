@@ -3,12 +3,12 @@
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
-#define TITLE_PIXELS_FROM_LEFT 8
-#define TITLE_PIXELS_HEIGHT 17
+#define TITLE_PIXELS_FROM_LEFT 14
+#define TITLE_PIXELS_HEIGHT 20
 #define MAXIMUM_DRAWABLE_LABEL_POSITION_RATIO 0.93
 #define LABEL_HEIGHT 16
-#define LABEL_FONT_HEIGHT 15
-#define LABEL_RIGHT_PADDING 5
+#define LABEL_FONT_HEIGHT DEFAULT_FONT_SIZE
+#define LABEL_RIGHT_PADDING 10
 
 /**
  * @brief A frequency scale that will paint tick and

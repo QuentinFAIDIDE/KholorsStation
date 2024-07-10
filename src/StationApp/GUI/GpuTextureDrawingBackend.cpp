@@ -4,6 +4,7 @@
 
 #include "../OpenGL/OpenGlShaders.h"
 #include "StationApp/OpenGL/GLInfoLogger.h"
+#include "juce_graphics/juce_graphics.h"
 #include "juce_opengl/opengl/juce_gl.h"
 #include <cstdint>
 #include <memory>
@@ -27,8 +28,6 @@ GpuTextureDrawingBackend::~GpuTextureDrawingBackend()
 
 void GpuTextureDrawingBackend::paint(juce::Graphics &g)
 {
-    g.setColour(COLOR_WHITE.withAlpha(0.2f));
-    g.fillRect(getLocalBounds().removeFromTop(1));
 
     int64_t viewPositionCopy, viewScaleCopy;
     {
@@ -41,11 +40,86 @@ void GpuTextureDrawingBackend::paint(juce::Graphics &g)
         std::lock_guard lock(playCursorMutex);
         playCursorStartPixel = (float)(playCursorPosition - viewPositionCopy) / (float)viewScaleCopy;
     }
-    auto areaRightToCursor = getLocalBounds().withTrimmedLeft(playCursorStartPixel);
-    auto playCursorBounds = areaRightToCursor.withWidth(PLAY_CURSOR_WIDTH);
+    // we won't draw the cursor when it's the right side, it's just ugly
+    if (playCursorStartPixel > 2)
+    {
+        auto areaRightToCursor = getLocalBounds().withTrimmedLeft(playCursorStartPixel);
+        auto playCursorBounds = areaRightToCursor.withWidth(PLAY_CURSOR_WIDTH);
 
-    g.setColour(COLOR_WHITE);
-    g.fillRect(playCursorBounds);
+        g.setColour(COLOR_WHITE);
+        g.fillRect(playCursorBounds);
+    }
+}
+
+void GpuTextureDrawingBackend::paintOverChildren(juce::Graphics &g)
+{
+    drawBorders(g);
+}
+
+void GpuTextureDrawingBackend::drawBorders(juce::Graphics &g)
+{
+    auto bounds = getLocalBounds();
+    int borderWidth = 3;
+    int roundedCornersWidth = 13;
+    // we fill two sub path, one for the borders that are to the left
+    // of the middle vertical line, and one for the borders that are to the right
+    // of it.
+    auto fillPath = juce::Path();
+    // we start first subpath to the pixel at the bottom center
+    fillPath.startNewSubPath(bounds.getCentreX(), bounds.getBottom());
+    fillPath.lineTo(bounds.getBottomLeft().toFloat());
+    fillPath.lineTo(bounds.getTopLeft().toFloat());
+    fillPath.lineTo(bounds.getCentreX(), bounds.getTopLeft().getY());
+    fillPath.lineTo(bounds.getCentreX(), bounds.getTopLeft().getY() + borderWidth);
+
+    fillPath.lineTo(bounds.getTopLeft().getX() + borderWidth + roundedCornersWidth,
+                    bounds.getTopLeft().getY() + borderWidth);
+
+    fillPath.quadraticTo(bounds.getTopLeft().getX() + borderWidth, bounds.getTopLeft().getY() + borderWidth,
+                         bounds.getTopLeft().getX() + borderWidth,
+                         bounds.getTopLeft().getY() + borderWidth + roundedCornersWidth);
+
+    fillPath.lineTo(bounds.getBottomLeft().getX() + borderWidth,
+                    bounds.getBottomLeft().getY() - borderWidth - roundedCornersWidth);
+
+    fillPath.quadraticTo(bounds.getBottomLeft().translated(borderWidth, -borderWidth).toFloat(),
+                         bounds.getBottomLeft().translated(borderWidth + roundedCornersWidth, -borderWidth).toFloat());
+
+    fillPath.lineTo(bounds.getCentreX(), bounds.getBottom() - borderWidth);
+    fillPath.closeSubPath();
+
+    // subpath to the right of the screen
+    fillPath.startNewSubPath(bounds.getCentreX(), bounds.getBottom());
+    fillPath.lineTo(bounds.getBottomRight().toFloat());
+    fillPath.lineTo(bounds.getTopRight().toFloat());
+    fillPath.lineTo(bounds.getCentreX(), bounds.getTopRight().getY());
+    fillPath.lineTo(bounds.getCentreX(), bounds.getTopRight().getY() + borderWidth);
+    fillPath.lineTo(bounds.getTopRight().translated(-(borderWidth + roundedCornersWidth), borderWidth).toFloat());
+
+    fillPath.quadraticTo(bounds.getTopRight().translated(-borderWidth, borderWidth).toFloat(),
+                         bounds.getTopRight().translated(-borderWidth, borderWidth + roundedCornersWidth).toFloat());
+
+    fillPath.lineTo(bounds.getBottomRight().translated(-(borderWidth), -(borderWidth + roundedCornersWidth)).toFloat());
+    fillPath.quadraticTo(
+        bounds.getBottomRight().translated(-borderWidth, -borderWidth).toFloat(),
+        bounds.getBottomRight().translated(-(borderWidth + roundedCornersWidth), -(borderWidth)).toFloat());
+    fillPath.lineTo(bounds.getCentreX(), bounds.getBottomRight().getY() - borderWidth);
+    fillPath.closeSubPath();
+
+    g.setColour(COLOR_BACKGROUND);
+    g.fillPath(fillPath);
+
+    // g.setColour(COLOR_FREQVIEW_BORDER);
+    // int borders2Width = 2;
+    // g.drawRoundedRectangle(bounds.toFloat().reduced(borders2Width / 2), roundedCornersWidth, borders2Width);
+
+    g.setColour(COLOR_FREQVIEW_BORDER);
+    int borders2Width = 1;
+    g.drawRoundedRectangle(bounds.toFloat().reduced(borders2Width), roundedCornersWidth, borders2Width);
+
+    auto middleLine = bounds.withY(bounds.getHeight() / 2).withHeight(1);
+    g.setColour(COLOR_GRIDS_LEVEL_0);
+    g.fillRect(middleLine);
 }
 
 void GpuTextureDrawingBackend::resized()
@@ -178,6 +252,18 @@ void GpuTextureDrawingBackend::uploadShadersUniforms()
         backgroundGridShader->setUniform("grid2PixelWidth", (GLfloat)grid2PixelWidth);
 
         backgroundGridShader->setUniform("viewHeightPixels", (GLfloat)(viewHeight));
+
+        backgroundGridShader->setUniform("gridColorLevel0", COLOR_GRIDS_LEVEL_0.getFloatRed(),
+                                         COLOR_GRIDS_LEVEL_0.getFloatGreen(), COLOR_GRIDS_LEVEL_0.getFloatBlue(),
+                                         COLOR_GRIDS_LEVEL_0.getFloatAlpha());
+
+        backgroundGridShader->setUniform("gridColorLevel1", COLOR_GRIDS_LEVEL_1.getFloatRed(),
+                                         COLOR_GRIDS_LEVEL_1.getFloatGreen(), COLOR_GRIDS_LEVEL_1.getFloatBlue(),
+                                         COLOR_GRIDS_LEVEL_1.getFloatAlpha());
+
+        backgroundGridShader->setUniform("gridColorLevel2", COLOR_GRIDS_LEVEL_2.getFloatRed(),
+                                         COLOR_GRIDS_LEVEL_2.getFloatGreen(), COLOR_GRIDS_LEVEL_2.getFloatBlue(),
+                                         COLOR_GRIDS_LEVEL_2.getFloatAlpha());
 
         lastUsedGlThreadUnifNonce = glThreadUniformsNonce;
     }

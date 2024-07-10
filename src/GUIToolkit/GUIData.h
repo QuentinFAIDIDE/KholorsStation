@@ -7,6 +7,9 @@ namespace GUIData
     extern const char*  RobotoBlack_ttf;
     const int           RobotoBlack_ttfSize = 168060;
 
+    extern const char*  artifaktnd_logo_svg;
+    const int           artifaktnd_logo_svgSize = 8415;
+
     extern const char*  RobotoMediumItalic_ttf;
     const int           RobotoMediumItalic_ttfSize = 173416;
 

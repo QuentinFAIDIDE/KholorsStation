@@ -5,6 +5,7 @@
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/OpenGL/SolidRectangle.h"
 #include "StationApp/OpenGL/TexturedRectangle.h"
+#include "juce_graphics/juce_graphics.h"
 #include "juce_opengl/juce_opengl.h"
 #include <cstdint>
 #include <memory>
@@ -68,6 +69,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     };
 
     void paint(juce::Graphics &g) override;
+    void paintOverChildren(juce::Graphics &g) override;
     void resized() override;
 
     /**
@@ -120,6 +122,13 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     std::vector<ClearTrackInfoRange> getClearedTrackRanges() override;
 
   private:
+    /**
+     * @brief Will draw rounded borders around the view.
+     *
+     * @param g juce graphics context
+     */
+    void drawBorders(juce::Graphics &g);
+
     /**
      * @brief Get index of the tile in the tile ring buffer if it exists.
      * Called only from the OpenGL thread.

@@ -65,9 +65,6 @@ void TimeScale::drawTicks(juce::Graphics &g, int64_t currentViewPosition, int64_
     int grid1PixelShift = int(grid0PixelShift + 0.5f) % int(grid1PixelWidth + 0.5f);
     int grid2PixelShift = int(grid1PixelShift + 0.5f) % int(grid2PixelWidth + 0.5f);
 
-    g.setColour(COLOR_WHITE.withAlpha(0.2f));
-    g.fillRect(getLocalBounds().removeFromTop(1));
-
     int currentBarIndex = int((float(currentViewPosition) / grid0FrameWidth)) + 1;
 
     g.setFont(DEFAULT_FONT_SIZE);

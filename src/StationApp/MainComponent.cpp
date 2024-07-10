@@ -64,25 +64,29 @@ bool MainComponent::taskHandler(std::shared_ptr<Task> task)
 void MainComponent::paintOverChildren(juce::Graphics &g)
 {
     int middlePadding = 6;
-    int leftPadding = 8;
+    int rightPadding = 25;
 
-    int mainTitleWidth = sharedFonts->robotoBlack.withHeight(MENU_BAR_HEIGHT).getStringWidth("KHOLORS II");
-    int subTitleWidth = sharedFonts->roboto.withHeight(MENU_BAR_HEIGHT).getStringWidth("STATION");
+    int mainTitleWidth = sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("KHOLORS II");
+    int subTitleWidth = sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("STATION");
     int totalWidth = mainTitleWidth + middlePadding + subTitleWidth;
 
     auto bounds = getLocalBounds();
-    g.setFont(sharedFonts->robotoBlack.withHeight(MENU_BAR_HEIGHT));
+    g.setFont(sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT));
     g.setColour(COLOR_TEXT);
 
     auto topspace = bounds.removeFromTop(MENU_BAR_HEIGHT);
-    topspace.removeFromRight(leftPadding);
-    auto titleSpace = topspace.removeFromRight(totalWidth);
+    topspace.removeFromLeft(rightPadding);
+    auto titleSpace = topspace.removeFromLeft(totalWidth);
     auto leftTitleSpace = titleSpace.removeFromLeft(mainTitleWidth);
     titleSpace.removeFromLeft(middlePadding);
 
-    g.drawText("KHOLORS II", leftTitleSpace, juce::Justification::centredLeft, false);
+    g.drawText("KHOLORS II", leftTitleSpace, juce::Justification::centredRight, false);
 
-    g.setFont(sharedFonts->roboto.withHeight(MENU_BAR_HEIGHT));
+    g.setFont(sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT));
     g.setColour(COLOR_TEXT_DARKER);
-    g.drawText("STATION", titleSpace, juce::Justification::centredLeft, false);
+    g.drawText("STATION", titleSpace, juce::Justification::centredRight, false);
+
+    auto artifaktLogoBounds = topspace.removeFromRight(rightPadding + TOP_LOGO_WIDTH);
+    artifaktLogoBounds.removeFromRight(rightPadding);
+    sharedSvgs->artifaktNdLogo->drawWithin(g, artifaktLogoBounds.toFloat(), juce::RectanglePlacement::centred, 1.0f);
 }

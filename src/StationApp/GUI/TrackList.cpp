@@ -29,9 +29,6 @@ void TrackList::paint(juce::Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
-    g.setColour(COLOR_WHITE.withAlpha(0.2f));
-    g.fillRect(getLocalBounds().removeFromLeft(1));
-
     int startTile, endTile;
     {
         std::lock_guard lock(viewMutex);
@@ -172,6 +169,7 @@ void TrackList::drawLabel(juce::Graphics &g, juce::Rectangle<int> bounds, std::s
 
     g.setColour(COLOR_WHITE);
     g.drawEllipse(circleBounds.toFloat(), 1.0f);
+    g.setFont(juce::Font(LABELS_FONT_HEIGHT));
 
     g.drawText(trackName, reducedBounds, juce::Justification::centredLeft, true);
 }

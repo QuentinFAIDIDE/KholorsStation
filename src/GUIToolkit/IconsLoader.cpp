@@ -41,4 +41,7 @@ IconsLoader::IconsLoader()
     fileIcon = juce::Drawable::createFromImageData(GUIData::file_svg, GUIData::file_svgSize);
     folderIcon = juce::Drawable::createFromImageData(GUIData::folder_svg, GUIData::folder_svgSize);
     audioIcon = juce::Drawable::createFromImageData(GUIData::song_svg, GUIData::song_svgSize);
+
+    artifaktNdLogo =
+        juce::Drawable::createFromImageData(GUIData::artifaktnd_logo_svg, GUIData::artifaktnd_logo_svgSize);
 }

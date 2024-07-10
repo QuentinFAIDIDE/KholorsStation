@@ -6,8 +6,8 @@
 #define TICK_LABEL_MARGIN 4
 #define TICK_LABEL_WIDTH 30
 
-#define TITLE_PIXELS_FROM_BOTTOM 2
-#define TITLE_PIXELS_HEIGHT 17
+#define TITLE_PIXELS_FROM_BOTTOM 8
+#define TITLE_PIXELS_HEIGHT 20
 
 /**
  * @brief A component that draws beat bars

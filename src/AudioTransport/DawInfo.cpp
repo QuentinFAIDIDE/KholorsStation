@@ -25,7 +25,8 @@ bool DawInfo::operator!=(const DawInfo &o)
 {
     return std::abs(loopEndQuarterNotePos - o.loopEndQuarterNotePos) > std::numeric_limits<double>::epsilon() ||
            std::abs(loopStartQuarterNotePos - o.loopStartQuarterNotePos) > std::numeric_limits<double>::epsilon() ||
-           bpm != o.bpm || timeSignatureNumerator != o.timeSignatureNumerator ||
+           std::abs(bpm - o.bpm) > std::numeric_limits<float>::epsilon() ||
+           timeSignatureNumerator != o.timeSignatureNumerator ||
            timeSignatureDenominator != o.timeSignatureDenominator || isLooping != o.isLooping;
 }
 
