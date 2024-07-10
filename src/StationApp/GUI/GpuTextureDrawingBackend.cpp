@@ -114,7 +114,7 @@ void GpuTextureDrawingBackend::drawBorders(juce::Graphics &g)
     // int borders2Width = 2;
     // g.drawRoundedRectangle(bounds.toFloat().reduced(borders2Width / 2), roundedCornersWidth, borders2Width);
 
-    g.setColour(juce::Colour(145, 157, 173));
+    g.setColour(COLOR_GRIDS_LEVEL_0);
     int borders2Width = 2;
     g.drawRoundedRectangle(bounds.toFloat(), roundedCornersWidth, borders2Width);
 
