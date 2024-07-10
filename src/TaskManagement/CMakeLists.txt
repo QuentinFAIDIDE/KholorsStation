@@ -11,7 +11,7 @@ file(
   "*.h")
 list(FILTER all_module_headers EXCLUDE REGEX ".*Test\\.h$")
 
-add_library(TaskManagement ${all_module_cpp} ${all_module_headers})
+add_library(TaskManagement SHARED ${all_module_cpp} ${all_module_headers})
 
 add_executable(TaskingManagerTest TaskingManagerTest.cpp)
 target_link_libraries(TaskingManagerTest TaskManagement

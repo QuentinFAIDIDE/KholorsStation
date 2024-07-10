@@ -1,9 +1,15 @@
 #include "PluginEditor.h"
+#include "GUIToolkit/GUIData.h"
 #include "PluginProcessor.h"
 
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &p)
     : AudioProcessorEditor(&p), processorRef(p)
 {
+    typeface = juce::Typeface::createSystemTypefaceFor(GUIData::RobotoRegular_ttf, GUIData::RobotoRegular_ttfSize);
+    appLookAndFeel.setDefaultSansSerifTypeface(typeface);
+    juce::LookAndFeel::setDefaultLookAndFeel(&appLookAndFeel);
+    setLookAndFeel(&appLookAndFeel);
+
     setSize(650, 143);
 }
 

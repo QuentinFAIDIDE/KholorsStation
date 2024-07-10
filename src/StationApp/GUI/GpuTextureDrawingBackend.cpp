@@ -14,8 +14,9 @@
 
 GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft,
                                                    NormalizedUnitTransformer &it)
-    : FftDrawingBackend(tis, ft, it), ignoreNewData(true), viewPosition(0), viewScale(150),
-      convolutionId(GpuConvolution::Emboss), bpm(120), needToResetTiles(false)
+    : FftDrawingBackend(tis, ft, it), background(COLOR_FREQVIEW_GRADIENT_CENTER, COLOR_FREQVIEW_GRADIENT_BORDERS),
+      ignoreNewData(true), viewPosition(0), viewScale(150), convolutionId(GpuConvolutionId::Emboss), bpm(120),
+      needToResetTiles(false)
 {
     openGLContext.setRenderer(this);
     openGLContext.attachTo(*this);
@@ -60,7 +61,7 @@ void GpuTextureDrawingBackend::drawBorders(juce::Graphics &g)
 {
     auto bounds = getLocalBounds();
     int borderWidth = 3;
-    int roundedCornersWidth = 13;
+    int roundedCornersWidth = 7;
     // we fill two sub path, one for the borders that are to the left
     // of the middle vertical line, and one for the borders that are to the right
     // of it.
@@ -113,9 +114,9 @@ void GpuTextureDrawingBackend::drawBorders(juce::Graphics &g)
     // int borders2Width = 2;
     // g.drawRoundedRectangle(bounds.toFloat().reduced(borders2Width / 2), roundedCornersWidth, borders2Width);
 
-    g.setColour(COLOR_FREQVIEW_BORDER);
-    int borders2Width = 1;
-    g.drawRoundedRectangle(bounds.toFloat().reduced(borders2Width), roundedCornersWidth, borders2Width);
+    g.setColour(juce::Colour(145, 157, 173));
+    int borders2Width = 2;
+    g.drawRoundedRectangle(bounds.toFloat(), roundedCornersWidth, borders2Width);
 
     auto middleLine = bounds.withY(bounds.getHeight() / 2).withHeight(1);
     g.setColour(COLOR_GRIDS_LEVEL_0);

@@ -3,6 +3,7 @@
 #include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
+#include "StationApp/OpenGL/RadialGradientRectangle.h"
 #include "StationApp/OpenGL/SolidRectangle.h"
 #include "StationApp/OpenGL/TexturedRectangle.h"
 #include "juce_graphics/juce_graphics.h"
@@ -56,7 +57,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      * @brief An identifier for the GPU convolution
      * performed at openGL rendering time.
      */
-    enum GpuConvolution
+    enum GpuConvolutionId
     {
         Identity = 0,
         Edge0 = 1,
@@ -235,12 +236,12 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     std::unique_ptr<juce::OpenGLShaderProgram> texturedPositionedShader; /**< shader to draw ffts */
     std::unique_ptr<juce::OpenGLShaderProgram> backgroundGridShader;     /**< Shader to draw grids on background */
 
-    SolidRectangle background; /**< OpenGL Mesh for background */
+    RadialGradientRectangle background; /**< OpenGL Mesh for background */
 
     std::atomic<bool> ignoreNewData; /**< after the openGL thread closes, prevent access to openGL resources */
 
     int64_t viewPosition, viewScale, viewHeight, viewWidth; /*< read by gl thread to update uniforms and view */
-    GpuConvolution convolutionId;                           /**< Identifier of the GLSL convolution to apply with GPU */
+    GpuConvolutionId convolutionId;                         /**< Identifier of the GLSL convolution to apply with GPU */
     float bpm;                         /**< values read by openGL thread to update uniforms and view */
     std::mutex glThreadUniformsMutex;  /**< to lock modifications of position, scale or bpm */
     int64_t glThreadUniformsNonce;     /**< to know if we need to update position and  */

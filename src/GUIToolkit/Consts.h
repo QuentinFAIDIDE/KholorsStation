@@ -23,6 +23,9 @@
 #define COLOR_GRIDS_LEVEL_2 juce::Colour(juce::uint8(63), 76, 124, 0.5f)
 #define COLOR_FREQVIEW_BORDER juce::Colour(129, 137, 166)
 
+#define COLOR_FREQVIEW_GRADIENT_BORDERS juce::Colour(19, 26, 51)
+#define COLOR_FREQVIEW_GRADIENT_CENTER juce::Colour(30, 35, 57)
+
 #define COLOR_NOTIF_INFO juce::Colour(64, 86, 165)
 #define COLOR_NOTIF_WARN juce::Colour(155, 95, 49)
 #define COLOR_NOTIF_ERROR juce::Colour(198, 66, 100)
