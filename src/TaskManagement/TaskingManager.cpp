@@ -1,5 +1,6 @@
 #include "TaskingManager.h"
 #include "Task.h"
+#include "TaskListener.h"
 #include "spdlog/spdlog.h"
 #include <memory>
 #include <mutex>
@@ -154,6 +155,20 @@ void TaskingManager::registerTaskListener(TaskListener *newListener)
 {
     std::lock_guard<std::mutex> lock(taskListenersMutex);
     taskListeners.push_back(newListener);
+}
+
+void TaskingManager::purgeTaskListener(TaskListener *listener)
+{
+    std::lock_guard<std::mutex> lock(taskListenersMutex);
+    std::vector<TaskListener *> newVector;
+    newVector.reserve(taskListeners.size());
+    for (size_t i = 0; i < taskListeners.size(); i++)
+    {
+        if (taskListeners[i] != listener)
+        {
+            newVector.push_back(taskListeners[i]);
+        }
+    }
 }
 
 void TaskingManager::broadcastNestedTaskNow(std::shared_ptr<Task> priorityTask)

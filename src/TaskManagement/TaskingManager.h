@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Task.h"
 #include "TaskListener.h"
 #include <condition_variable>
 #include <memory>
@@ -33,6 +34,11 @@ class TaskingManager : public TaskListener
     void registerTaskListener(TaskListener *);
 
     /**
+     * Tries to find the task listener and delete it from the list.
+     */
+    void purgeTaskListener(TaskListener *);
+
+    /**
      * Starts the task broadcasting thread. If not called
      * the task are never broadcast and just wait in the queue.
      */
@@ -64,7 +70,7 @@ class TaskingManager : public TaskListener
      * @return true This task can be passed to other TaskListeners handlers.
      * @return false This task broadcasting does not need to reach remaining TaskListeners handlers.
      */
-    bool taskHandler(std::shared_ptr<Task> task);
+    bool taskHandler(std::shared_ptr<Task> task) override;
 
   private:
     /**

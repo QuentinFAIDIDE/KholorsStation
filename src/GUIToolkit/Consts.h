@@ -1,6 +1,6 @@
 #pragma once
 
-#define COLOR_BACKGROUND juce::Colour(10, 17, 41)
+#define COLOR_BACKGROUND juce::Colour(3, 8, 27)
 #define COLOR_BACKGROUND_LIGHTER juce::Colour(10, 17, 41)
 #define COLOR_APP_BACKGROUND juce::Colour(10, 17, 41)
 #define COLOR_BACKGROUND_HIGHLIGHT juce::Colour(33, 45, 90)
@@ -23,8 +23,8 @@
 #define COLOR_GRIDS_LEVEL_2 juce::Colour(juce::uint8(63), 76, 124, 0.5f)
 #define COLOR_FREQVIEW_BORDER juce::Colour(129, 137, 166)
 
-#define COLOR_FREQVIEW_GRADIENT_BORDERS juce::Colour(19, 26, 51)
-#define COLOR_FREQVIEW_GRADIENT_CENTER juce::Colour(30, 35, 57)
+#define COLOR_FREQVIEW_GRADIENT_BORDERS juce::Colour(3, 8, 27)
+#define COLOR_FREQVIEW_GRADIENT_CENTER juce::Colour(10, 17, 41)
 
 #define COLOR_NOTIF_INFO juce::Colour(64, 86, 165)
 #define COLOR_NOTIF_WARN juce::Colour(155, 95, 49)

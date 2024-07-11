@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "AudioBlockInfo.h"
+#include "TaskManagement/TaskListener.h"
 
 #define FORWARDER_THREAD_MAX_WAIT_MS 100
 
@@ -23,7 +24,7 @@
  * queue them for a coalescing thread to aggregate them into AudioSegmentPayloads,
  * which are queued for a sender thread to send these to the Kholors Station gRPC api.
  */
-class BufferForwarder
+class BufferForwarder : public TaskListener
 {
   public:
     BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps);
@@ -61,6 +62,17 @@ class BufferForwarder
      * @param isCompatible true if the daw is compatible, false otherwise.
      */
     void setDawIsCompatible(bool isCompatible);
+
+    /**
+     * @brief Handler for the tasks that goes through task manager.
+     * Mostly here to receive tasks about UI changes related to color
+     * and track name update.
+     *
+     * @param task
+     * @return true
+     * @return false
+     */
+    bool taskHandler(std::shared_ptr<Task> task) override;
 
   private:
     /**

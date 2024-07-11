@@ -23,6 +23,8 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
             spdlog::debug("KHOLORS_LOG_LEVEL was set so the Kholors Sink plugin will show debug info");
         }
     }
+
+    taskingManager.startTaskBroadcast();
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -200,7 +202,9 @@ bool AudioPluginAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor *AudioPluginAudioProcessor::createEditor()
 {
-    return new AudioPluginAudioProcessorEditor(*this);
+    auto gui = new AudioPluginAudioProcessorEditor(*this, taskingManager);
+    // TODO: broadcast the color picker and trackname values
+    return gui;
 }
 
 void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock &destData)

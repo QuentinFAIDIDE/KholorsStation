@@ -1,17 +1,23 @@
 #pragma once
 
+#include "GUIToolkit/FontsLoader.h"
 #include "GUIToolkit/IconsLoader.h"
 #include "GUIToolkit/KholorsLookAndFeel.h"
+#include "GUIToolkit/Widgets/ColorPicker.h"
 #include "PluginProcessor.h"
+#include "TaskManagement/TaskListener.h"
+#include "TaskManagement/TaskingManager.h"
 #include "juce_core/juce_core.h"
+#include "juce_graphics/juce_graphics.h"
+#include <memory>
 
 /**
  * @brief Class that describes the GUI of the plugin.
  */
-class AudioPluginAudioProcessorEditor : public juce::AudioProcessorEditor
+class AudioPluginAudioProcessorEditor : public juce::AudioProcessorEditor, TaskListener
 {
   public:
-    explicit AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &);
+    explicit AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &, TaskingManager &);
     ~AudioPluginAudioProcessorEditor() override;
     void paint(juce::Graphics &) override;
     void resized() override;
@@ -19,13 +25,21 @@ class AudioPluginAudioProcessorEditor : public juce::AudioProcessorEditor
     void mouseDown(const juce::MouseEvent &ev) override;
     void mouseUp(const juce::MouseEvent &ev) override;
 
+    bool taskHandler(std::shared_ptr<Task> t) override;
+
   private:
+    void drawHeader(juce::Graphics &g);
+
     AudioPluginAudioProcessor &processorRef; /**< Provided as an easy way to
                                                 access the audio/midi processor. */
     juce::Typeface::Ptr typeface;            /**< Default font of the app */
     KholorsLookAndFeel appLookAndFeel;       /**< Defines the app look and feel */
 
     juce::SharedResourcePointer<IconsLoader> sharedSvgs; /**< singleton object that loads svg images */
+    juce::SharedResourcePointer<FontsLoader> sharedFonts;
+
+    TaskingManager &taskManager;
+    ColorPicker colorPicker;
 
     // destroy copy constructors
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessorEditor)

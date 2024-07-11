@@ -20,6 +20,7 @@
 #include "GUIData.h"
 #include "IconsLoader.h"
 #include "KholorsLookAndFeel.h"
+#include "Widgets/ColorPicker.h"
 #include "Widgets/LabeledLineContainer.h"
 #include "Widgets/LabeledLineStack.h"
 #include "Widgets/LabeledLineText.h"

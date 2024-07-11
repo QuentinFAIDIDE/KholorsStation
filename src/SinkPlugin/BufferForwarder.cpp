@@ -406,3 +406,7 @@ void BufferForwarder::queueCurrentlyFilledPayloadForSend()
     }
     payloadsCV.notify_one();
 }
+
+bool BufferForwarder::taskHandler(std::shared_ptr<Task> task)
+{
+}

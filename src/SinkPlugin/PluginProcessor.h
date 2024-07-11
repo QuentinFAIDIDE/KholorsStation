@@ -2,6 +2,7 @@
 
 #include "AudioTransport/Client.h"
 #include "SinkPlugin/BufferForwarder.h"
+#include "TaskManagement/TaskingManager.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #define MAX_DB_BOOST 30.0f
@@ -158,6 +159,8 @@ class AudioPluginAudioProcessor : public juce::AudioProcessor
     AudioTransport::Client audioTransportGrpcClient;
     BufferForwarder audioInfoForwarder;
     std::atomic<int64_t> trackIdentifier;
+
+    TaskingManager taskingManager;
 
     // Juce utility to delete copy constructors
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)

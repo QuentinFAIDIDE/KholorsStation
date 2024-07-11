@@ -2,6 +2,7 @@
 #include "GUIData.cpp"
 #include "IconsLoader.cpp"
 #include "KholorsLookAndFeel.cpp"
+#include "Widgets/ColorPicker.cpp"
 #include "Widgets/LabeledLineContainer.cpp"
 #include "Widgets/LabeledLineStack.cpp"
 #include "Widgets/ServerPortText.cpp"
