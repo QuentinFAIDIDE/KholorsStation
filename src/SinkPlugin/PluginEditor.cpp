@@ -2,6 +2,7 @@
 #include "GUIToolkit/Consts.h"
 #include "GUIToolkit/GUIData.h"
 #include "GUIToolkit/Widgets/ColorPicker.h"
+#include "GUIToolkit/Widgets/TextEntry.h"
 #include "PluginProcessor.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
@@ -17,8 +18,10 @@
 #define SECTIONS_HEADER_TITLE_FONT_SIZE 21
 
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &p, TaskingManager &tm,
-                                                                 juce::Colour currentlySelectedColor)
-    : AudioProcessorEditor(&p), processorRef(p), taskManager(tm), colorPicker("track-color-picker", taskManager)
+                                                                 juce::Colour currentlySelectedColor,
+                                                                 std::string currentTrackName)
+    : AudioProcessorEditor(&p), processorRef(p), taskManager(tm), colorPicker("track-color-picker", taskManager),
+      textEntry(taskManager, "track-name", TRANS("Track Name").toStdString(), "My track", TextEntry::NameTextFilter)
 {
     typeface = juce::Typeface::createSystemTypefaceFor(GUIData::RobotoRegular_ttf, GUIData::RobotoRegular_ttfSize);
     appLookAndFeel.setDefaultSansSerifTypeface(typeface);
@@ -29,6 +32,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
 
     colorPicker.setColour(currentlySelectedColor.getRed(), currentlySelectedColor.getGreen(),
                           currentlySelectedColor.getBlue());
+    textEntry.setText(currentTrackName);
 
     addAndMakeVisible(colorPicker);
     addAndMakeVisible(textEntry);

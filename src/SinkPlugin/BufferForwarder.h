@@ -77,6 +77,7 @@ class BufferForwarder : public TaskListener
     bool taskHandler(std::shared_ptr<Task> task) override;
 
     juce::Colour getCurrentColor();
+    std::string getCurrentTrackName();
 
   private:
     /**

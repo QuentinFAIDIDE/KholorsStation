@@ -204,7 +204,8 @@ bool AudioPluginAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor *AudioPluginAudioProcessor::createEditor()
 {
-    auto gui = new AudioPluginAudioProcessorEditor(*this, taskingManager, audioInfoForwarder.getCurrentColor());
+    auto gui = new AudioPluginAudioProcessorEditor(*this, taskingManager, audioInfoForwarder.getCurrentColor(),
+                                                   audioInfoForwarder.getCurrentTrackName());
     return gui;
 }
 

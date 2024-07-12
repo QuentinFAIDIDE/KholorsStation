@@ -3,6 +3,7 @@
 #include "AudioTransport/ColorBytes.h"
 #include "GUIToolkit/Consts.h"
 #include "GUIToolkit/Widgets/ColorPickerUpdateTask.h"
+#include "GUIToolkit/Widgets/TextEntry.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
 #include <chrono>
@@ -103,9 +104,6 @@ void BufferForwarder::initializeTrackInfo(uint64_t id)
         std::lock_guard lock(trackNameMutex);
         trackName = std::to_string(trackIdentifier);
     }
-    auto colorUpdateTask =
-        std::make_shared<ColorPickerUpdateTask>("track-color-picker", trackColorRed, trackColorGreen, trackColorBlue);
-    colorUpdateTask->preventFromGoingToTaskHistory();
 }
 
 void BufferForwarder::setDawIsCompatible(bool v)
@@ -427,10 +425,24 @@ bool BufferForwarder::taskHandler(std::shared_ptr<Task> task)
         trackColorGreen = colorUpdateTask->green;
         trackColorBlue = colorUpdateTask->blue;
     }
+
+    auto textUpdateTask = std::dynamic_pointer_cast<TextEntryUpdateTask>(task);
+    if (textUpdateTask != nullptr && textUpdateTask->isCompleted() &&
+        textUpdateTask->textEntryIdentifier == "track-name")
+    {
+        std::lock_guard lock(trackNameMutex);
+        trackName = textUpdateTask->newText;
+    }
     return false;
 }
 
 juce::Colour BufferForwarder::getCurrentColor()
 {
     return juce::Colour(trackColorRed, trackColorGreen, trackColorBlue);
+}
+
+std::string BufferForwarder::getCurrentTrackName()
+{
+    std::lock_guard lock(trackNameMutex);
+    return trackName;
 }

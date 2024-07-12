@@ -1,9 +1,9 @@
 #pragma once
 
-#define COLOR_BACKGROUND juce::Colour(3, 8, 27)
-#define COLOR_BACKGROUND_LIGHTER juce::Colour(10, 17, 41)
-#define COLOR_APP_BACKGROUND juce::Colour(10, 17, 41)
-#define COLOR_BACKGROUND_HIGHLIGHT juce::Colour(33, 45, 90)
+#define COLOR_BACKGROUND juce::Colour(25, 35, 79)
+#define COLOR_BACKGROUND_LIGHTER juce::Colour(50, 64, 126)
+#define COLOR_APP_BACKGROUND juce::Colour(25, 35, 79)
+#define COLOR_BACKGROUND_HIGHLIGHT juce::Colour(50, 64, 126)
 #define COLOR_SAMPLE_BORDER juce::Colour(87, 110, 195)
 #define COLOR_TEXT COLOR_WHITE
 #define COLOR_TEXT_DARKER juce::Colour(179, 179, 179)
@@ -19,14 +19,14 @@
 #define COLOR_HIGHLIGHT juce::Colour(87, 110, 195)
 #define COLOR_SELECTED_BACKGROUND juce::Colour(33, 45, 90)
 #define COLOR_GRIDS_LEVEL_0 juce::Colour(juce::uint8(63), 76, 124, 1.0f)
-#define COLOR_GRIDS_LEVEL_1 juce::Colour(juce::uint8(63), 76, 124, 0.57f)
+#define COLOR_GRIDS_LEVEL_1 juce::Colour(juce::uint8(44), 54, 91, 1.0f)
 #define COLOR_GRIDS_LEVEL_2 juce::Colour(juce::uint8(63), 76, 124, 0.5f)
 #define COLOR_FREQVIEW_BORDER juce::Colour(129, 137, 166)
 #define COLOR_INPUT_BACKGROUND juce::Colour(211, 222, 222)
 #define COLOR_INPUT_TEXT juce::Colour(51, 51, 51)
 
-#define COLOR_FREQVIEW_GRADIENT_BORDERS juce::Colour(3, 8, 27)
-#define COLOR_FREQVIEW_GRADIENT_CENTER juce::Colour(10, 17, 41)
+#define COLOR_FREQVIEW_GRADIENT_BORDERS juce::Colour(25, 35, 79)
+#define COLOR_FREQVIEW_GRADIENT_CENTER juce::Colour(25, 35, 79)
 
 #define COLOR_NOTIF_INFO juce::Colour(64, 86, 165)
 #define COLOR_NOTIF_WARN juce::Colour(155, 95, 49)

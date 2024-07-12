@@ -16,7 +16,7 @@
 class AudioPluginAudioProcessorEditor : public juce::AudioProcessorEditor
 {
   public:
-    explicit AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &, TaskingManager &, juce::Colour);
+    explicit AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &, TaskingManager &, juce::Colour, std::string);
     ~AudioPluginAudioProcessorEditor() override;
     void paint(juce::Graphics &) override;
     void resized() override;

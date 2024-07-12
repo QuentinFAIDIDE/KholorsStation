@@ -27,7 +27,7 @@ KholorsLookAndFeel::KholorsLookAndFeel()
     setColour(juce::ListBox::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(juce::ListBox::ColourIds::outlineColourId, juce::Colours::transparentBlack);
 
-    setColour(juce::TextEditor::ColourIds::textColourId, COLOR_TEXT);
+    setColour(juce::TextEditor::ColourIds::textColourId, COLOR_INPUT_TEXT);
     setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(juce::TextEditor::ColourIds::outlineColourId, juce::Colours::transparentBlack);
     setColour(juce::TextEditor::ColourIds::focusedOutlineColourId, juce::Colours::transparentBlack);
