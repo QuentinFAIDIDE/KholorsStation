@@ -22,6 +22,8 @@
 #define COLOR_GRIDS_LEVEL_1 juce::Colour(juce::uint8(63), 76, 124, 0.57f)
 #define COLOR_GRIDS_LEVEL_2 juce::Colour(juce::uint8(63), 76, 124, 0.5f)
 #define COLOR_FREQVIEW_BORDER juce::Colour(129, 137, 166)
+#define COLOR_INPUT_BACKGROUND juce::Colour(211, 222, 222)
+#define COLOR_INPUT_TEXT juce::Colour(51, 51, 51)
 
 #define COLOR_FREQVIEW_GRADIENT_BORDERS juce::Colour(3, 8, 27)
 #define COLOR_FREQVIEW_GRADIENT_CENTER juce::Colour(10, 17, 41)
@@ -52,3 +54,10 @@
 #define POPUP_MENU_IDEAL_HEIGHT 18
 #define POPUP_MENU_SEPARATOR_IDEAL_HEIGHT 4
 #define TAB_HIGHLIGHT_LINE_WIDTH 2
+
+#define COLOR_PALETTE                                                                                                  \
+    {juce::Colour::fromString("ff399898"), juce::Colour::fromString("ff3c7a98"), juce::Colour::fromString("ff4056a5"), \
+     juce::Colour::fromString("ff663fc6"), juce::Colour::fromString("ff8c2fd3"), juce::Colour::fromString("ffcc34c9"), \
+     juce::Colour::fromString("ffc2448a"), juce::Colour::fromString("ffc64264"), juce::Colour::fromString("ff9b5f31"), \
+     juce::Colour::fromString("ffc5a536"), juce::Colour::fromString("ffbec83d"), juce::Colour::fromString("ff97c43e"), \
+     juce::Colour::fromString("ff49c479")}

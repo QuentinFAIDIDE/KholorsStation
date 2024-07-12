@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <thread>
 
-TaskingManager::TaskingManager()
+TaskingManager::TaskingManager() : lastUsedTaskListenerId(-1)
 {
     taskBroadcastStopped = true;
     historyNextIndex = 0;
@@ -151,24 +151,37 @@ void TaskingManager::broadcastTask(std::shared_ptr<Task> submittedTask)
     taskingThreadCV.notify_all();
 }
 
-void TaskingManager::registerTaskListener(TaskListener *newListener)
+int64_t TaskingManager::registerTaskListener(TaskListener *newListener)
 {
     std::lock_guard<std::mutex> lock(taskListenersMutex);
+    int64_t newId = lastUsedTaskListenerId + 1;
+    lastUsedTaskListenerId = newId;
     taskListeners.push_back(newListener);
+    taskListenersIds.push_back(newId);
+    return newId;
 }
 
-void TaskingManager::purgeTaskListener(TaskListener *listener)
+void TaskingManager::purgeTaskListener(int64_t idToRemove)
 {
     std::lock_guard<std::mutex> lock(taskListenersMutex);
-    std::vector<TaskListener *> newVector;
-    newVector.reserve(taskListeners.size());
+
+    std::vector<TaskListener *> newTaskListeners;
+    std::vector<int64_t> newTaskListersIds;
+
+    newTaskListeners.reserve(taskListeners.size());
+    newTaskListersIds.reserve(taskListeners.size());
+
     for (size_t i = 0; i < taskListeners.size(); i++)
     {
-        if (taskListeners[i] != listener)
+        if (taskListenersIds[i] != idToRemove)
         {
-            newVector.push_back(taskListeners[i]);
+            newTaskListeners.push_back(taskListeners[i]);
+            newTaskListersIds.push_back(taskListenersIds[i]);
         }
     }
+
+    taskListeners.swap(newTaskListeners);
+    taskListenersIds.swap(newTaskListersIds);
 }
 
 void TaskingManager::broadcastNestedTaskNow(std::shared_ptr<Task> priorityTask)

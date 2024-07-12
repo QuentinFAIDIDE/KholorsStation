@@ -1,6 +1,10 @@
 #include "BufferForwarder.h"
 #include "AudioTransport.pb.h"
 #include "AudioTransport/ColorBytes.h"
+#include "GUIToolkit/Consts.h"
+#include "GUIToolkit/Widgets/ColorPickerUpdateTask.h"
+#include "TaskManagement/TaskingManager.h"
+#include "juce_graphics/juce_graphics.h"
 #include <chrono>
 #include <cstdint>
 #include <memory>
@@ -9,8 +13,9 @@
 #include <stdexcept>
 #include <string>
 
-BufferForwarder::BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps)
-    : payloadSender(ps), freeBlockInfos(NUM_PREALLOCATED_BLOCKINFO), blockInfosToCoalesce(NUM_PREALLOCATED_BLOCKINFO)
+BufferForwarder::BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps, TaskingManager &tm)
+    : taskManager(tm), payloadSender(ps), freeBlockInfos(NUM_PREALLOCATED_BLOCKINFO),
+      blockInfosToCoalesce(NUM_PREALLOCATED_BLOCKINFO)
 {
     shouldStop = false;
     dawIsCompatible = true;
@@ -85,17 +90,22 @@ void BufferForwarder::forwardAudioBlockInfo(std::shared_ptr<AudioBlockInfo> bloc
     blockInfosToCoalesceCV.notify_one();
 }
 
-void BufferForwarder::setTrackInfo(uint64_t id)
+void BufferForwarder::initializeTrackInfo(uint64_t id)
 {
     trackIdentifier = id;
-    trackColorRed = trackIdentifier | 0x00000001;
-    trackColorGreen = (trackIdentifier >> 8) | 0x00000001;
-    trackColorBlue = (trackIdentifier >> 16) | 0x00000001;
-    trackColorAlpha = (trackIdentifier >> 24) | 0x00000001;
+    std::vector<juce::Colour> choices = COLOR_PALETTE;
+    auto color = choices[id % choices.size()];
+    trackColorRed = color.getRed();
+    trackColorGreen = color.getGreen();
+    trackColorBlue = color.getBlue();
+    trackColorAlpha = 255;
     {
         std::lock_guard lock(trackNameMutex);
         trackName = std::to_string(trackIdentifier);
     }
+    auto colorUpdateTask =
+        std::make_shared<ColorPickerUpdateTask>("track-color-picker", trackColorRed, trackColorGreen, trackColorBlue);
+    colorUpdateTask->preventFromGoingToTaskHistory();
 }
 
 void BufferForwarder::setDawIsCompatible(bool v)
@@ -409,4 +419,18 @@ void BufferForwarder::queueCurrentlyFilledPayloadForSend()
 
 bool BufferForwarder::taskHandler(std::shared_ptr<Task> task)
 {
+    auto colorUpdateTask = std::dynamic_pointer_cast<ColorPickerUpdateTask>(task);
+    if (colorUpdateTask != nullptr && colorUpdateTask->isCompleted() &&
+        colorUpdateTask->colorPickerIdentifier == "track-color-picker")
+    {
+        trackColorRed = colorUpdateTask->red;
+        trackColorGreen = colorUpdateTask->green;
+        trackColorBlue = colorUpdateTask->blue;
+    }
+    return false;
+}
+
+juce::Colour BufferForwarder::getCurrentColor()
+{
+    return juce::Colour(trackColorRed, trackColorGreen, trackColorBlue);
 }

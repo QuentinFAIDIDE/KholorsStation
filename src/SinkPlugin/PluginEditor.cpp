@@ -16,8 +16,9 @@
 #define SECTIONS_HEADER_HEIGHT 40
 #define SECTIONS_HEADER_TITLE_FONT_SIZE 21
 
-AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &p, TaskingManager &tm)
-    : AudioProcessorEditor(&p), processorRef(p), taskManager(tm), colorPicker(taskManager)
+AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &p, TaskingManager &tm,
+                                                                 juce::Colour currentlySelectedColor)
+    : AudioProcessorEditor(&p), processorRef(p), taskManager(tm), colorPicker("track-color-picker", taskManager)
 {
     typeface = juce::Typeface::createSystemTypefaceFor(GUIData::RobotoRegular_ttf, GUIData::RobotoRegular_ttfSize);
     appLookAndFeel.setDefaultSansSerifTypeface(typeface);
@@ -26,19 +27,16 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
 
     setSize(APP_WIDTH, APP_HEIGHT);
 
-    addAndMakeVisible(colorPicker);
+    colorPicker.setColour(currentlySelectedColor.getRed(), currentlySelectedColor.getGreen(),
+                          currentlySelectedColor.getBlue());
 
-    taskManager.registerTaskListener(this);
+    addAndMakeVisible(colorPicker);
+    addAndMakeVisible(textEntry);
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
 {
-    taskManager.purgeTaskListener(this);
-}
-
-bool AudioPluginAudioProcessorEditor::taskHandler(std::shared_ptr<Task> t)
-{
-    // TODO: pass tasks to the color picker and track name
+    setLookAndFeel(nullptr);
 }
 
 //==============================================================================
@@ -114,4 +112,5 @@ void AudioPluginAudioProcessorEditor::resized()
     rightArea.removeFromTop(SECTIONS_HEADER_HEIGHT);
 
     colorPicker.setBounds(leftArea);
+    textEntry.setBounds(rightArea.removeFromTop(TABS_HEIGHT));
 }

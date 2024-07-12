@@ -8,4 +8,5 @@ class TextEntry : public juce::Component
     TextEntry();
     void paint(juce::Graphics &g) override;
     void resized() override;
+    void setText(std::string newText);
 };

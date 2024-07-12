@@ -7,3 +7,4 @@
 #include "Widgets/LabeledLineStack.cpp"
 #include "Widgets/ServerPortText.cpp"
 #include "Widgets/ServerStatusText.cpp"
+#include "Widgets/TextEntry.cpp"

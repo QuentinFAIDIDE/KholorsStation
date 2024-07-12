@@ -9,10 +9,10 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     : AudioProcessor(BusesProperties()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      audioTransportGrpcClient(DEFAULT_SERVER_PORT), audioInfoForwarder(audioTransportGrpcClient)
+      audioTransportGrpcClient(DEFAULT_SERVER_PORT), audioInfoForwarder(audioTransportGrpcClient, taskingManager)
 {
     auto uuid = juce::Uuid();
-    audioInfoForwarder.setTrackInfo(uuid.hash());
+    audioInfoForwarder.initializeTrackInfo(uuid.hash());
 
     // set log level based on envar
     if (const char *logLevel = std::getenv("KHOLORS_LOG_LEVEL"))
@@ -23,6 +23,8 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
             spdlog::debug("KHOLORS_LOG_LEVEL was set so the Kholors Sink plugin will show debug info");
         }
     }
+
+    taskingManager.registerTaskListener(&audioInfoForwarder);
 
     taskingManager.startTaskBroadcast();
 }
@@ -117,13 +119,13 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
     }
 
     // fetch daw info and abort if not available
-    juce::AudioPlayHead *playHead = getPlayHead();
-    if (playHead == nullptr)
+    juce::AudioPlayHead *currentPlayhead = getPlayHead();
+    if (currentPlayhead == nullptr)
     {
         audioInfoForwarder.setDawIsCompatible(false);
         return;
     }
-    auto positionInfo = playHead->getPosition();
+    auto positionInfo = currentPlayhead->getPosition();
     if (!positionInfo.hasValue())
     {
         audioInfoForwarder.setDawIsCompatible(false);
@@ -202,8 +204,7 @@ bool AudioPluginAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor *AudioPluginAudioProcessor::createEditor()
 {
-    auto gui = new AudioPluginAudioProcessorEditor(*this, taskingManager);
-    // TODO: broadcast the color picker and trackname values
+    auto gui = new AudioPluginAudioProcessorEditor(*this, taskingManager, audioInfoForwarder.getCurrentColor());
     return gui;
 }
 

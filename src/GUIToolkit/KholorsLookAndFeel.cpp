@@ -1,6 +1,7 @@
 #include "KholorsLookAndFeel.h"
 
 #include "Consts.h"
+#include "juce_gui_extra/juce_gui_extra.h"
 
 #define MENU_SEPARATOR_HEIGHT 6
 #define MENU_ITEM_HEIGHT 28
@@ -31,6 +32,8 @@ KholorsLookAndFeel::KholorsLookAndFeel()
     setColour(juce::TextEditor::ColourIds::outlineColourId, juce::Colours::transparentBlack);
     setColour(juce::TextEditor::ColourIds::focusedOutlineColourId, juce::Colours::transparentBlack);
     setColour(juce::TextEditor::ColourIds::highlightColourId, COLOR_HIGHLIGHT);
+
+    setColour(juce::ColourSelector::ColourIds::backgroundColourId, COLOR_BACKGROUND);
 
     setColour(juce::ResizableWindow::backgroundColourId, COLOR_BACKGROUND);
 }

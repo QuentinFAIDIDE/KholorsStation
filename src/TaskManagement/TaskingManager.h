@@ -30,13 +30,14 @@ class TaskingManager : public TaskListener
     /**
      Add the TaskListener class to a list of objects which gets
      their callback called with the tasks when they are broadcasted.
+     Returns an id that must be used later if using purgeTaskListener.
      */
-    void registerTaskListener(TaskListener *);
+    int64_t registerTaskListener(TaskListener *);
 
     /**
      * Tries to find the task listener and delete it from the list.
      */
-    void purgeTaskListener(TaskListener *);
+    void purgeTaskListener(int64_t taskListenerId);
 
     /**
      * Starts the task broadcasting thread. If not called
@@ -121,6 +122,7 @@ class TaskingManager : public TaskListener
     int historyNextIndex;                            /**<  the index of the next recorded history entry */
     std::stack<std::shared_ptr<Task>> canceledTasks; //**<  stack of canceled tasks */
     std::vector<TaskListener *> taskListeners;       /**<  a list of object we broadcast tasks to */
+    std::vector<int64_t> taskListenersIds;           /**<  a list of identifier for ecah taskListeners */
     std::mutex taskListenersMutex;               /**< Mutex to prevent race condition on the vector of taskListeners */
     std::queue<std::shared_ptr<Task>> taskQueue; /**<  the queue of tasks to be broadcasted */
     bool taskBroadcastStopped;                   /**<  boolean to tell if the broadcasting processing is enabled */
@@ -129,4 +131,5 @@ class TaskingManager : public TaskListener
     std::mutex taskingThreadStartMutex; /**< Used to secure start and stop being called concurrently, and reading of
                                            thread ids and nullity in other functions */
     std::condition_variable taskingThreadCV; /**< Used to wake up the background thread */
+    int64_t lastUsedTaskListenerId;          /**< used to incrementally generate task listeners ids */
 };

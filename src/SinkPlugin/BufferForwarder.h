@@ -11,6 +11,8 @@
 
 #include "AudioBlockInfo.h"
 #include "TaskManagement/TaskListener.h"
+#include "TaskManagement/TaskingManager.h"
+#include "juce_graphics/juce_graphics.h"
 
 #define FORWARDER_THREAD_MAX_WAIT_MS 100
 
@@ -27,7 +29,7 @@
 class BufferForwarder : public TaskListener
 {
   public:
-    BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps);
+    BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps, TaskingManager &tm);
     ~BufferForwarder();
 
     /**
@@ -52,7 +54,7 @@ class BufferForwarder : public TaskListener
      *
      * @param trackIdentifier track identifier, preferrably generated from hash of UUID at plugin startup.
      */
-    void setTrackInfo(uint64_t trackIdentifier);
+    void initializeTrackInfo(uint64_t trackIdentifier);
 
     /**
      * @brief Set the boolean telling if the daw is compatible with what we wanna do or not.
@@ -73,6 +75,8 @@ class BufferForwarder : public TaskListener
      * @return false
      */
     bool taskHandler(std::shared_ptr<Task> task) override;
+
+    juce::Colour getCurrentColor();
 
   private:
     /**
@@ -178,6 +182,8 @@ class BufferForwarder : public TaskListener
     void queueCurrentlyFilledPayloadForSend();
 
     /////////////////////////////////////
+
+    TaskingManager &taskManager;
 
     std::shared_ptr<std::thread> coalescerThread;
     std::shared_ptr<std::thread> senderThread;

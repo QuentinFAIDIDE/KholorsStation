@@ -3,20 +3,15 @@
 #include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "juce_gui_extra/juce_gui_extra.h"
 #include <cstdint>
+#include <memory>
 
-// made from https://medialab.github.io/iwanthue/
-inline std::vector<juce::Colour> colourPalette = {
-    juce::Colour::fromString("ff399898"), juce::Colour::fromString("ff3c7a98"), juce::Colour::fromString("ff4056a5"),
-    juce::Colour::fromString("ff663fc6"), juce::Colour::fromString("ff8c2fd3"), juce::Colour::fromString("ffcc34c9"),
-    juce::Colour::fromString("ffc2448a"), juce::Colour::fromString("ffc64264"), juce::Colour::fromString("ff9b5f31"),
-    juce::Colour::fromString("ffc5a536"), juce::Colour::fromString("ffbec83d"), juce::Colour::fromString("ff97c43e"),
-    juce::Colour::fromString("ff49c479")};
-
-class ColorPicker : public juce::Component
+class ColorPicker : public juce::Component, TaskListener
 {
   public:
-    ColorPicker(TaskingManager &tm);
+    ColorPicker(std::string id, TaskingManager &tm);
+    ~ColorPicker();
     void paint(juce::Graphics &g) override;
     void resized() override;
 
@@ -35,10 +30,37 @@ class ColorPicker : public juce::Component
 
     static std::vector<juce::Colour> getDefaultColours();
 
+    bool taskHandler(std::shared_ptr<Task> task) override;
+
   private:
+    std::string identifier; /**< uniquely identifies this colorPicker */
     TaskingManager &taskManager;
     std::vector<juce::Colour> colors;
     size_t pickedColorId; /**< index in the colors array of the color user choosed, or the first number after if he
                              picked his own */
     std::vector<juce::Rectangle<int>> colorSquaresPosition;
+    juce::Colour currentColor; /**< used when custom colors is chosen to display it */
+    std::mutex selectedColorMutex;
+
+    int64_t taskListenerId; /**< Id to delete itself from task listeners when destructor is called */
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ColorPicker)
+};
+
+class ColorPickerDialog : public juce::Component, juce::Button::Listener
+{
+  public:
+    ColorPickerDialog(std::string colorPickerId, TaskingManager &tm);
+    void paint(juce::Graphics &g) override;
+    void resized() override;
+    void buttonClicked(juce::Button *button) override;
+    void closeDialog();
+
+  private:
+    std::string colorPickerIdentifier;
+    juce::TextButton closeButton;
+    juce::TextButton confirmButton;
+    juce::ColourSelector colorSelector;
+    TaskingManager &taskManager;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ColorPickerDialog)
 };

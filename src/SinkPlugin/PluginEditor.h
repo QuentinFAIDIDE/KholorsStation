@@ -4,28 +4,25 @@
 #include "GUIToolkit/IconsLoader.h"
 #include "GUIToolkit/KholorsLookAndFeel.h"
 #include "GUIToolkit/Widgets/ColorPicker.h"
+#include "GUIToolkit/Widgets/TextEntry.h"
 #include "PluginProcessor.h"
-#include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_core/juce_core.h"
 #include "juce_graphics/juce_graphics.h"
-#include <memory>
 
 /**
  * @brief Class that describes the GUI of the plugin.
  */
-class AudioPluginAudioProcessorEditor : public juce::AudioProcessorEditor, TaskListener
+class AudioPluginAudioProcessorEditor : public juce::AudioProcessorEditor
 {
   public:
-    explicit AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &, TaskingManager &);
+    explicit AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &, TaskingManager &, juce::Colour);
     ~AudioPluginAudioProcessorEditor() override;
     void paint(juce::Graphics &) override;
     void resized() override;
     void mouseDrag(const juce::MouseEvent &ev) override;
     void mouseDown(const juce::MouseEvent &ev) override;
     void mouseUp(const juce::MouseEvent &ev) override;
-
-    bool taskHandler(std::shared_ptr<Task> t) override;
 
   private:
     void drawHeader(juce::Graphics &g);
@@ -40,6 +37,9 @@ class AudioPluginAudioProcessorEditor : public juce::AudioProcessorEditor, TaskL
 
     TaskingManager &taskManager;
     ColorPicker colorPicker;
+    TextEntry textEntry;
+
+    int64_t taskListenerId; /** Used to remove the task listener when the GUI is destructed */
 
     // destroy copy constructors
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessorEditor)
