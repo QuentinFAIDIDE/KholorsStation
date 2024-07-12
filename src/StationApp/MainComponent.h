@@ -15,6 +15,7 @@
 #define DEFAULT_WINDOW_WIDTH 1440
 #define DEFAULT_WINDOW_HEIGHT 800
 #define APP_NAME_FONT_HEIGHT 40
+#define FREQVIEW_OUTER_BORDER_WIDTH 2
 
 class MainComponent final : public juce::Component, public TaskListener
 {
@@ -28,6 +29,8 @@ class MainComponent final : public juce::Component, public TaskListener
     bool taskHandler(std::shared_ptr<Task> task) override;
 
   private:
+    juce::Path getShadowPath();
+
     TaskingManager taskManager;                           /**< Object that manages task for actions */
     juce::MenuBarComponent menuBar;                       /**< App menu at the top of the app */
     juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */

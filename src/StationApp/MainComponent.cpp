@@ -4,8 +4,10 @@
 #include "GUIToolkit/GUIData.h"
 #include "StationApp/Audio/AudioDataWorker.h"
 #include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FreqTimeView.h"
 #include "TaskManagement/TaskingManager.h"
+#include "juce_graphics/juce_graphics.h"
 #include <spdlog/spdlog.h>
 
 #define DEFAULT_SERVER_PORT 7849
@@ -89,4 +91,54 @@ void MainComponent::paintOverChildren(juce::Graphics &g)
     auto artifaktLogoBounds = topspace.removeFromRight(rightPadding + TOP_LOGO_WIDTH);
     artifaktLogoBounds.removeFromRight(rightPadding);
     sharedSvgs->artifaktNdLogo->drawWithin(g, artifaktLogoBounds.toFloat(), juce::RectanglePlacement::centred, 1.0f);
+
+    // draw the shadow over the freqview
+    juce::Path shadowPath = getShadowPath();
+    g.setColour(juce::Colour(3, 6, 31).withAlpha(0.3f));
+    g.fillPath(shadowPath);
+
+    auto bordersGradient = juce::ColourGradient(
+        juce::Colour(juce::uint8(234), 239, 255, 0.45f),
+        getLocalBounds().removeFromRight(getWidth() / 4).removeFromTop(getHeight() / 8).getTopLeft().toFloat(),
+        juce::Colour(juce::uint8(215), 224, 255, 0.f),
+        getLocalBounds().getBottomLeft().translated(getWidth() / 3, -getHeight() / 5).toFloat(), false);
+
+    auto freqViewBounds = getLocalBounds()
+                              .withTrimmedTop(MENU_BAR_HEIGHT)
+                              .withTrimmedBottom(TIME_GRID_HEIGHT)
+                              .withTrimmedLeft(FREQUENCY_GRID_WIDTH)
+                              .withTrimmedRight(TRACK_LIST_WIDTH)
+                              .expanded(FREQVIEW_OUTER_BORDER_WIDTH, FREQVIEW_OUTER_BORDER_WIDTH);
+
+    g.setGradientFill(bordersGradient);
+    g.fillRoundedRectangle(freqViewBounds.toFloat(), FREQVIEW_ROUNDED_CORNERS_WIDTH);
+}
+
+juce::Path MainComponent::getShadowPath()
+{
+    // coordinates of the freqview top left angle bottom
+    auto topLeftAngleBottom = getLocalBounds()
+                                  .withTrimmedTop(MENU_BAR_HEIGHT)
+                                  .withTrimmedLeft(FREQUENCY_GRID_WIDTH)
+                                  .getTopLeft()
+                                  .translated(FREQVIEW_BORDER_WIDTH, FREQVIEW_ROUNDED_CORNERS_WIDTH / 2);
+    // next point is 45 degree angle to left side of the screen (1:1 h/v pixel ratio)
+    auto point1 = topLeftAngleBottom.withX(getLocalBounds().getX()).translated(0, topLeftAngleBottom.getX());
+    auto point2 = getLocalBounds().getBottomLeft();
+    auto point3 = getLocalBounds().withTrimmedRight(TRACK_LIST_WIDTH).getBottomRight().translated(-TIME_GRID_HEIGHT, 0);
+    auto point4 = getLocalBounds()
+                      .withTrimmedRight(TRACK_LIST_WIDTH)
+                      .withTrimmedBottom(TIME_GRID_HEIGHT)
+                      .getBottomRight()
+                      .translated(-FREQVIEW_ROUNDED_CORNERS_WIDTH / 2, 0);
+
+    juce::Path shadowPath;
+    shadowPath.startNewSubPath(topLeftAngleBottom.toFloat());
+    shadowPath.lineTo(point1.toFloat());
+    shadowPath.lineTo(point2.toFloat());
+    shadowPath.lineTo(point3.toFloat());
+    shadowPath.lineTo(point4.toFloat());
+    shadowPath.closeSubPath();
+
+    return shadowPath;
 }

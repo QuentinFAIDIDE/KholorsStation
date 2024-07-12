@@ -60,8 +60,8 @@ void GpuTextureDrawingBackend::paintOverChildren(juce::Graphics &g)
 void GpuTextureDrawingBackend::drawBorders(juce::Graphics &g)
 {
     auto bounds = getLocalBounds();
-    int borderWidth = 3;
-    int roundedCornersWidth = 7;
+    int borderWidth = FREQVIEW_BORDER_WIDTH;
+    int roundedCornersWidth = FREQVIEW_ROUNDED_CORNERS_WIDTH;
     // we fill two sub path, one for the borders that are to the left
     // of the middle vertical line, and one for the borders that are to the right
     // of it.

@@ -22,6 +22,9 @@
 #define SECOND_TILE_WIDTH 64
 #define SECOND_TILE_HEIGHT 512
 
+#define FREQVIEW_ROUNDED_CORNERS_WIDTH 7
+#define FREQVIEW_BORDER_WIDTH 3
+
 /**
  * @brief Abstract class that receives the audio data (sfft freqs intensities) to display
  * on screen.
@@ -175,7 +178,7 @@ class FftDrawingBackend : public juce::Component
     /**
      * @brief clears on screen data.
      */
-    virtual void clearDisplayedFFTs(){};
+    virtual void clearDisplayedFFTs() {};
 
     /**
      * @brief Retains information about a track on a range
