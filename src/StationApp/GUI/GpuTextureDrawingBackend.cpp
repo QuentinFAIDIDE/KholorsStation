@@ -21,6 +21,9 @@ GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, Normaliz
     openGLContext.setRenderer(this);
     openGLContext.attachTo(*this);
     secondTileNextIndex = 0;
+    mouseOnComponent = false;
+    lastMouseX = 0;
+    lastMouseY = 0;
 }
 
 GpuTextureDrawingBackend::~GpuTextureDrawingBackend()
@@ -41,7 +44,7 @@ void GpuTextureDrawingBackend::paint(juce::Graphics &g)
         std::lock_guard lock(playCursorMutex);
         playCursorStartPixel = (float)(playCursorPosition - viewPositionCopy) / (float)viewScaleCopy;
     }
-    // we won't draw the cursor when it's the right side, it's just ugly
+    // we won't draw the playhead cursor when it's to the 0 position, it's just ugly
     if (playCursorStartPixel > 2)
     {
         auto areaRightToCursor = getLocalBounds().withTrimmedLeft(playCursorStartPixel);
@@ -49,6 +52,16 @@ void GpuTextureDrawingBackend::paint(juce::Graphics &g)
 
         g.setColour(COLOR_WHITE);
         g.fillRect(playCursorBounds);
+    }
+
+    // we draw mouse cursor horizontal and vertical lines
+    if (mouseOnComponent)
+    {
+        auto horizontalLine = getLocalBounds().withHeight(1).withY(lastMouseY);
+        auto verticalLine = getLocalBounds().withWidth(1).withX(lastMouseX);
+        g.setColour(COLOR_GRIDS_LEVEL_0);
+        g.fillRect(horizontalLine);
+        g.fillRect(verticalLine);
     }
 }
 
@@ -583,4 +596,11 @@ std::vector<FftDrawingBackend::ClearTrackInfoRange> GpuTextureDrawingBackend::ge
         clearedRanges.pop();
     }
     return response;
+}
+
+void GpuTextureDrawingBackend::setMouseCursor(bool onComponent, int x, int y)
+{
+    mouseOnComponent = onComponent;
+    lastMouseX = x;
+    lastMouseY = y;
 }

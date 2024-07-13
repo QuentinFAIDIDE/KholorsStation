@@ -248,6 +248,12 @@ void FreqTimeView::mouseUp(const juce::MouseEvent &e)
 
 void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
 {
+    auto positionRelativeToFreqTimeView = e.getEventRelativeTo(fftDrawBackend.get());
+    fftDrawBackend->setMouseCursor(fftDrawBackend->getBounds().contains(e.getPosition()),
+                                   positionRelativeToFreqTimeView.position.x,
+                                   positionRelativeToFreqTimeView.position.y);
+    fftDrawBackend->repaint();
+
     if (e.mods.isMiddleButtonDown())
     {
         std::lock_guard lock(viewMutex);
@@ -306,4 +312,19 @@ void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
             repaint();
         }
     }
+}
+
+void FreqTimeView::mouseMove(const juce::MouseEvent &me)
+{
+    auto positionRelativeToFreqTimeView = me.getEventRelativeTo(fftDrawBackend.get());
+    fftDrawBackend->setMouseCursor(fftDrawBackend->getBounds().contains(me.getPosition()),
+                                   positionRelativeToFreqTimeView.position.x,
+                                   positionRelativeToFreqTimeView.position.y);
+    fftDrawBackend->repaint();
+}
+
+void FreqTimeView::mouseExit(const juce::MouseEvent &)
+{
+    fftDrawBackend->setMouseCursor(false, -1, -1);
+    fftDrawBackend->repaint();
 }

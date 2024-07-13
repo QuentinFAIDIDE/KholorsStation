@@ -7,6 +7,7 @@
 #include "StationApp/OpenGL/SolidRectangle.h"
 #include "StationApp/OpenGL/TexturedRectangle.h"
 #include "juce_graphics/juce_graphics.h"
+#include "juce_gui_basics/juce_gui_basics.h"
 #include "juce_opengl/juce_opengl.h"
 #include <cstdint>
 #include <memory>
@@ -121,6 +122,17 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      * @return std::vector<ClearTrackInfoRange> vector of ranges to clear with trackIdentifiers.
      */
     std::vector<ClearTrackInfoRange> getClearedTrackRanges() override;
+
+    /**
+     * @brief Set the mouse cursor position on component, as it is intercepted
+     * by parent and is not received. We could let the mouse events through
+     * but we're with this patterN;
+     *
+     * @param onComponent is the mouse over this compoennt ?
+     * @param x mouse x
+     * @param y mouse y
+     */
+    void setMouseCursor(bool onComponent, int x, int y) override;
 
   private:
     /**
@@ -266,4 +278,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     std::mutex clearedRangesMutex;
     std::queue<ClearTrackInfoRange> clearedRanges; /**< A list of ranges on which specific tracks were cleared. Here to
                                                       prevent TrackList from showing info about deleted data. */
+
+    int lastMouseX, lastMouseY;
+    bool mouseOnComponent;
 };

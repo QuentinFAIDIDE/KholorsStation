@@ -144,6 +144,10 @@ class FftDrawingBackend : public juce::Component
     {
     }
 
+    virtual void setMouseCursor(bool isOnComponent, int x, int y)
+    {
+    }
+
     /**
      * @brief Submit a new play cursor position to the drawing backend, which
      * may or may not accept it. It will first be converted to a position in
