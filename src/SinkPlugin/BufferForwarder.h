@@ -78,6 +78,8 @@ class BufferForwarder : public TaskListener
 
     juce::Colour getCurrentColor();
     std::string getCurrentTrackName();
+    void setCurrentColor(juce::Colour c);
+    void setCurrentTrackName(std::string s);
 
   private:
     /**

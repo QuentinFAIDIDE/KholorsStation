@@ -1,8 +1,13 @@
 #include "PluginProcessor.h"
 #include "AudioTransport/Client.h"
+#include "AudioTransport/ColorBytes.h"
+#include "GUIToolkit/Widgets/ColorPickerUpdateTask.h"
+#include "GUIToolkit/Widgets/TextEntry.h"
 #include "PluginEditor.h"
 #include "SinkPlugin/BufferForwarder.h"
 #include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <spdlog/spdlog.h>
 
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
@@ -211,10 +216,43 @@ juce::AudioProcessorEditor *AudioPluginAudioProcessor::createEditor()
 
 void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
 {
+    auto trackName = audioInfoForwarder.getCurrentTrackName();
+    auto trackNameStr = trackName.c_str();
+
+    auto color = audioInfoForwarder.getCurrentColor();
+    AudioTransport::ColorContainer colorByteFormatter(color.getRed(), color.getGreen(), color.getBlue(), 255);
+    uint32_t colorBytes = colorByteFormatter.toColorBytes();
+
+    destData.append(&colorBytes, sizeof(uint32_t));
+    destData.append(trackNameStr, sizeof(char) * (trackName.size() + 1));
 }
 
 void AudioPluginAudioProcessor::setStateInformation(const void *data, int sizeInBytes)
 {
+    // note that we ignore any state with less than three characters
+    if ((size_t)sizeInBytes > sizeof(uint32_t) + (3 * sizeof(char)))
+    {
+        uint32_t *colorBytes = (uint32_t *)data;
+        char *trackNameCStr = (char *)(&colorBytes[1]);
+        std::string trackName(trackNameCStr);
+
+        uint32_t colorBytesCopy = *colorBytes;
+        AudioTransport::ColorContainer newColor(colorBytesCopy);
+
+        auto textUpdateTask = std::make_shared<TextEntryUpdateTask>("track-name", trackName);
+        auto colorUpdateTask =
+            std::make_shared<ColorPickerUpdateTask>("track-color-picker", newColor.red, newColor.green, newColor.blue);
+
+        // whathever happens we forcefully set the values
+        // as the UI may not currently be created.
+        audioInfoForwarder.setCurrentColor(juce::Colour(newColor.red, newColor.green, newColor.blue));
+        audioInfoForwarder.setCurrentTrackName(trackName);
+
+        // this may not be neccessary in a lot of scenarios as the UI is likely down
+        // and the tasks may never get completed.
+        taskingManager.broadcastTask(textUpdateTask);
+        taskingManager.broadcastTask(colorUpdateTask);
+    }
 }
 
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()

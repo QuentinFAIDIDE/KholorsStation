@@ -1,12 +1,13 @@
 #pragma once
 
 #include "GUIToolkit/FontsLoader.h"
+#include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_core/juce_core.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <nlohmann/json.hpp>
 
-class TextEntry : public juce::Component, juce::TextEditor::Listener
+class TextEntry : public juce::Component, juce::TextEditor::Listener, TaskListener
 {
   public:
     /**
@@ -37,6 +38,8 @@ class TextEntry : public juce::Component, juce::TextEditor::Listener
         NameFilter();
     };
 
+    bool taskHandler(std::shared_ptr<Task> task) override;
+
   private:
     std::string identifier; /**< unique identifier for this component */
     std::string name;       /**< text displayed next to the entry */
@@ -48,12 +51,22 @@ class TextEntry : public juce::Component, juce::TextEditor::Listener
     TaskingManager &taskManager;
 };
 
+/**
+ * @brief This task is to update the text entries values. When the text entry
+ * broadcast it, it's already marked completed and has the previous value saved for
+ * undoing, but when an external component
+ * wants to set its value and create the task, the TextEntry will complete
+ * it and rebroadcast it.
+ * When an external component emits the task, it is by default undo-able but
+ * you can prevent it from being by setting undoable as false.
+ */
 class TextEntryUpdateTask : public Task
 {
   public:
-    TextEntryUpdateTask(std::string identifier, std::string newTextP, std::string previousTextP)
-        : textEntryIdentifier(identifier), previousText(previousTextP), newText(newTextP)
+    TextEntryUpdateTask(std::string identifier, std::string newTextP)
+        : textEntryIdentifier(identifier), newText(newTextP)
     {
+        undoable = true;
     }
 
     /**
@@ -74,13 +87,18 @@ class TextEntryUpdateTask : public Task
 
     std::vector<std::shared_ptr<Task>> getOppositeTasks() override
     {
-        auto rev = std::make_shared<TextEntryUpdateTask>(textEntryIdentifier, previousText, newText);
         std::vector<std::shared_ptr<Task>> response;
-        response.push_back(rev);
+        if (undoable)
+        {
+            auto rev = std::make_shared<TextEntryUpdateTask>(textEntryIdentifier, previousText);
+            rev->previousText = newText;
+            response.push_back(rev);
+        }
         return response;
     }
 
     std::string textEntryIdentifier;
     std::string previousText;
     std::string newText;
+    bool undoable;
 };

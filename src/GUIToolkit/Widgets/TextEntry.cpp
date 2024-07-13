@@ -1,7 +1,10 @@
 #include "TextEntry.h"
 #include "GUIToolkit/Consts.h"
+#include "juce_events/juce_events.h"
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
+#include <memory>
+#include <mutex>
 
 #define TEXT_INPUT_INNER_PADDING 8
 #define INPUT_LABEL_WIDTH 100
@@ -46,6 +49,7 @@ void TextEntry::resized()
 
 void TextEntry::setText(std::string newText)
 {
+    juce::MessageManagerLock mmlock;
     lastTextSendToTask = newText;
     textEditor.setText(newText);
 }
@@ -55,9 +59,28 @@ void TextEntry::textEditorTextChanged(juce::TextEditor &te)
     auto txt = textEditor.getText();
     if (txt.toStdString() != lastTextSendToTask)
     {
-        auto newTask = std::make_shared<TextEntryUpdateTask>(identifier, txt.toStdString(), lastTextSendToTask);
+        auto newTask = std::make_shared<TextEntryUpdateTask>(identifier, txt.toStdString());
+        newTask->previousText = lastTextSendToTask;
         newTask->setCompleted(true);
-        taskManager.broadcastTask(newTask);
         lastTextSendToTask = txt.toStdString();
+        taskManager.broadcastTask(newTask);
     }
+}
+
+bool TextEntry::taskHandler(std::shared_ptr<Task> task)
+{
+    auto textUpdateTask = std::dynamic_pointer_cast<TextEntryUpdateTask>(task);
+    if (textUpdateTask != nullptr && !textUpdateTask->isCompleted() &&
+        textUpdateTask->textEntryIdentifier == identifier)
+    {
+        {
+            juce::MessageManagerLock mmlock;
+            textUpdateTask->previousText = textEditor.getText().toStdString();
+            setText(textUpdateTask->newText);
+        }
+        textUpdateTask->setCompleted(true);
+        taskManager.broadcastNestedTaskNow(textUpdateTask);
+        return true;
+    }
+    return false;
 }

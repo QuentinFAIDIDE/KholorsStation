@@ -446,3 +446,16 @@ std::string BufferForwarder::getCurrentTrackName()
     std::lock_guard lock(trackNameMutex);
     return trackName;
 }
+
+void BufferForwarder::setCurrentColor(juce::Colour c)
+{
+    trackColorRed = c.getRed();
+    trackColorGreen = c.getGreen();
+    trackColorBlue = c.getBlue();
+}
+
+void BufferForwarder::setCurrentTrackName(std::string s)
+{
+    std::lock_guard lock(trackNameMutex);
+    trackName = s;
+}
