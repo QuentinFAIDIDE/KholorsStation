@@ -10,7 +10,7 @@
 #include "TaskManagement/TaskingManager.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
-#define MAX_SCALE_SAMPLE_PER_PIXEL 800
+#define MAX_SCALE_SAMPLE_PER_PIXEL 600
 #define MIN_SCALE_SAMPLE_PER_PIXEL 80
 #define PIXEL_SCALE_SPEED 0.01f
 #define MAX_IDLE_MS_TIME_BEFORE_CLEAR 500
