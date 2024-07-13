@@ -4,22 +4,27 @@
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/TrackColorUpdateTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
-#include "StationApp/GUI/CpuImageDrawingBackend.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FrequencyScale.h"
 #include "StationApp/GUI/GpuTextureDrawingBackend.h"
+#include "StationApp/GUI/MouseCursorInfoTask.h"
 #include "StationApp/GUI/TrackList.h"
 #include "StationApp/Maths/NormalizedBijectiveProjection.h"
+#include "juce_core/juce_core.h"
 #include <cstddef>
 #include <limits>
 #include <memory>
 #include <mutex>
 #include <spdlog/spdlog.h>
 
-FreqTimeView::FreqTimeView(TrackInfoStore &tis)
-    : trackInfoStore(tis), viewPosition(0), viewScale(150),
+FreqTimeView::FreqTimeView(TrackInfoStore &tis, TaskingManager &tm)
+    : taskingManager(tm), trackInfoStore(tis), viewPosition(0), viewScale(150),
       frequencyScale(frequencyTransformer, VISUAL_SAMPLE_RATE >> 1), trackList(trackInfoStore, frequencyTransformer)
 {
+    lastFftMousePosX = 0;
+    lastFftMousePosY = 0;
+    lastCursorShowStatus = false;
+
     setOpaque(true);
 
     fftDrawBackend =
@@ -90,7 +95,6 @@ void FreqTimeView::resized()
 
 void FreqTimeView::timerCallback()
 {
-
     int64_t currentTime = juce::Time().getCurrentTime().toMilliseconds();
     int64_t elapsedSinceLastCallMs = currentTime - lastTimerCallMs;
     int64_t lastFftDrawTimeMsCopy;
@@ -125,6 +129,11 @@ void FreqTimeView::timerCallback()
             fftDrawBackend->updateViewPosition(viewPosition);
             timeScale.setViewPosition(viewPosition);
             trackList.setViewPosition(viewPosition);
+            // if we show the cursor, we should update its value shown on screen in the tips
+            if (lastCursorShowStatus)
+            {
+                emitMousePositionInfoTask(true, lastFftMousePosX, lastFftMousePosY);
+            }
             repaint();
         }
         // if play cursor is between 3/4 of view and right side, apply constant view moving speed
@@ -139,6 +148,11 @@ void FreqTimeView::timerCallback()
             fftDrawBackend->updateViewPosition(viewPosition);
             timeScale.setViewPosition(viewPosition);
             trackList.setViewPosition(viewPosition);
+            // if we show the cursor, we should update its value shown on screen in the tips
+            if (lastCursorShowStatus)
+            {
+                emitMousePositionInfoTask(true, lastFftMousePosX, lastFftMousePosY);
+            }
             repaint();
         }
     }
@@ -248,11 +262,7 @@ void FreqTimeView::mouseUp(const juce::MouseEvent &e)
 
 void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
 {
-    auto positionRelativeToFreqTimeView = e.getEventRelativeTo(fftDrawBackend.get());
-    fftDrawBackend->setMouseCursor(fftDrawBackend->getBounds().contains(e.getPosition()),
-                                   positionRelativeToFreqTimeView.position.x,
-                                   positionRelativeToFreqTimeView.position.y);
-    fftDrawBackend->repaint();
+    broadcastMouseEventInfo(e);
 
     if (e.mods.isMiddleButtonDown())
     {
@@ -316,15 +326,58 @@ void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
 
 void FreqTimeView::mouseMove(const juce::MouseEvent &me)
 {
+    broadcastMouseEventInfo(me);
+}
+
+void FreqTimeView::broadcastMouseEventInfo(const juce::MouseEvent &me)
+{
     auto positionRelativeToFreqTimeView = me.getEventRelativeTo(fftDrawBackend.get());
-    fftDrawBackend->setMouseCursor(fftDrawBackend->getBounds().contains(me.getPosition()),
-                                   positionRelativeToFreqTimeView.position.x,
+    bool showCursor = fftDrawBackend->getBounds().contains(me.getPosition());
+    fftDrawBackend->setMouseCursor(showCursor, positionRelativeToFreqTimeView.position.x,
                                    positionRelativeToFreqTimeView.position.y);
+
+    emitMousePositionInfoTask(showCursor, positionRelativeToFreqTimeView.x, positionRelativeToFreqTimeView.y);
+
     fftDrawBackend->repaint();
+}
+
+void FreqTimeView::emitMousePositionInfoTask(bool shouldShow, int x, int y)
+{
+    lastFftMousePosX = x;
+    lastFftMousePosY = y;
+    lastCursorShowStatus = shouldShow;
+
+    float positionInFreq = 0.0f;
+    int64_t timeInSample = 0;
+
+    if (shouldShow)
+    {
+        float positionInChannel = 0.0f;
+        float halfHeight = 0.5f * float(fftDrawBackend->getHeight());
+        bool isOnTopChannel = y < halfHeight;
+        if (isOnTopChannel)
+        {
+            positionInChannel = 1.0f - (float(y) / halfHeight);
+        }
+        else
+        {
+            positionInChannel = (float(y) - halfHeight) / halfHeight;
+        }
+        positionInChannel = juce::jlimit(0.0f, 1.0f, positionInChannel);
+        positionInFreq = frequencyTransformer.transformInv(positionInChannel);
+    }
+
+    timeInSample = viewPosition + (viewScale * x);
+
+    auto cursorUpdateTask = std::make_shared<MouseCursorInfoTask>(
+        shouldShow, positionInFreq * 0.5f * float(VISUAL_SAMPLE_RATE), timeInSample);
+    taskingManager.broadcastTask(cursorUpdateTask);
 }
 
 void FreqTimeView::mouseExit(const juce::MouseEvent &)
 {
     fftDrawBackend->setMouseCursor(false, -1, -1);
+    auto cursorUpdateTask = std::make_shared<MouseCursorInfoTask>(false, 0, 0);
+    taskingManager.broadcastTask(cursorUpdateTask);
     fftDrawBackend->repaint();
 }

@@ -10,7 +10,7 @@
 #include "TaskManagement/TaskingManager.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
-#define MAX_SCALE_SAMPLE_PER_PIXEL 600
+#define MAX_SCALE_SAMPLE_PER_PIXEL 400
 #define MIN_SCALE_SAMPLE_PER_PIXEL 80
 #define PIXEL_SCALE_SPEED 0.01f
 #define MAX_IDLE_MS_TIME_BEFORE_CLEAR 500
@@ -18,7 +18,7 @@
 #define MAX_TIME_WITHOUT_TRACK_LIST_PAINT_MS 150
 #define VIEW_MOVE_TIME_INTERVAL_MS 15
 #define FREQUENCY_GRID_WIDTH 110
-#define TIME_GRID_HEIGHT 65
+#define TIME_GRID_HEIGHT 75
 #define TRACK_LIST_WIDTH 220
 
 /**
@@ -29,7 +29,7 @@
 class FreqTimeView : public juce::Component, public TaskListener, public juce::Timer
 {
   public:
-    FreqTimeView(TrackInfoStore &);
+    FreqTimeView(TrackInfoStore &, TaskingManager &);
     ~FreqTimeView();
 
     void paint(juce::Graphics &g) override;
@@ -55,6 +55,17 @@ class FreqTimeView : public juce::Component, public TaskListener, public juce::T
     bool taskHandler(std::shared_ptr<Task> task) override;
 
   private:
+    /**
+     * @brief Compute frequency and time under cursor and pass data to freqtime view and tip bar.
+     *
+     * @param me mouse event on drag or move.
+     */
+    void broadcastMouseEventInfo(const juce::MouseEvent &me);
+
+    void emitMousePositionInfoTask(bool shouldShow, int x, int y);
+
+    TaskingManager &taskingManager;
+
     NormalizedUnitTransformer frequencyTransformer;    /**< Transformer for the frequency displayed */
     NormalizedUnitTransformer intensityTransformer;    /**< Transformer for the intensity displayed */
     std::shared_ptr<FftDrawingBackend> fftDrawBackend; /**< Juce component that draws FFTs on screen */
@@ -78,6 +89,10 @@ class FreqTimeView : public juce::Component, public TaskListener, public juce::T
     TrackList trackList;
 
     juce::Rectangle<int> unpaintedArea1, unpaintedArea2; /**< Area left unpainted that FreqView needs to paint */
+
+    int lastFftMousePosX;
+    int lastFftMousePosY;
+    bool lastCursorShowStatus;
 
     float lastReceivedBpm;
 };

@@ -4,6 +4,7 @@
 #include "GUIToolkit/FontsLoader.h"
 #include "GUIToolkit/IconsLoader.h"
 #include "StationApp/Audio/AudioDataWorker.h"
+#include "StationApp/GUI/BottomInfoLine.h"
 #include "StationApp/GUI/FreqTimeView.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
@@ -38,6 +39,7 @@ class MainComponent final : public juce::Component, public TaskListener
     FreqTimeView freqTimeView;                            /**< Viewer that display frequencies over time received */
     AudioTransport::SyncServer audioDataServer;           /**< Server that receives audio data */
     AudioDataWorker audioDataWorker; /**< Worker threads to parse audio data from server and emit Tasks accordingly */
+    BottomInfoLine infoBar;          /**< bottom tip bar */
 
     juce::SharedResourcePointer<IconsLoader> sharedSvgs; /**< singleton that loads svg files */
 

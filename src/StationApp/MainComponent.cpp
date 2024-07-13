@@ -4,6 +4,7 @@
 #include "GUIToolkit/GUIData.h"
 #include "StationApp/Audio/AudioDataWorker.h"
 #include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/GUI/BottomInfoLine.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FreqTimeView.h"
 #include "TaskManagement/TaskingManager.h"
@@ -13,9 +14,11 @@
 #define DEFAULT_SERVER_PORT 7849
 
 MainComponent::MainComponent()
-    : trackInfoStore(taskManager), freqTimeView(trackInfoStore), audioDataWorker(audioDataServer, taskManager)
+    : trackInfoStore(taskManager), freqTimeView(trackInfoStore, taskManager),
+      audioDataWorker(audioDataServer, taskManager), infoBar(taskManager)
 {
     addAndMakeVisible(freqTimeView);
+    addAndMakeVisible(infoBar);
 
     setSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 
@@ -27,6 +30,7 @@ MainComponent::MainComponent()
     audioDataServer.setServerToListenOnPort(DEFAULT_SERVER_PORT);
 
     taskManager.registerTaskListener(this);
+    taskManager.registerTaskListener(&infoBar);
     taskManager.startTaskBroadcast();
 }
 
@@ -46,7 +50,8 @@ void MainComponent::paint(juce::Graphics &g)
 void MainComponent::resized()
 {
     juce::Rectangle<int> localBounds = getLocalBounds();
-    localBounds.removeFromTop(MENU_BAR_HEIGHT); // note that we don't show top bar anymore
+    localBounds.removeFromTop(MENU_BAR_HEIGHT);
+    infoBar.setBounds(localBounds.removeFromBottom(BOTTOM_INFO_LINE_HEIGHT));
     freqTimeView.setBounds(localBounds);
 }
 
@@ -105,7 +110,7 @@ void MainComponent::paintOverChildren(juce::Graphics &g)
 
     auto freqViewBounds = getLocalBounds()
                               .withTrimmedTop(MENU_BAR_HEIGHT)
-                              .withTrimmedBottom(TIME_GRID_HEIGHT)
+                              .withTrimmedBottom(TIME_GRID_HEIGHT + BOTTOM_INFO_LINE_HEIGHT)
                               .withTrimmedLeft(FREQUENCY_GRID_WIDTH)
                               .withTrimmedRight(TRACK_LIST_WIDTH)
                               .expanded(FREQVIEW_OUTER_BORDER_WIDTH, FREQVIEW_OUTER_BORDER_WIDTH);
@@ -125,10 +130,13 @@ juce::Path MainComponent::getShadowPath()
     // next point is 45 degree angle to left side of the screen (1:1 h/v pixel ratio)
     auto point1 = topLeftAngleBottom.withX(getLocalBounds().getX()).translated(0, topLeftAngleBottom.getX());
     auto point2 = getLocalBounds().getBottomLeft();
-    auto point3 = getLocalBounds().withTrimmedRight(TRACK_LIST_WIDTH).getBottomRight().translated(-TIME_GRID_HEIGHT, 0);
+    auto point3 = getLocalBounds()
+                      .withTrimmedRight(TRACK_LIST_WIDTH)
+                      .getBottomRight()
+                      .translated(-(BOTTOM_INFO_LINE_HEIGHT + TIME_GRID_HEIGHT), 0);
     auto point4 = getLocalBounds()
                       .withTrimmedRight(TRACK_LIST_WIDTH)
-                      .withTrimmedBottom(TIME_GRID_HEIGHT)
+                      .withTrimmedBottom((BOTTOM_INFO_LINE_HEIGHT + TIME_GRID_HEIGHT))
                       .getBottomRight()
                       .translated(-FREQVIEW_ROUNDED_CORNERS_WIDTH / 2, 0);
 
