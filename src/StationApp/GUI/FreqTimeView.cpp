@@ -116,7 +116,7 @@ void FreqTimeView::timerCallback()
         int64_t lastPlayCursorPos = fftDrawBackend->getPlayCursorPosition();
         std::lock_guard lock(viewMutex);
         int64_t leftScreenSideSamplePos = viewPosition;
-        int64_t rightScreenSideSamplePos = viewPosition + (getLocalBounds().getWidth() * viewScale);
+        int64_t rightScreenSideSamplePos = viewPosition + (fftDrawBackend->getBounds().getWidth() * viewScale);
         int64_t screenQuarter = (rightScreenSideSamplePos - leftScreenSideSamplePos) / 4;
         // if play cursor is outside the view, reset view position where play cursor is at 3/4
         if (lastPlayCursorPos < leftScreenSideSamplePos || lastPlayCursorPos > rightScreenSideSamplePos)
