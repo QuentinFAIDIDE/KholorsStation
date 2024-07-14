@@ -45,36 +45,21 @@ class TrackInfoStore : public TaskListener
                 // update color
                 if (colorsPerTrack.find(trackinfoUpdate->identifier) != colorsPerTrack.end())
                 {
-                    auto existingColor = colorsPerTrack.find(trackinfoUpdate->identifier)->second;
-                    if (existingColor.red != trackinfoUpdate->redColorLevel ||
-                        existingColor.green != trackinfoUpdate->greenColorLevel ||
-                        existingColor.blue != trackinfoUpdate->blueColorLevel)
-                    {
-                        existingColor.red = trackinfoUpdate->redColorLevel;
-                        existingColor.green = trackinfoUpdate->greenColorLevel,
-                        existingColor.blue = trackinfoUpdate->blueColorLevel;
-
-                        auto colorUpdateTask = std::make_shared<TrackColorUpdateTask>(
-                            trackinfoUpdate->identifier, existingColor.red, existingColor.green, existingColor.blue);
-                        taskingManager.broadcastNestedTaskNow(colorUpdateTask);
-                    }
+                    colorsPerTrack.erase(trackinfoUpdate->identifier);
                 }
-                else
+                auto emplacement_tuple = colorsPerTrack.emplace(
+                    std::piecewise_construct, std::forward_as_tuple(trackinfoUpdate->identifier),
+                    std::forward_as_tuple(trackinfoUpdate->redColorLevel, trackinfoUpdate->greenColorLevel,
+                                          trackinfoUpdate->blueColorLevel, 0));
+                if (!emplacement_tuple.second)
                 {
-                    auto emplacement_tuple = colorsPerTrack.emplace(
-                        std::piecewise_construct, std::forward_as_tuple(trackinfoUpdate->identifier),
-                        std::forward_as_tuple(trackinfoUpdate->redColorLevel, trackinfoUpdate->greenColorLevel,
-                                              trackinfoUpdate->blueColorLevel, 0));
-                    if (!emplacement_tuple.second)
-                    {
-                        throw std::runtime_error("failed to insert color into TrackInfoStore");
-                    }
-
-                    auto colorUpdateTask = std::make_shared<TrackColorUpdateTask>(
-                        trackinfoUpdate->identifier, trackinfoUpdate->redColorLevel, trackinfoUpdate->greenColorLevel,
-                        trackinfoUpdate->blueColorLevel);
-                    taskingManager.broadcastNestedTaskNow(colorUpdateTask);
+                    throw std::runtime_error("failed to insert color into TrackInfoStore");
                 }
+
+                auto colorUpdateTask = std::make_shared<TrackColorUpdateTask>(
+                    trackinfoUpdate->identifier, trackinfoUpdate->redColorLevel, trackinfoUpdate->greenColorLevel,
+                    trackinfoUpdate->blueColorLevel);
+                taskingManager.broadcastNestedTaskNow(colorUpdateTask);
             }
 
             trackinfoUpdate->setCompleted(true);
