@@ -2,6 +2,7 @@
 
 #include "Task.h"
 #include "TaskListener.h"
+#include <atomic>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -73,6 +74,19 @@ class TaskingManager : public TaskListener
      */
     bool taskHandler(std::shared_ptr<Task> task) override;
 
+    /**
+     * @brief Tells the background thread to stop without joining.
+     */
+    void shutdownBackgroundThreadAsync();
+
+    /**
+     * @brief Tells if the background thread is still running.
+     *
+     * @return true background thread is running
+     * @return false background thread is not running
+     */
+    bool isBackgroundThreadRunning();
+
   private:
     /**
      * The function that runs the thread
@@ -132,4 +146,6 @@ class TaskingManager : public TaskListener
                                            thread ids and nullity in other functions */
     std::condition_variable taskingThreadCV; /**< Used to wake up the background thread */
     int64_t lastUsedTaskListenerId;          /**< used to incrementally generate task listeners ids */
+
+    std::atomic<bool> backgroundThreadIsRunning;
 };

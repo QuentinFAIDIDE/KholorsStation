@@ -8,6 +8,7 @@
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FreqTimeView.h"
 #include "TaskManagement/TaskingManager.h"
+#include "juce_events/juce_events.h"
 #include "juce_graphics/juce_graphics.h"
 #include <spdlog/spdlog.h>
 
@@ -37,7 +38,12 @@ MainComponent::MainComponent()
 MainComponent::~MainComponent()
 {
     audioDataServer.stopServer();
-    taskManager.stopTaskBroadcast();
+
+    taskManager.shutdownBackgroundThreadAsync();
+    while (taskManager.isBackgroundThreadRunning())
+    {
+        juce::MessageManager::getInstance()->runDispatchLoopUntil(100);
+    }
 
     menuBar.setModel(nullptr);
 }

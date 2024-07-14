@@ -53,7 +53,7 @@ target_compile_definitions(
                     # `juce_add_gui_app` call
     JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:StationApp,JUCE_PRODUCT_NAME>"
     JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:StationApp,JUCE_VERSION>"
-)
+    JUCE_MODAL_LOOPS_PERMITTED=1)
 
 # If your target needs extra binary assets, you can add them here. The first
 # argument is the name of a new static library target that will include all the

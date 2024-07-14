@@ -9,6 +9,7 @@
 
 TaskingManager::TaskingManager() : lastUsedTaskListenerId(-1)
 {
+    backgroundThreadIsRunning = false;
     taskBroadcastStopped = true;
     historyNextIndex = 0;
     registerTaskListener(this);
@@ -76,6 +77,7 @@ void TaskingManager::stopTaskBroadcast()
 
 void TaskingManager::taskingThreadLoop()
 {
+    backgroundThreadIsRunning = true;
     size_t lastQueueSize;
     std::shared_ptr<Task> currentTask;
     // looping on successive wake ups from condition variable (or timeouts thereof)
@@ -91,6 +93,7 @@ void TaskingManager::taskingThreadLoop()
                 // abort if the thread is currently being stopped
                 if (taskBroadcastStopped)
                 {
+                    backgroundThreadIsRunning = false;
                     return;
                 }
             }
@@ -426,4 +429,18 @@ void TaskingManager::clearTaskHistory()
     historyNextIndex = 0;
 
     spdlog::debug("Cleared task history");
+}
+
+void TaskingManager::shutdownBackgroundThreadAsync()
+{
+    {
+        std::lock_guard<std::mutex> lock2(taskQueueMutex);
+        taskBroadcastStopped = true;
+    }
+    taskingThreadCV.notify_all();
+}
+
+bool TaskingManager::isBackgroundThreadRunning()
+{
+    return backgroundThreadIsRunning;
 }
