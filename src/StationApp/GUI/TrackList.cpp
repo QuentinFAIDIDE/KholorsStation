@@ -4,8 +4,10 @@
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
+#include "StationApp/GUI/TrackSelectionTask.h"
+#include "TaskManagement/TaskingManager.h"
+#include "juce_graphics/juce_graphics.h"
 #include <cstdlib>
-#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -14,12 +16,16 @@
 
 // this is the number of tiles per seconds
 #define SECOND_TILE_RATIO 10
+#define TRACK_NOT_SELECTED_ALPHA 0.35f
 
 #define TILE_WIDTH (VISUAL_SAMPLE_RATE / 4)
 
-TrackList::TrackList(TrackInfoStore &tis, NormalizedUnitTransformer &nut)
-    : viewPosition(0), viewScale(200), freqViewWidth(1000), trackInfoStore(tis), frequencyTransformer(nut)
+TrackList::TrackList(TrackInfoStore &tis, NormalizedUnitTransformer &nut, TaskingManager &tm)
+    : taskingManager(tm), viewPosition(0), viewScale(200), freqViewWidth(1000), trackInfoStore(tis),
+      frequencyTransformer(nut)
 {
+    lastMouseX = 0;
+    lastMouseY = 0;
     setOpaque(true);
     tilesRingBuffer.reserve(TILES_RING_BUFFER_SIZE);
     nextTileIndex = 0;
@@ -44,6 +50,8 @@ void TrackList::paint(juce::Graphics &g)
     juce::Rectangle<int> labelArea = drawableBounds.withHeight(LABEL_HEIGHT);
 
     int drawableHeightHalf = drawableBounds.getHeight() / 2;
+
+    tracksLabelPositions.resize(0);
 
     for (size_t i = 0; i < tracks.size(); i++)
     {
@@ -112,8 +120,11 @@ void TrackList::paint(juce::Graphics &g)
 
             if (labelAreaOpt.has_value())
             {
-                drawLabel(g, labelAreaOpt.value(), trackName, trackColor);
+                drawLabel(g, labelAreaOpt.value(), trackName, trackColor, tracks[i].trackIdentifier);
                 drawnAreas.push_back(labelAreaOpt.value());
+                std::pair<uint64_t, juce::Rectangle<int>> trackLabelPos(tracks[i].trackIdentifier,
+                                                                        labelAreaOpt.value());
+                tracksLabelPositions.push_back(trackLabelPos);
             }
         }
 
@@ -143,12 +154,17 @@ void TrackList::paint(juce::Graphics &g)
 
             if (labelAreaOpt.has_value())
             {
-                drawLabel(g, labelAreaOpt.value(), trackName, trackColor);
+                drawLabel(g, labelAreaOpt.value(), trackName, trackColor, tracks[i].trackIdentifier);
                 drawnAreas.push_back(labelAreaOpt.value());
+                std::pair<uint64_t, juce::Rectangle<int>> trackLabelPos(tracks[i].trackIdentifier,
+                                                                        labelAreaOpt.value());
+                tracksLabelPositions.push_back(trackLabelPos);
             }
         }
     }
     lastRedrawMs = juce::Time().getCurrentTime().toMilliseconds();
+
+    updateSelectedTrack(lastMouseX, lastMouseY);
 }
 
 int64_t TrackList::getLastRedrawMs()
@@ -156,18 +172,90 @@ int64_t TrackList::getLastRedrawMs()
     return lastRedrawMs;
 }
 
+void TrackList::updateSelectedTrack(int mouseX, int mouseY)
+{
+    // TODO: see currently selected track, if changed after running this func, broadcast new TrackSelectionTask
+    std::optional<uint64_t> previouslySelectedTrack = selectedTrack;
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
+    if (!mouseOnComponent)
+    {
+        selectedTrack = std::nullopt;
+        if (selectedTrack != previouslySelectedTrack)
+        {
+            broadcastSelectedTrack();
+        }
+        return;
+    }
+    for (size_t i = 0; i < tracksLabelPositions.size(); i++)
+    {
+        if (tracksLabelPositions[i].second.contains(lastMouseX, lastMouseY))
+        {
+            selectedTrack = tracksLabelPositions[i].first;
+            if (selectedTrack != previouslySelectedTrack)
+            {
+                broadcastSelectedTrack();
+            }
+            return;
+        }
+    }
+    selectedTrack = std::nullopt;
+    if (selectedTrack != previouslySelectedTrack)
+    {
+        broadcastSelectedTrack();
+    }
+}
+
+void TrackList::broadcastSelectedTrack()
+{
+    auto selectionUpdate = std::make_shared<TrackSelectionTask>(selectedTrack);
+    taskingManager.broadcastTask(selectionUpdate);
+}
+
+void TrackList::mouseMove(const juce::MouseEvent &me)
+{
+    mouseOnComponent = true;
+    updateSelectedTrack(me.position.x, me.position.y);
+}
+
+void TrackList::mouseDrag(const juce::MouseEvent &me)
+{
+    mouseOnComponent = true;
+    updateSelectedTrack(me.position.x, me.position.y);
+}
+
+void TrackList::mouseExit(const juce::MouseEvent &)
+{
+    mouseOnComponent = false;
+}
+
 void TrackList::drawLabel(juce::Graphics &g, juce::Rectangle<int> bounds, std::string trackName,
-                          juce::Colour trackColor)
+                          juce::Colour trackColor, uint64_t trackIdentifier)
 {
     auto reducedBounds = bounds.reduced(LABELS_INNER_PADDING);
 
-    g.setColour(trackColor);
+    if (selectedTrack.has_value() && selectedTrack.value() != trackIdentifier)
+    {
+        g.setColour(trackColor.withAlpha(TRACK_NOT_SELECTED_ALPHA));
+    }
+    else
+    {
+        g.setColour(trackColor);
+    }
     auto circleBounds = reducedBounds.removeFromLeft(reducedBounds.getHeight() + LABELS_CIRCLE_TEXT_PADDING);
     circleBounds.removeFromRight(LABELS_CIRCLE_TEXT_PADDING);
     circleBounds.reduce(CIRCLE_PADDING, CIRCLE_PADDING);
     g.fillEllipse(circleBounds.toFloat());
 
-    g.setColour(COLOR_WHITE);
+    if (selectedTrack.has_value() && selectedTrack.value() != trackIdentifier)
+    {
+        g.setColour(COLOR_WHITE.withAlpha(TRACK_NOT_SELECTED_ALPHA));
+    }
+    else
+    {
+        g.setColour(COLOR_WHITE);
+    }
+
     g.drawEllipse(circleBounds.toFloat(), 1.0f);
     g.setFont(juce::Font(LABELS_FONT_HEIGHT));
 

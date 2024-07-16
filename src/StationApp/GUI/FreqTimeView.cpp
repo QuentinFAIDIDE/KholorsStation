@@ -1,5 +1,4 @@
 #include "FreqTimeView.h"
-#include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/BpmUpdateTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/TrackColorUpdateTask.h"
@@ -9,6 +8,7 @@
 #include "StationApp/GUI/GpuTextureDrawingBackend.h"
 #include "StationApp/GUI/MouseCursorInfoTask.h"
 #include "StationApp/GUI/TrackList.h"
+#include "StationApp/GUI/TrackSelectionTask.h"
 #include "StationApp/Maths/NormalizedBijectiveProjection.h"
 #include "juce_core/juce_core.h"
 #include <cstddef>
@@ -19,7 +19,7 @@
 
 FreqTimeView::FreqTimeView(TrackInfoStore &tis, TaskingManager &tm)
     : taskingManager(tm), trackInfoStore(tis), viewPosition(0), viewScale(150),
-      frequencyScale(frequencyTransformer, VISUAL_SAMPLE_RATE >> 1), trackList(trackInfoStore, frequencyTransformer)
+      frequencyScale(frequencyTransformer, VISUAL_SAMPLE_RATE >> 1), trackList(trackInfoStore, frequencyTransformer, tm)
 {
     lastFftMousePosX = 0;
     lastFftMousePosY = 0;
@@ -232,6 +232,14 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
             lastReceivedBpm = bpmUpdateTask->bpm;
         }
         bpmUpdateTask->setCompleted(true);
+        return false;
+    }
+
+    auto selectionUpdate = std::dynamic_pointer_cast<TrackSelectionTask>(task);
+    if (selectionUpdate != nullptr && !selectionUpdate->isCompleted())
+    {
+        fftDrawBackend->setSelectedTrack(selectionUpdate->selectedTrack);
+        selectionUpdate->setCompleted(true);
         return false;
     }
 

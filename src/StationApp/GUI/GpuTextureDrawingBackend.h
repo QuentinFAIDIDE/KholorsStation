@@ -134,6 +134,13 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      */
     void setMouseCursor(bool onComponent, int x, int y) override;
 
+    /**
+     * @brief Setting the currently selected track highlighted on screen.
+     *
+     * @param selectedTrack Optional, being if something is selected the identifier of the track.
+     */
+    void setSelectedTrack(std::optional<uint64_t> selectedTrack) override;
+
   private:
     /**
      * @brief Will draw rounded borders around the view.
@@ -281,4 +288,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
 
     int lastMouseX, lastMouseY;
     bool mouseOnComponent;
+
+    std::optional<uint64_t> currentlySelectedTrack;
+    std::mutex selectedTrackMutex;
 };

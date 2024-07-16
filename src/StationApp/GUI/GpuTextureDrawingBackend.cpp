@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 
@@ -375,11 +376,18 @@ void GpuTextureDrawingBackend::renderOpenGL()
     backgroundGridShader->use();
     background.drawGlObjects();
 
+    std::optional<uint64_t> selection;
+    {
+        std::lock_guard lock(selectedTrackMutex);
+        selection = currentlySelectedTrack;
+    }
+
     // draw tiles with FFTs
     texturedPositionedShader->use();
     for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
     {
-        if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
+        if (secondTilesRingBuffer[i].tileIndexPosition >= 0 &&
+            (selection == std::nullopt || selection.value() == secondTilesRingBuffer[i].trackIdentifer))
         {
             secondTilesRingBuffer[i].mesh->drawGlObjects();
         }
@@ -603,4 +611,14 @@ void GpuTextureDrawingBackend::setMouseCursor(bool onComponent, int x, int y)
     mouseOnComponent = onComponent;
     lastMouseX = x;
     lastMouseY = y;
+}
+
+void GpuTextureDrawingBackend::setSelectedTrack(std::optional<uint64_t> selectedTrack)
+{
+    {
+        std::lock_guard lock(selectedTrackMutex);
+        currentlySelectedTrack = selectedTrack;
+    }
+    const juce::MessageManagerLock mmlock;
+    repaint();
 }

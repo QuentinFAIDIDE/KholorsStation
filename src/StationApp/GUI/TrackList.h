@@ -3,6 +3,8 @@
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
+#include "TaskManagement/TaskingManager.h"
+#include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
 #define MAX_TRACKS_PER_TILE 16
@@ -40,7 +42,7 @@
 class TrackList : public juce::Component
 {
   public:
-    TrackList(TrackInfoStore &tis, NormalizedUnitTransformer &nut);
+    TrackList(TrackInfoStore &tis, NormalizedUnitTransformer &nut, TaskingManager &tm);
 
     void paint(juce::Graphics &g) override;
 
@@ -129,6 +131,10 @@ class TrackList : public juce::Component
      */
     int64_t getLastRedrawMs();
 
+    void mouseMove(const juce::MouseEvent &me) override;
+    void mouseDrag(const juce::MouseEvent &me) override;
+    void mouseExit(const juce::MouseEvent &me) override;
+
   private:
     /**
      * @brief Tries to position labelRectangle into drawableBounds,
@@ -152,7 +158,8 @@ class TrackList : public juce::Component
         float freqPositionRatio, float labelPositionRatioInDrawableArea, int drawableHeightHalf,
         std::vector<juce::Rectangle<int>> &drawnAreas, uint64_t trackIdentifier);
 
-    void drawLabel(juce::Graphics &g, juce::Rectangle<int> bounds, std::string trackName, juce::Colour trackColor);
+    void drawLabel(juce::Graphics &g, juce::Rectangle<int> bounds, std::string trackName, juce::Colour trackColor,
+                   uint64_t trackIdentifier);
 
     /**
      * @brief Get tile index, and create it if not exists.
@@ -189,6 +196,12 @@ class TrackList : public juce::Component
 
     static bool rectIntersectsRectList(juce::Rectangle<int> &rect, std::vector<juce::Rectangle<int>> &list);
 
+    void updateSelectedTrack(int mouseX, int mouseY);
+
+    void broadcastSelectedTrack();
+
+    TaskingManager &taskingManager;
+
     std::vector<TracksPlaybackInfoTile> tilesRingBuffer; /**< ring buffer of tiles track playback info */
     std::map<int64_t, size_t> tileIndexesPerPosition;    /**< tile indexes indexes by tile position in seconds */
     size_t nextTileIndex;                                /**< index of the next tile to create/replace */
@@ -208,4 +221,9 @@ class TrackList : public juce::Component
 
     TrackInfoStore &trackInfoStore;
     NormalizedUnitTransformer &frequencyTransformer;
+
+    std::vector<std::pair<uint64_t, juce::Rectangle<int>>> tracksLabelPositions;
+    std::optional<uint64_t> selectedTrack;
+    int lastMouseX, lastMouseY;
+    bool mouseOnComponent;
 };

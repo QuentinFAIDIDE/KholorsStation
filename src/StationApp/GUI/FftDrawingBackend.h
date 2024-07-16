@@ -205,6 +205,15 @@ class FftDrawingBackend : public juce::Component
         return std::vector<ClearTrackInfoRange>();
     }
 
+    /**
+     * @brief Setting the currently selected track highlighted on screen.
+     *
+     * @param selectedTrack Optional, being if something is selected the identifier of the track.
+     */
+    virtual void setSelectedTrack(std::optional<uint64_t> selectedTrack)
+    {
+    }
+
   protected:
     /**
      * @brief Draws the provided FFT (there's only one) on the TrackSecondTile;

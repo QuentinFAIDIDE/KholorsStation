@@ -47,6 +47,7 @@ class TrackInfoStore : public TaskListener
                 {
                     colorsPerTrack.erase(trackinfoUpdate->identifier);
                 }
+
                 auto emplacement_tuple = colorsPerTrack.emplace(
                     std::piecewise_construct, std::forward_as_tuple(trackinfoUpdate->identifier),
                     std::forward_as_tuple(trackinfoUpdate->redColorLevel, trackinfoUpdate->greenColorLevel,
