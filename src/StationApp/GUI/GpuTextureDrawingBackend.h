@@ -34,7 +34,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     struct FftToDraw
     {
         FftToDraw(uint64_t _trackIdentifier, int64_t _secondTileIndex, int64_t _begin, int64_t _end, int fftSize,
-                  float *data, int _channel)
+                  float *data, int _channel, uint32_t _sampleRate)
         {
             fftData.resize((size_t)fftSize);
             for (size_t i = 0; i < (size_t)fftSize; i++)
@@ -46,12 +46,14 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
             secondTileIndex = _secondTileIndex;
             begin = _begin;
             end = _end;
+            sampleRate = _sampleRate;
         }
         std::vector<float> fftData; /**< data to draw inside the tile */
         uint64_t trackIdentifier;   /**< identifier of the track tied to the track */
         int64_t secondTileIndex;    /**< index of the tile to draw in */
         int64_t begin, end;         /**< begin and end horizontal pixel coordinates */
         int channel;                /**< 0 for left, 1 for right, 2 for both */
+        uint32_t sampleRate;        /**< sample rate of the fft tile */
     };
 
     /**
@@ -223,9 +225,10 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      * @param fftSize number of frequency bins in the provided fft
      * @param data pointer to the floats containing fft bins intensities in decibels
      * @param channel 0 for left, 1 for right, 2 for both
+     * @param sampleRate sample rate of data that was passed through fft
      */
     void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
-                       float *data, int channel) override;
+                       float *data, int channel, uint32_t sampleRate) override;
 
     /**
      * @brief Called by the openGL thread to draw an fft isnide a GPU texture tile.

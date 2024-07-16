@@ -418,16 +418,14 @@ void GpuTextureDrawingBackend::openGLContextClosing()
 }
 
 void GpuTextureDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin,
-                                             int64_t end, int fftSize, float *data, int channel)
+                                             int64_t end, int fftSize, float *data, int channel, uint32_t sampleRate)
 {
     {
-        auto newFftToDraw =
-            std::make_shared<FftToDraw>(trackIdentifier, secondTileIndex, begin, end, fftSize, data, channel);
+        auto newFftToDraw = std::make_shared<FftToDraw>(trackIdentifier, secondTileIndex, begin, end, fftSize, data,
+                                                        channel, sampleRate);
         std::lock_guard lock(fftsToDrawMutex);
         fftsToDrawQueue.push(newFftToDraw);
     }
-    // TODO: remove that, it creates deadlock and takes much unecessary tasking threa time.
-    // It just takes the FreqTimeView timer to trigger the redraw instead.
     {
         const juce::MessageManagerLock mmlock;
         repaint();
@@ -447,12 +445,21 @@ void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> 
     {
         tileToDrawIn = createSecondTile(fftData->trackIdentifier, fftData->secondTileIndex);
     }
+    // we need to correct frequencies and positions if the sample rates differs
+    float sampleRateRatio = 1.0f;
+    if (fftData->sampleRate != VISUAL_SAMPLE_RATE)
+    {
+        sampleRateRatio = float(fftData->sampleRate) / float(VISUAL_SAMPLE_RATE);
+    }
     // draw the fft inside the tile
-    size_t startPixel =
-        (size_t)juce::jlimit(0, SECOND_TILE_WIDTH - 1,
-                             (int)((float(fftData->begin) / float(VISUAL_SAMPLE_RATE)) * float(SECOND_TILE_WIDTH)));
-    size_t endPixel = (size_t)juce::jlimit(
-        0, SECOND_TILE_WIDTH - 1, (int)((float(fftData->end) / float(VISUAL_SAMPLE_RATE)) * float(SECOND_TILE_WIDTH)));
+    float startSecond = (float(fftData->begin) / float(VISUAL_SAMPLE_RATE));
+    float endSecond = (float(fftData->end) / float(VISUAL_SAMPLE_RATE));
+    size_t startPixel = (size_t)juce::jlimit(0, SECOND_TILE_WIDTH - 1, (int)(startSecond * float(SECOND_TILE_WIDTH)));
+    size_t endPixel = (size_t)juce::jlimit(0, SECOND_TILE_WIDTH - 1, (int)(endSecond * float(SECOND_TILE_WIDTH)));
+
+    // it is necessary to adjust the frequency bin fetching to potentially different sample rates
+    float rateAdjustedNoFreqBins = float(fftData->fftData.size()) / sampleRateRatio;
+
     // iterate from left to right
     for (size_t horizontalPixel = startPixel; horizontalPixel <= endPixel; horizontalPixel++)
     {
@@ -460,11 +467,20 @@ void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> 
         for (size_t verticalPos = 0; verticalPos < (SECOND_TILE_HEIGHT >> 1); verticalPos++)
         {
             size_t frequencyBinIndex =
-                ((float(fftData->fftData.size()) *
-                  freqTransformer.transformInv(float(verticalPos) / float(SECOND_TILE_HEIGHT >> 1))) +
+                ((rateAdjustedNoFreqBins *
+                  freqTransformer.transformInv((float(verticalPos)) / float(SECOND_TILE_HEIGHT >> 1))) +
                  0.5f);
-            frequencyBinIndex = (size_t)juce::jlimit(0, (int)fftData->fftData.size() - 1, (int)frequencyBinIndex);
-            float intensityDb = fftData->fftData[frequencyBinIndex];
+
+            float intensityDb;
+            if (frequencyBinIndex <= 0 || frequencyBinIndex >= fftData->fftData.size() - 1)
+            {
+                intensityDb = MIN_DB;
+            }
+            else
+            {
+                intensityDb = fftData->fftData[frequencyBinIndex];
+            }
+
             float intensityNormalized = juce::jmap(intensityDb, MIN_DB, 0.0f, 0.0f, 1.0f);
             intensityNormalized = juce::jlimit(0.0f, 1.0f, intensityNormalized);
             intensityNormalized = intensityTransformer.transformInv(intensityNormalized);

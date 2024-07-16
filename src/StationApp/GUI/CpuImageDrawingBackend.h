@@ -97,9 +97,10 @@ class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
      * @param fftSize number of frequency bins in the provided fft
      * @param data pointer to the floats containing fft bins intensities in decibels
      * @param channel 0 for left, 1 for right, 2 for both
+     * @param sampleRate sample rate of the signal passed to FFT
      */
     void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
-                       float *data, int channel) override;
+                       float *data, int channel, uint32_t sampleRate) override;
 
     int64_t viewPosition; /**< Position of the view in samples */
     int64_t viewScale;    /**< Scale of the view in samples per pixels */

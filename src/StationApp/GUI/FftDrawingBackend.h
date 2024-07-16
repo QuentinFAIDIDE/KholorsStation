@@ -76,7 +76,6 @@ class FftDrawingBackend : public juce::Component
      */
     void displayNewFftData(std::shared_ptr<NewFftDataTask> fftData)
     {
-
         int fftSize = fftData->fftData->size() / fftData->noFFTs;
         int64_t fftSampleWidth = (int64_t)fftData->segmentSampleLength / (int64_t)fftData->noFFTs;
         // for each fft in the received set
@@ -129,7 +128,7 @@ class FftDrawingBackend : public juce::Component
                     }
                 }
                 drawFftOnTile(fftData->trackIdentifier, j, tileStartSample, tileEndSample, fftSize, fftDataPointer,
-                              channelIndex);
+                              channelIndex, fftData->sampleRate);
             }
         }
     }
@@ -225,9 +224,10 @@ class FftDrawingBackend : public juce::Component
      * @param fftSize number of frequency bins in the provided fft
      * @param data pointer to the floats containing fft bins intensities in decibels
      * @param channel 0 for left, 1 for right, 2 for both
+     * @param sampleRate sample rate of signal that was FFT'ed
      */
     virtual void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end,
-                               int fftSize, float *data, int channel) = 0;
+                               int fftSize, float *data, int channel, uint32_t sampleRate) = 0;
 
     TrackInfoStore &trackInfoStore;
     NormalizedUnitTransformer &freqTransformer;
