@@ -14,12 +14,13 @@
 #include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
 
-#define FORWARDER_THREAD_MAX_WAIT_MS 100
+#define FORWARDER_THREAD_MAX_WAIT_MS 80
 
 #define NUM_PREALLOCATED_BLOCKINFO 16
 #define NUM_PREALLOCATED_COALESCED_PAYLOADS 8
 #define PREALLOCATED_BLOCKINFO_SAMPLE_SIZE 4096
 #define DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE 4096
+#define MAX_PAYLOAD_IDLE_MS 250
 
 /**
  * @brief A class that receives AudioBlockInfos from audio thread, and
@@ -109,10 +110,20 @@ class BufferForwarder : public TaskListener
     static bool payloadIsFull(std::shared_ptr<AudioTransport::AudioSegmentPayload>);
 
     /**
+     * @brief Tells if the payloads is too old to be kept in here.
+     * Usually we don't want the playback stopping to cause half empty buffers
+     * to be kept for too long and send only when it resume later.
+     *
+     * @return true The payload is too old and should be sent padded with zeros.
+     * @return false The paylod is not too old and can be filled with more data.
+     */
+    bool payloadIsOld(std::shared_ptr<AudioTransport::AudioSegmentPayload>);
+
+    /**
      * @brief Clear the audio samples.
      *
      */
-    static void clearPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload>);
+    void clearPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload>);
 
     /**
      * @brief Copy metadata from src to dest, and also add some track info from this class.
@@ -190,6 +201,8 @@ class BufferForwarder : public TaskListener
 
     std::shared_ptr<std::thread> coalescerThread;
     std::shared_ptr<std::thread> senderThread;
+
+    std::map<std::shared_ptr<AudioTransport::AudioSegmentPayload>, int64_t> payloadsFillingStartTimesMs;
 
     AudioTransport::AudioSegmentPayloadSender &payloadSender;
 

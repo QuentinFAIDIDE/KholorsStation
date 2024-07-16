@@ -129,6 +129,12 @@ void BufferForwarder::coalescePayloadsThreadLoop()
         blockInfosToCoalesce.dequeue(blockInfoToCoalesceFetchContainer, 10);
         size_t queuedBlockInfoIndex = 0;
 
+        if (currentlyFilledPayload != nullptr && payloadIsOld(currentlyFilledPayload))
+        {
+            spdlog::debug("A payloads is too old to be kept around");
+            fillPayloadRemainingSpaceWithZeros(currentlyFilledPayload);
+        }
+
         while (payloadIsFullOrBlockInfoRemains(queuedBlockInfoIndex))
         {
             spdlog::debug("Preparing to operate on payloads to send or buffer to coalesce...");
@@ -248,11 +254,19 @@ bool BufferForwarder::payloadIsFull(std::shared_ptr<AudioTransport::AudioSegment
     return payload->segment_sample_duration() == DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE;
 }
 
+bool BufferForwarder::payloadIsOld(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
+{
+    int64_t currentTime = juce::Time::currentTimeMillis();
+    int64_t msDiff = currentTime - payloadsFillingStartTimesMs[payload];
+    return msDiff > MAX_PAYLOAD_IDLE_MS;
+}
+
 void BufferForwarder::clearPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
 {
     payload->mutable_segment_audio_samples()->Resize(0, 0.0f);
     payload->mutable_segment_audio_samples()->Resize(DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE * 2, 0.0f);
     payload->set_segment_sample_duration(0);
+    payloadsFillingStartTimesMs[payload] = juce::Time::currentTimeMillis();
 }
 
 void BufferForwarder::copyMetadataToPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload> dest,

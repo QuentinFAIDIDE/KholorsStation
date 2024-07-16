@@ -111,7 +111,7 @@ target_link_libraries(
 
 # ##############################################################################
 # Test target
-juce_add_console_app(BufferForwarderTest PRODUCT_NAME "Console App Example")
+juce_add_console_app(BufferForwarderTest PRODUCT_NAME "BufferForwarderTest")
 
 target_sources(
   BufferForwarderTest PRIVATE BufferForwarder.cpp BufferForwarder.h
