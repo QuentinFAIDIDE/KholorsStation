@@ -49,9 +49,20 @@ void TextEntry::resized()
 
 void TextEntry::setText(std::string newText)
 {
-    juce::MessageManagerLock mmlock;
-    lastTextSendToTask = newText;
-    textEditor.setText(newText);
+    {
+        juce::MessageManager::Lock mmLock;
+        juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+        while (!tryLock.isLocked())
+        {
+            if (taskManager.shutdownWasCalled())
+            {
+                return;
+            }
+            tryLock.retryLock();
+        }
+        lastTextSendToTask = newText;
+        textEditor.setText(newText);
+    }
 }
 
 void TextEntry::textEditorTextChanged(juce::TextEditor &te)
@@ -74,7 +85,16 @@ bool TextEntry::taskHandler(std::shared_ptr<Task> task)
         textUpdateTask->textEntryIdentifier == identifier)
     {
         {
-            juce::MessageManagerLock mmlock;
+            juce::MessageManager::Lock mmLock;
+            juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+            while (!tryLock.isLocked())
+            {
+                if (taskManager.shutdownWasCalled())
+                {
+                    return true;
+                }
+                tryLock.retryLock();
+            }
             textUpdateTask->previousText = textEditor.getText().toStdString();
             setText(textUpdateTask->newText);
         }

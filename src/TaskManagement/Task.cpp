@@ -7,6 +7,7 @@ using json = nlohmann::json;
 
 Task::Task()
 {
+    currentTaskingManager = nullptr;
     completed = false;
     failed = false;
 
@@ -120,6 +121,17 @@ int Task::getNewTaskGroupIndex()
 
     return taskGroupToReturn;
 }
+
+TaskingManager *Task::getTaskingManager()
+{
+    return currentTaskingManager;
+}
+
+void Task::setTaskingManager(TaskingManager *tm)
+{
+    currentTaskingManager = tm;
+}
+
 // ============================
 
 SilentTask::SilentTask()

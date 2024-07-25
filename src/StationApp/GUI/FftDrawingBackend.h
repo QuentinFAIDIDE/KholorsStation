@@ -4,6 +4,7 @@
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FrequencyLinesDrawer.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
+#include "TaskManagement/TaskingManager.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <cstdint>
 #include <memory>
@@ -59,8 +60,9 @@ class FftDrawingBackend : public juce::Component
      * implementation are inherently unused and can decide not to implement it.
      *
      * @param newBpm new bpm value to use to draw the grid
+     * @param tm A tasking manager to try-lock juce message manager thread while it's not shutting down
      */
-    virtual void updateBpm(float newBpm)
+    virtual void updateBpm(float newBpm, TaskingManager *tm)
     {
     }
 
@@ -94,7 +96,9 @@ class FftDrawingBackend : public juce::Component
             }
             int64_t secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
             int64_t secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
-            // fill the tile (one or many) with the fft data
+            // NOTE: we suppose that single FFT will never be larger than one second (tile width)
+
+            // fill the tile (one or two if overlaps) with the fft data
             for (int64_t j = secondTileIndexStartSample; j <= secondTileIndexEndSample; j++)
             {
                 if (j < 0)
@@ -128,7 +132,7 @@ class FftDrawingBackend : public juce::Component
                     }
                 }
                 drawFftOnTile(fftData->trackIdentifier, j, tileStartSample, tileEndSample, fftSize, fftDataPointer,
-                              channelIndex, fftData->sampleRate);
+                              channelIndex, fftData->sampleRate, fftData->getTaskingManager());
             }
         }
     }
@@ -209,7 +213,7 @@ class FftDrawingBackend : public juce::Component
      *
      * @param selectedTrack Optional, being if something is selected the identifier of the track.
      */
-    virtual void setSelectedTrack(std::optional<uint64_t> selectedTrack)
+    virtual void setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm)
     {
     }
 
@@ -225,9 +229,11 @@ class FftDrawingBackend : public juce::Component
      * @param data pointer to the floats containing fft bins intensities in decibels
      * @param channel 0 for left, 1 for right, 2 for both
      * @param sampleRate sample rate of signal that was FFT'ed
+     * @param tm a reference to the tasking manager so we trylock the message thread for repaint as long as it's not
+     * shut down (by message thread)
      */
     virtual void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end,
-                               int fftSize, float *data, int channel, uint32_t sampleRate) = 0;
+                               int fftSize, float *data, int channel, uint32_t sampleRate, TaskingManager *tm) = 0;
 
     TrackInfoStore &trackInfoStore;
     NormalizedUnitTransformer &freqTransformer;

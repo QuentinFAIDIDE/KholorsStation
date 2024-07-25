@@ -87,6 +87,14 @@ class TaskingManager : public TaskListener
      */
     bool isBackgroundThreadRunning();
 
+    /**
+     * @brief Tells if the shutdown method was called.
+     *
+     * @return true shutdown was called and we are either waiting for shutdown or already completed it
+     * @return false the thread shutdown was not called.
+     */
+    bool shutdownWasCalled();
+
   private:
     /**
      * The function that runs the thread

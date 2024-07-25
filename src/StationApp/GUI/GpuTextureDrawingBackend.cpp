@@ -4,6 +4,7 @@
 
 #include "../OpenGL/OpenGlShaders.h"
 #include "StationApp/OpenGL/GLInfoLogger.h"
+#include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
 #include "juce_opengl/opengl/juce_gl.h"
 #include <cstdint>
@@ -165,15 +166,25 @@ void GpuTextureDrawingBackend::updateViewScale(uint32_t samplesPerPixel)
     repaint();
 }
 
-void GpuTextureDrawingBackend::updateBpm(float nbpm)
+void GpuTextureDrawingBackend::updateBpm(float nbpm, TaskingManager *tm)
 {
     std::lock_guard lock(glThreadUniformsMutex);
     bpm = nbpm;
     glThreadUniformsNonce++;
-    // note that since this is called by the tasking thread,
-    // I don't repaint and lock mmthread because if the message manager
-    // thread is waiting for the tasking thread to finish its task in order
-    // to post one... we get a nasty hierarchical lock.
+    if (tm != nullptr)
+    {
+        juce::MessageManager::Lock mmLock;
+        juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+        while (!tryLock.isLocked())
+        {
+            if (tm->shutdownWasCalled())
+            {
+                return;
+            }
+            tryLock.retryLock();
+        }
+        repaint();
+    }
 }
 
 void GpuTextureDrawingBackend::newOpenGLContextCreated()
@@ -418,7 +429,8 @@ void GpuTextureDrawingBackend::openGLContextClosing()
 }
 
 void GpuTextureDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin,
-                                             int64_t end, int fftSize, float *data, int channel, uint32_t sampleRate)
+                                             int64_t end, int fftSize, float *data, int channel, uint32_t sampleRate,
+                                             TaskingManager *tm)
 {
     {
         auto newFftToDraw = std::make_shared<FftToDraw>(trackIdentifier, secondTileIndex, begin, end, fftSize, data,
@@ -426,8 +438,18 @@ void GpuTextureDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t s
         std::lock_guard lock(fftsToDrawMutex);
         fftsToDrawQueue.push(newFftToDraw);
     }
+    if (tm != nullptr)
     {
-        const juce::MessageManagerLock mmlock;
+        juce::MessageManager::Lock mmLock;
+        juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+        while (!tryLock.isLocked())
+        {
+            if (tm->shutdownWasCalled())
+            {
+                return;
+            }
+            tryLock.retryLock();
+        }
         repaint();
     }
 }
@@ -445,7 +467,7 @@ void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> 
     {
         tileToDrawIn = createSecondTile(fftData->trackIdentifier, fftData->secondTileIndex);
     }
-    // we need to correct frequencies and positions if the sample rates differs
+    // we need to correct frequencies if the sample rates differs
     float sampleRateRatio = 1.0f;
     if (fftData->sampleRate != VISUAL_SAMPLE_RATE)
     {
@@ -629,12 +651,22 @@ void GpuTextureDrawingBackend::setMouseCursor(bool onComponent, int x, int y)
     lastMouseY = y;
 }
 
-void GpuTextureDrawingBackend::setSelectedTrack(std::optional<uint64_t> selectedTrack)
+void GpuTextureDrawingBackend::setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm)
 {
     {
         std::lock_guard lock(selectedTrackMutex);
         currentlySelectedTrack = selectedTrack;
     }
-    const juce::MessageManagerLock mmlock;
+
+    juce::MessageManager::Lock mmLock;
+    juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+    while (!tryLock.isLocked())
+    {
+        if (tm->shutdownWasCalled())
+        {
+            return;
+        }
+        tryLock.retryLock();
+    }
     repaint();
 }

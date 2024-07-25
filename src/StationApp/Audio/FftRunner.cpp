@@ -151,7 +151,7 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
                 remainingJobs--;
                 fftPosition++;
                 // move the data pointer forward
-                nextJobStart += ((size_t)FFT_INPUT_NO_INTENSITIES / (size_t)FFT_OVERLAP_DIVISION);
+                nextJobStart += windowPadding;
             }
 
             // push all jobs on the todo queue

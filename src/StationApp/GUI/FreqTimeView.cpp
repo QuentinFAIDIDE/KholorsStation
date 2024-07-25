@@ -227,7 +227,7 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
     {
         if (std::abs(lastReceivedBpm - bpmUpdateTask->bpm) >= std::numeric_limits<float>::epsilon())
         {
-            fftDrawBackend->updateBpm(bpmUpdateTask->bpm);
+            fftDrawBackend->updateBpm(bpmUpdateTask->bpm, bpmUpdateTask->getTaskingManager());
             timeScale.setBpm(bpmUpdateTask->bpm);
             lastReceivedBpm = bpmUpdateTask->bpm;
         }
@@ -238,7 +238,7 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
     auto selectionUpdate = std::dynamic_pointer_cast<TrackSelectionTask>(task);
     if (selectionUpdate != nullptr && !selectionUpdate->isCompleted())
     {
-        fftDrawBackend->setSelectedTrack(selectionUpdate->selectedTrack);
+        fftDrawBackend->setSelectedTrack(selectionUpdate->selectedTrack, selectionUpdate->getTaskingManager());
         selectionUpdate->setCompleted(true);
         return false;
     }

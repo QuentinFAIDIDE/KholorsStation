@@ -6,6 +6,7 @@
 #include "StationApp/OpenGL/RadialGradientRectangle.h"
 #include "StationApp/OpenGL/SolidRectangle.h"
 #include "StationApp/OpenGL/TexturedRectangle.h"
+#include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "juce_opengl/juce_opengl.h"
@@ -95,7 +96,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      *
      * @param newBpm new bpm value to use to draw the grid
      */
-    void updateBpm(float newBpm) override;
+    void updateBpm(float newBpm, TaskingManager *tm) override;
 
     /**
      * @brief clears on screen data.
@@ -141,7 +142,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      *
      * @param selectedTrack Optional, being if something is selected the identifier of the track.
      */
-    void setSelectedTrack(std::optional<uint64_t> selectedTrack) override;
+    void setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm) override;
 
   private:
     /**
@@ -226,9 +227,10 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      * @param data pointer to the floats containing fft bins intensities in decibels
      * @param channel 0 for left, 1 for right, 2 for both
      * @param sampleRate sample rate of data that was passed through fft
+     * @param tm a tasking manager (used to check for shutdown and preevent deadlock with emssage thread)
      */
     void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
-                       float *data, int channel, uint32_t sampleRate) override;
+                       float *data, int channel, uint32_t sampleRate, TaskingManager *tm) override;
 
     /**
      * @brief Called by the openGL thread to draw an fft isnide a GPU texture tile.

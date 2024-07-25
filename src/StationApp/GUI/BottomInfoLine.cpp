@@ -52,8 +52,19 @@ bool BottomInfoLine::taskHandler(std::shared_ptr<Task> task)
         mouseOverSfftView = cursorInfo->cursorOnSfftView;
         lastFrequency = cursorInfo->frequencyUnderMouse;
         lastSampleTime = cursorInfo->timeUnderMouse;
-        juce::MessageManagerLock mmlock;
-        repaint();
+        {
+            juce::MessageManager::Lock mmLock;
+            juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+            while (!tryLock.isLocked())
+            {
+                if (task->getTaskingManager()->shutdownWasCalled())
+                {
+                    return true;
+                }
+                tryLock.retryLock();
+            }
+            repaint();
+        }
     }
     return false;
 }

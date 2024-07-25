@@ -27,7 +27,7 @@
 #define FFT_STORAGE_SCOPE_SIZE 4096
 
 /**< How much zeros we pad at the end of fft input intensities for each intensity sample */
-#define FFT_ZERO_PADDING_FACTOR 2
+#define FFT_ZERO_PADDING_FACTOR 3
 
 /**< Number of intensities we send as input (not accounting for zero padding after it). */
 #define FFT_INPUT_NO_INTENSITIES 2048 // always choose a power of two!

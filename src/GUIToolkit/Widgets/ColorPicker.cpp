@@ -166,7 +166,16 @@ bool ColorPicker::taskHandler(std::shared_ptr<Task> task)
         colorUpdateTask->setCompleted(true);
 
         {
-            juce::MessageManagerLock mmLock;
+            juce::MessageManager::Lock mmLock;
+            juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+            while (!tryLock.isLocked())
+            {
+                if (task->getTaskingManager()->shutdownWasCalled())
+                {
+                    return true;
+                }
+                tryLock.retryLock();
+            }
             repaint();
         }
 

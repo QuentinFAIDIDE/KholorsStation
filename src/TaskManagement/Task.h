@@ -6,6 +6,8 @@
 
 #define MAX_TASK_INDEX 1048576
 
+class TaskingManager;
+
 /**
   Abstract class for "Tasks", which are actions to perform or that were
   already performed. These Tasks are sent down the ActivityManager
@@ -126,6 +128,19 @@ class Task : public Marshalable
      */
     static int getNewTaskGroupIndex();
 
+    /**
+     * @brief For the task manager to set a reference to itself on every task.
+     */
+    void setTaskingManager(TaskingManager *);
+
+    /**
+     * @brief To retrieve a reference to the current tasking manager. May be nullptr
+     * if this task was not yet passed to the broadcastTask or broadcastNestedTaskNow functions.
+     *
+     * @return TaskingManager*
+     */
+    TaskingManager *getTaskingManager();
+
   protected:
     bool recordableInHistory; // tell if this task should be saved in history. Inherit SilentTask to have it false.
     bool isPartOfReversion;   // tells if this task was obtained through getOppositeTasks
@@ -139,6 +154,8 @@ class Task : public Marshalable
 
     static int taskGroupIndexIterator; // a static value that is incremented and assigned to new task, and also wrapped
                                        // at MAX_TASK_INDEX
+
+    TaskingManager *currentTaskingManager;
 };
 
 /**

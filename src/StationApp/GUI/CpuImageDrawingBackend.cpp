@@ -135,7 +135,8 @@ void CpuImageDrawingBackend::timerCallback()
 }
 
 void CpuImageDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin,
-                                           int64_t end, int fftSize, float *data, int channel, uint32_t)
+                                           int64_t end, int fftSize, float *data, int channel, uint32_t,
+                                           TaskingManager *)
 {
     std::lock_guard lock(imageAccessMutex);
     // if the tile does not exists, create it

@@ -28,9 +28,9 @@ class ColorPickerUpdateTask : public Task
                                 {"is_completed", isCompleted()},
                                 {"failed", hasFailed()},
                                 {"color_picker_id", colorPickerIdentifier},
-                                {"red", red},
-                                {"green", green},
-                                {"blue", blue},
+                                {"red", (int)(red)},
+                                {"green", (int)(green)},
+                                {"blue", (int)(blue)},
                                 {"recordable_in_history", recordableInHistory},
                                 {"is_part_of_reversion", isPartOfReversion}};
         return taskj.dump();

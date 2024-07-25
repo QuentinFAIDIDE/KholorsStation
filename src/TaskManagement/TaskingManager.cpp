@@ -147,6 +147,7 @@ void TaskingManager::taskingThreadLoop()
 
 void TaskingManager::broadcastTask(std::shared_ptr<Task> submittedTask)
 {
+    submittedTask->setTaskingManager(this);
     {
         std::lock_guard<std::mutex> lock(taskQueueMutex);
         taskQueue.push(submittedTask);
@@ -190,6 +191,7 @@ void TaskingManager::purgeTaskListener(int64_t idToRemove)
 void TaskingManager::broadcastNestedTaskNow(std::shared_ptr<Task> priorityTask)
 {
     throwIfCallerIsNotTaskingThread("broadcastNestedTaskNow");
+    priorityTask->setTaskingManager(this);
 
     // NOTE: we don't record nested tasks in history
 
@@ -443,4 +445,10 @@ void TaskingManager::shutdownBackgroundThreadAsync()
 bool TaskingManager::isBackgroundThreadRunning()
 {
     return backgroundThreadIsRunning;
+}
+
+bool TaskingManager::shutdownWasCalled()
+{
+    std::lock_guard<std::mutex> lock2(taskQueueMutex);
+    return taskBroadcastStopped;
 }
