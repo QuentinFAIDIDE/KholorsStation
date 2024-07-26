@@ -150,27 +150,33 @@ void GpuTextureDrawingBackend::resized()
 
 void GpuTextureDrawingBackend::updateViewPosition(uint32_t samplePosition)
 {
-    std::lock_guard lock(glThreadUniformsMutex);
-    viewPosition = samplePosition;
-    glThreadUniformsNonce++;
+    {
+        std::lock_guard lock(glThreadUniformsMutex);
+        viewPosition = samplePosition;
+        glThreadUniformsNonce++;
+    }
     const juce::MessageManagerLock mmlock;
     repaint();
 }
 
 void GpuTextureDrawingBackend::updateViewScale(uint32_t samplesPerPixel)
 {
-    std::lock_guard lock(glThreadUniformsMutex);
-    viewScale = samplesPerPixel;
-    glThreadUniformsNonce++;
+    {
+        std::lock_guard lock(glThreadUniformsMutex);
+        viewScale = samplesPerPixel;
+        glThreadUniformsNonce++;
+    }
     const juce::MessageManagerLock mmlock;
     repaint();
 }
 
 void GpuTextureDrawingBackend::updateBpm(float nbpm, TaskingManager *tm)
 {
-    std::lock_guard lock(glThreadUniformsMutex);
-    bpm = nbpm;
-    glThreadUniformsNonce++;
+    {
+        std::lock_guard lock(glThreadUniformsMutex);
+        bpm = nbpm;
+        glThreadUniformsNonce++;
+    }
     if (tm != nullptr)
     {
         juce::MessageManager::Lock mmLock;
@@ -244,7 +250,7 @@ bool GpuTextureDrawingBackend::buildShader(std::unique_ptr<juce::OpenGLShaderPro
 
 void GpuTextureDrawingBackend::uploadShadersUniforms()
 {
-    std::lock_guard lock(glThreadUniformsMutex);
+    std::lock_guard lock(glThreadUniformsMutex); // BUG: Deadlock here
     if (lastUsedGlThreadUnifNonce != glThreadUniformsNonce)
     {
 

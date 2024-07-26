@@ -26,5 +26,6 @@ class Client : public AudioSegmentPayloadSender
     std::unique_ptr<KholorsAudioTransport::Stub> stub;
     uint32_t lastPortUsed;
     std::shared_mutex portChangeMutex;
+    grpc::ChannelArguments channelArgs;
 };
 }; // namespace AudioTransport
