@@ -4,11 +4,9 @@
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/OpenGL/RadialGradientRectangle.h"
-#include "StationApp/OpenGL/SolidRectangle.h"
 #include "StationApp/OpenGL/TexturedRectangle.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
-#include "juce_gui_basics/juce_gui_basics.h"
 #include "juce_opengl/juce_opengl.h"
 #include <cstdint>
 #include <memory>
