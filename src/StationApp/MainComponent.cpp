@@ -1,7 +1,6 @@
 #include "MainComponent.h"
 
 #include "GUIToolkit/Consts.h"
-#include "GUIToolkit/GUIData.h"
 #include "StationApp/Audio/AudioDataWorker.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/BottomInfoLine.h"

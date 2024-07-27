@@ -1,8 +1,13 @@
 #include "GUIToolkit/GUIData.h"
 #include "GUIToolkit/KholorsLookAndFeel.h"
-#include "MainComponent.h"
+#include "StationApp/MainComponent.h"
 #include <spdlog/common.h>
 #include <spdlog/spdlog.h>
+
+#define WINDOW_MIN_WIDTH 960
+#define WINDOW_MIN_HEIGHT 540
+#define WINDOW_MAX_WIDTH 4000
+#define WINDOW_MAX_HEIGHT 3000
 
 //==============================================================================
 class GuiAppApplication final : public juce::JUCEApplication
@@ -92,6 +97,8 @@ class GuiAppApplication final : public juce::JUCEApplication
                   DocumentWindow::allButtons)
         {
             setUsingNativeTitleBar(true);
+            setTitle("Kholors Station");
+            setResizeLimits(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT, WINDOW_MAX_WIDTH, WINDOW_MAX_HEIGHT);
             setContentOwned(new MainComponent(), true);
 
 #if JUCE_IOS || JUCE_ANDROID
