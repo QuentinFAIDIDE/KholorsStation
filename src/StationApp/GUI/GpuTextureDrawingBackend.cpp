@@ -125,10 +125,6 @@ void GpuTextureDrawingBackend::drawBorders(juce::Graphics &g)
     g.setColour(COLOR_BACKGROUND);
     g.fillPath(fillPath);
 
-    // g.setColour(COLOR_FREQVIEW_BORDER);
-    // int borders2Width = 2;
-    // g.drawRoundedRectangle(bounds.toFloat().reduced(borders2Width / 2), roundedCornersWidth, borders2Width);
-
     g.setColour(COLOR_GRIDS_LEVEL_0);
     int borders2Width = 2;
     g.drawRoundedRectangle(bounds.toFloat(), roundedCornersWidth, borders2Width);
@@ -215,6 +211,16 @@ void GpuTextureDrawingBackend::newOpenGLContextCreated()
 
         // initialize background openGL objects
         background.registerGlObjects();
+
+        // load tiles textures
+        texturedPositionedShader->use();
+        for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+        {
+            if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
+            {
+                secondTilesRingBuffer[i].mesh->registerGlObjects();
+            }
+        }
     }
     else
     {
@@ -250,7 +256,7 @@ bool GpuTextureDrawingBackend::buildShader(std::unique_ptr<juce::OpenGLShaderPro
 
 void GpuTextureDrawingBackend::uploadShadersUniforms()
 {
-    std::lock_guard lock(glThreadUniformsMutex); // BUG: Deadlock here
+    std::lock_guard lock(glThreadUniformsMutex);
     if (lastUsedGlThreadUnifNonce != glThreadUniformsNonce)
     {
 
@@ -431,6 +437,8 @@ void GpuTextureDrawingBackend::openGLContextClosing()
         secondTilesRingBuffer[i].mesh->freeGlObjects();
     }
     background.freeGlObjects();
+    backgroundGridShader->release();
+    texturedPositionedShader->release();
     ignoreNewData = true;
 }
 

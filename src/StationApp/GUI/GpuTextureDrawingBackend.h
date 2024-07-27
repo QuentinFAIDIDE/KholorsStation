@@ -256,9 +256,9 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
 
     int64_t lastDrawTilesNonce; /**< The last nonce tilesNonce drawn */
 
-    juce::OpenGLContext openGLContext;
     std::unique_ptr<juce::OpenGLShaderProgram> texturedPositionedShader; /**< shader to draw ffts */
     std::unique_ptr<juce::OpenGLShaderProgram> backgroundGridShader;     /**< Shader to draw grids on background */
+    juce::OpenGLContext openGLContext;
 
     RadialGradientRectangle background; /**< OpenGL Mesh for background */
 
