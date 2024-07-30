@@ -1,5 +1,6 @@
 #include "BottomInfoLine.h"
 #include "GUIToolkit/Consts.h"
+#include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/MouseCursorInfoTask.h"
 #include "TaskManagement/TaskingManager.h"
@@ -13,6 +14,7 @@
 BottomInfoLine::BottomInfoLine(TaskingManager &tm)
     : taskingManager(tm), lastFrequency(0), lastSampleTime(0), mouseOverSfftView(false)
 {
+    averageSegmentProcessingTimeMs = 0;
 }
 
 void BottomInfoLine::paint(juce::Graphics &g)
@@ -20,7 +22,8 @@ void BottomInfoLine::paint(juce::Graphics &g)
     g.setColour(COLOR_UNITS);
     g.fillRect(getLocalBounds().withHeight(1));
 
-    std::string leftText = "Kholors II Station Alpha v0.0.0";
+    std::string leftText =
+        "Average Audio Processing Delay (milliseconds): " + std::to_string((int)averageSegmentProcessingTimeMs);
     std::string rightText = TRANS("No tip to display because mouse is not on grid...").toStdString();
 
     if (mouseOverSfftView)
@@ -66,5 +69,25 @@ bool BottomInfoLine::taskHandler(std::shared_ptr<Task> task)
             repaint();
         }
     }
+
+    auto processingRateTask = std::dynamic_pointer_cast<ProcessingTimeUpdateTask>(task);
+    if (processingRateTask != nullptr)
+    {
+        averageSegmentProcessingTimeMs = processingRateTask->averageProcesingTimeMs;
+        {
+            juce::MessageManager::Lock mmLock;
+            juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+            while (!tryLock.isLocked())
+            {
+                if (task->getTaskingManager()->shutdownWasCalled())
+                {
+                    return true;
+                }
+                tryLock.retryLock();
+            }
+            repaint();
+        }
+    }
+
     return false;
 }

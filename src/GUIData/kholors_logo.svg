@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="180.90598mm"
+   height="180.90598mm"
+   viewBox="0 0 180.90598 180.90598"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25, custom)"
+   sodipodi:docname="kholors_logo.svg"
+   inkscape:export-filename="../../res/kholors_icon.png"
+   inkscape:export-xdpi="8.9858828"
+   inkscape:export-ydpi="8.9858828"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.51892186"
+     inkscape:cx="183.07188"
+     inkscape:cy="245.70173"
+     inkscape:window-width="2560"
+     inkscape:window-height="1371"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-2.381032,-28.839523)">
+    <rect
+       style="fill:#19234f;fill-opacity:1;stroke-width:1.576;stroke-opacity:0.482561"
+       id="rect553"
+       width="180.90598"
+       height="180.90598"
+       x="2.381032"
+       y="28.839523"
+       ry="28.507887" />
+    <path
+       style="-inkscape-font-specification:'Roboto Heavy';fill:#319dc6;stroke-width:633.629"
+       d="m 56.014545,125.45045 -6.6028,7.24474 v 17.60747 H 33.317417 V 83.541004 h 16.094328 v 29.437486 l 5.594039,-8.48276 14.397774,-20.954726 h 19.900109 l -22.55957,29.529196 22.55957,37.23246 H 70.228908 Z"
+       id="text553"
+       aria-label="K" />
+    <path
+       style="-inkscape-font-specification:'Roboto Heavy';fill:#31c670;stroke-width:633.629"
+       d="m 149.44399,150.21013 h -16.00262 v -27.87849 h -23.70589 v 27.87849 H 93.64115 V 83.448475 h 16.09433 v 26.502905 h 23.70589 V 83.448475 h 16.00262 z"
+       id="text554"
+       aria-label="H" />
+  </g>
+</svg>

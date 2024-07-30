@@ -221,6 +221,8 @@ void BufferForwarder::sendPayloadsThreadLoop()
 
         spdlog::debug("Got a payload to send to the station");
 
+        filledPayloadToSend->set_payload_sent_time_unix_ms(juce::Time::currentTimeMillis());
+
         // send payload to the api
         bool success = payloadSender.sendAudioSegment(filledPayloadToSend.get());
 

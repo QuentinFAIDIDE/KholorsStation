@@ -1,8 +1,10 @@
 #include "CpuImageDrawingBackend.h"
+#include "StationApp/Audio/ProcessingTimerWaitgroup.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include <cstddef>
+#include <memory>
 #include <mutex>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
@@ -136,7 +138,7 @@ void CpuImageDrawingBackend::timerCallback()
 
 void CpuImageDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin,
                                            int64_t end, int fftSize, float *data, int channel, uint32_t,
-                                           TaskingManager *)
+                                           TaskingManager *, std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
 {
     std::lock_guard lock(imageAccessMutex);
     // if the tile does not exists, create it
@@ -168,7 +170,7 @@ void CpuImageDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t sec
             float intensityDb = data[frequencyBinIndex];
             float intensityNormalized = juce::jmap(intensityDb, MIN_DB, 0.0f, 0.0f, 1.0f);
             intensityNormalized = juce::jlimit(0.0f, 1.0f, intensityNormalized);
-            intensityNormalized = intensityTransformer.transformInv(intensityNormalized);
+            intensityNormalized = intensityTransformer.transform(intensityNormalized);
             if (channel == 0 || channel == 2)
             {
                 setTilePixelIntensity(tileToDrawIn, horizontalPixel, (SECOND_TILE_HEIGHT >> 1) - verticalPos,
@@ -183,4 +185,5 @@ void CpuImageDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t sec
     }
     // increment the nonce to let timer know we need to trigger an update
     tilesNonce++;
+    procTimeWg->recordCompletion();
 }

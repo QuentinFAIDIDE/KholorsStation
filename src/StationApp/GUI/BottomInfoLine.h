@@ -25,4 +25,5 @@ class BottomInfoLine : public juce::Component, public TaskListener
     std::atomic<float> lastFrequency;
     std::atomic<float> lastSampleTime;
     std::atomic<bool> mouseOverSfftView;
+    std::atomic<float> averageSegmentProcessingTimeMs;
 };

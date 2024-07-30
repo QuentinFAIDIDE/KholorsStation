@@ -1,5 +1,6 @@
 #pragma once
 
+#include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FrequencyScale.h"
@@ -65,6 +66,7 @@ class FreqTimeView : public juce::Component, public TaskListener, public juce::T
     void emitMousePositionInfoTask(bool shouldShow, int x, int y);
 
     TaskingManager &taskingManager;
+    ProcessingTimer processingTimer;
 
     NormalizedUnitTransformer frequencyTransformer;    /**< Transformer for the frequency displayed */
     NormalizedUnitTransformer intensityTransformer;    /**< Transformer for the intensity displayed */

@@ -1,6 +1,9 @@
 #include "GUIToolkit/GUIData.h"
+#include "GUIToolkit/IconsLoader.h"
 #include "GUIToolkit/KholorsLookAndFeel.h"
 #include "StationApp/MainComponent.h"
+#include "juce_core/juce_core.h"
+#include "juce_graphics/juce_graphics.h"
 #include <spdlog/common.h>
 #include <spdlog/spdlog.h>
 
@@ -8,6 +11,7 @@
 #define WINDOW_MIN_HEIGHT 540
 #define WINDOW_MAX_WIDTH 4000
 #define WINDOW_MAX_HEIGHT 3000
+#define WINDOW_ICON_WIDTH 64
 
 //==============================================================================
 class GuiAppApplication final : public juce::JUCEApplication
@@ -99,6 +103,14 @@ class GuiAppApplication final : public juce::JUCEApplication
             setUsingNativeTitleBar(true);
             setTitle("Kholors Station");
             setResizeLimits(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT, WINDOW_MAX_WIDTH, WINDOW_MAX_HEIGHT);
+
+            // generate an image with the logo (actually useless on my Linux window manager
+            juce::Image logo(juce::Image::RGB, WINDOW_ICON_WIDTH, WINDOW_ICON_WIDTH, true);
+            juce::Graphics g(logo);
+            sharedLogos->kholorsLogo->drawWithin(g, logo.getBounds().toFloat(), juce::RectanglePlacement::stretchToFit,
+                                                 1.0f);
+            setIcon(logo);
+
             setContentOwned(new MainComponent(), true);
 
 #if JUCE_IOS || JUCE_ANDROID
@@ -127,6 +139,7 @@ class GuiAppApplication final : public juce::JUCEApplication
         */
 
       private:
+        juce::SharedResourcePointer<IconsLoader> sharedLogos;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainWindow)
     };
 

@@ -14,36 +14,38 @@ service KholorsAudioTransport {
     // Bytes representing a RGBA color as a set of 4 unsigned 8 bits integers that are from left (first) to right (last): RED, GREEN, BLUE, ALPHA.
     // They are representing the color attached to the UUID hash attached.
     fixed32 track_color = 2;
+    // Timestamp in millisecond at which the payload was sent
+    int64 payload_sent_time_unix_ms = 3;
     // Name of the channel to display on screen.
-    string track_name = 3;
+    string track_name = 4;
     // Sample rate of the daw signal.
-    int32 daw_sample_rate = 4;
+    int32 daw_sample_rate = 5;
     // Beats per minute setup in the DAW.
-    double daw_bpm = 5;
+    double daw_bpm = 6;
     // Numerator of the DAW time signature.
-    int32 daw_time_signature_numerator = 6;
+    int32 daw_time_signature_numerator = 7;
     // Denominator of the daw time signature.
-    int32 daw_time_signature_denominator = 7;
+    int32 daw_time_signature_denominator = 8;
     // Is the daw in loop mode ?
-    bool daw_is_looping = 8;
+    bool daw_is_looping = 9;
     // Is the daw currently playing ?
-    bool daw_is_playing = 9;
+    bool daw_is_playing = 10;
     // Is this DAW providing the basic informations required to run this VST ?
-    bool daw_not_supported = 10;
+    bool daw_not_supported = 11;
     // Start of loop section for this daw, in fractions of quarter-notes.
-    double daw_loop_start = 11;
+    double daw_loop_start = 12;
     // End of loop section for this daw, in fractions of quarter-notes.
-    double daw_loop_end = 12;
+    double daw_loop_end = 13;
     // Sample time at the start of the segment
-    int64 segment_start_sample = 13;
+    int64 segment_start_sample = 14;
     // Duration of the segment in samples
-    uint64 segment_sample_duration = 14;
+    uint64 segment_sample_duration = 15;
     // Number of audio channels for this signal.
-    int32 segment_no_channels = 15;
+    int32 segment_no_channels = 16;
     // Audio content of the segment, arranged as a sequence of floats.
     // There are segment_no_channels segments of length segment_sample_duration.
     // It can also be empty, meaning this channel segment has so little intensity it can be ignored.
-    repeated float segment_audio_samples = 16; 
+    repeated float segment_audio_samples = 17; 
   }
   
   // The reply to an audio buffer and metadata upload request.

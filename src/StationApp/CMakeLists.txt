@@ -6,6 +6,10 @@ juce_add_gui_app(
   # DOCUMENT_EXTENSIONS ...           # Specify file extensions that should be
   # associated with this app COMPANY_NAME ...                  # Specify the
   # name of the app's author
+  COMPANY_NAME
+  "ArtifaktNd"
+  ICON_BIG
+  "/usr/share/pixmaps/kholors.png"
   PRODUCT_NAME
   "Kholors 2 Station") # The name of the final executable, which can differ from
                        # the target name

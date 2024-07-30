@@ -164,31 +164,34 @@ class SigmoidProjection : public NormalizedBijectiveProjection
     /**
      * @brief Construct a new Sigmoid Projection object.
      * Before being fed to sigmoid, the range is map from [0, 1]
-     * to [-maxSourceRangeToUse, maxSourceRangeToUse]. Changing maxSOurceRange
-     * will
+     * to [-maxSourceRangeToUse, maxSourceRangeToUse].
      *
      * @param maxSourceRangeToUse The maximum absolute value of range sent to sigmoid.
      */
     SigmoidProjection(float maxSourceRangeToUse = 6.0)
     {
         maxSourceRange = maxSourceRangeToUse;
+        float expc = std::exp(maxSourceRangeToUse);
+        a = -1.0f / (expc - 1.0f);
+        b = (expc + 1.0f) / (expc - 1.0f);
     }
 
     float projectIn(float input) const override
     {
         // ensure we map in range
         float limitedInput = juce::jlimit(0.0f, 1.0f, input);
-        float mappedInput = juce::jmap(limitedInput, -maxSourceRange, maxSourceRange);
-        return 1.0f / (1.0f + std::exp(-mappedInput));
+        float mappedInput = juce::jmap(limitedInput, -1.0f, 1.0f);
+        return a + (b / (1.0f + std::exp(-mappedInput * maxSourceRange)));
     }
 
     float projectOut(float input) const override
     {
         float limitedInput = juce::jlimit(0.0f, 1.0f, input);
-        float inputAfterSigmoidInv = -std::log((1.0 / limitedInput) - 1.0);
-        return juce::jmap(inputAfterSigmoidInv, -maxSourceRange, maxSourceRange, 0.0f, 1.0f);
+        float inputAfterSigmoidInv = -(1.0f / maxSourceRange) * std::log((b / (limitedInput - a)) - 1.0f);
+        return juce::jmap(inputAfterSigmoidInv, -1.0f, 1.0f, 0.0f, 1.0f);
     }
 
   private:
     float maxSourceRange;
+    float a, b; /**< coefficients used to correct range from [-1,1] into [0,1] */
 };

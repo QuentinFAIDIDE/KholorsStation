@@ -52,6 +52,9 @@ namespace GUIData
     extern const char*  RobotoThinItalic_ttf;
     const int           RobotoThinItalic_ttfSize = 172860;
 
+    extern const char*  kholors_logo_svg;
+    const int           kholors_logo_svgSize = 2208;
+
     extern const char*  RobotoLightItalic_ttf;
     const int           RobotoLightItalic_ttfSize = 173172;
 

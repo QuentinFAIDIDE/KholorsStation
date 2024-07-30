@@ -21,6 +21,7 @@ struct IconsLoader
     std::unique_ptr<juce::Drawable> closedCaret;
     std::unique_ptr<juce::Drawable> openedCaret;
     std::unique_ptr<juce::Drawable> artifaktNdLogo;
+    std::unique_ptr<juce::Drawable> kholorsLogo;
 
   private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(IconsLoader)

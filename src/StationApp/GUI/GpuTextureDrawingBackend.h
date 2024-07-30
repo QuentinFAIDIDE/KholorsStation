@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GUIToolkit/Consts.h"
+#include "StationApp/Audio/ProcessingTimerWaitgroup.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/OpenGL/RadialGradientRectangle.h"
@@ -33,7 +34,8 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     struct FftToDraw
     {
         FftToDraw(uint64_t _trackIdentifier, int64_t _secondTileIndex, int64_t _begin, int64_t _end, int fftSize,
-                  float *data, int _channel, uint32_t _sampleRate)
+                  float *data, int _channel, uint32_t _sampleRate,
+                  std::shared_ptr<ProcessingTimerWaitgroup> _procTimeWg)
         {
             fftData.resize((size_t)fftSize);
             for (size_t i = 0; i < (size_t)fftSize; i++)
@@ -46,6 +48,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
             begin = _begin;
             end = _end;
             sampleRate = _sampleRate;
+            procTimeWg = _procTimeWg;
         }
         std::vector<float> fftData; /**< data to draw inside the tile */
         uint64_t trackIdentifier;   /**< identifier of the track tied to the track */
@@ -53,6 +56,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
         int64_t begin, end;         /**< begin and end horizontal pixel coordinates */
         int channel;                /**< 0 for left, 1 for right, 2 for both */
         uint32_t sampleRate;        /**< sample rate of the fft tile */
+        std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg;
     };
 
     /**
@@ -226,9 +230,11 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      * @param channel 0 for left, 1 for right, 2 for both
      * @param sampleRate sample rate of data that was passed through fft
      * @param tm a tasking manager (used to check for shutdown and preevent deadlock with emssage thread)
+     * @param procTimeWg a waitgroup to be used to notify when work is done, no need to call add, parent already did
      */
     void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
-                       float *data, int channel, uint32_t sampleRate, TaskingManager *tm) override;
+                       float *data, int channel, uint32_t sampleRate, TaskingManager *tm,
+                       std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg) override;
 
     /**
      * @brief Called by the openGL thread to draw an fft isnide a GPU texture tile.

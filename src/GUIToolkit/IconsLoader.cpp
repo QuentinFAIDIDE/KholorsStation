@@ -44,4 +44,6 @@ IconsLoader::IconsLoader()
 
     artifaktNdLogo =
         juce::Drawable::createFromImageData(GUIData::artifaktnd_logo_svg, GUIData::artifaktnd_logo_svgSize);
+
+    kholorsLogo = juce::Drawable::createFromImageData(GUIData::kholors_logo_svg, GUIData::kholors_logo_svgSize);
 }

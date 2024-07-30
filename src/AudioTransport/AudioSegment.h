@@ -38,5 +38,6 @@ struct AudioSegment : public AudioTransportData
     uint32_t sampleRate;                           /**< Sample rate of the data */
     uint32_t segmentStartSample;                   /**< Start sample of the audio segment position */
     uint64_t noAudioSamples;                       /**< How many audio samples there are in this audio segment */
+    int64_t payloadSentTimeMs;                     /**< time at which the payload was sent by the plugin */
 };
 } // namespace AudioTransport

@@ -15,7 +15,7 @@ class NewFftDataTask : public SilentTask
   public:
     NewFftDataTask(uint64_t _trackIdentifier, uint32_t _noChannels, uint32_t _channelIndex, uint32_t _sampleRate,
                    uint32_t _segmentStartSample, uint64_t _segmentSampleLength, uint32_t _noFFTs,
-                   std::shared_ptr<std::vector<float>> _data)
+                   std::shared_ptr<std::vector<float>> _data, int64_t _sentTimeUnixMs)
     {
         trackIdentifier = _trackIdentifier;
         totalNoChannels = _noChannels;
@@ -25,6 +25,7 @@ class NewFftDataTask : public SilentTask
         segmentSampleLength = _segmentSampleLength;
         noFFTs = _noFFTs;
         fftData = _data;
+        sentTimeUnixMs = _sentTimeUnixMs;
     }
 
     /**
@@ -54,6 +55,7 @@ class NewFftDataTask : public SilentTask
     uint32_t sampleRate;                         /**< Sample rate of this segment */
     uint32_t segmentStartSample;                 /**< Start sample of this segment */
     uint64_t segmentSampleLength;                /**< Length of the segment in samples */
+    int64_t sentTimeUnixMs;                      /**< time at which the plugin sent the payload */
     uint32_t noFFTs;                             /**< Number of FFTs generated for this segment */
     std::shared_ptr<std::vector<float>> fftData; /**< raw FFT result in dBs (noFFTs FFTs of len FFT_OUTPUT_NO_FREQS) */
 };

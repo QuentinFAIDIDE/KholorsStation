@@ -76,7 +76,7 @@ void AudioDataWorker::workerThreadLoop()
                 auto newDataTask = std::make_shared<NewFftDataTask>(
                     audioSegment->trackIdentifier, audioSegment->noChannels, audioSegment->channel,
                     audioSegment->sampleRate, audioSegment->segmentStartSample, audioSegment->noAudioSamples,
-                    (uint32_t)numFFTs, shortTimeFFTs);
+                    (uint32_t)numFFTs, shortTimeFFTs, audioSegment->payloadSentTimeMs);
 
                 taskingManager.broadcastTask(newDataTask);
             }

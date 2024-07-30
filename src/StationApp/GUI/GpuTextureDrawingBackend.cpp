@@ -1,5 +1,6 @@
 #include "GpuTextureDrawingBackend.h"
 #include "GUIToolkit/Consts.h"
+#include "StationApp/Audio/ProcessingTimerWaitgroup.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 
 #include "../OpenGL/OpenGlShaders.h"
@@ -444,11 +445,11 @@ void GpuTextureDrawingBackend::openGLContextClosing()
 
 void GpuTextureDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin,
                                              int64_t end, int fftSize, float *data, int channel, uint32_t sampleRate,
-                                             TaskingManager *tm)
+                                             TaskingManager *tm, std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
 {
     {
         auto newFftToDraw = std::make_shared<FftToDraw>(trackIdentifier, secondTileIndex, begin, end, fftSize, data,
-                                                        channel, sampleRate);
+                                                        channel, sampleRate, procTimeWg);
         std::lock_guard lock(fftsToDrawMutex);
         fftsToDrawQueue.push(newFftToDraw);
     }
@@ -519,7 +520,7 @@ void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> 
 
             float intensityNormalized = juce::jmap(intensityDb, MIN_DB, 0.0f, 0.0f, 1.0f);
             intensityNormalized = juce::jlimit(0.0f, 1.0f, intensityNormalized);
-            intensityNormalized = intensityTransformer.transformInv(intensityNormalized);
+            intensityNormalized = intensityTransformer.transform(intensityNormalized);
 
             if (fftData->channel == 0 || fftData->channel == 2)
             {
@@ -533,6 +534,8 @@ void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> 
             }
         }
     }
+
+    fftData->procTimeWg->recordCompletion();
 }
 
 int64_t GpuTextureDrawingBackend::getTileIndexIfExists(uint64_t trackIdentifier, int64_t secondTileIndex)

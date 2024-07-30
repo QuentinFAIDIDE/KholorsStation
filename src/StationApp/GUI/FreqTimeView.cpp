@@ -1,6 +1,7 @@
 #include "FreqTimeView.h"
 #include "StationApp/Audio/BpmUpdateTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
+#include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/Audio/TrackColorUpdateTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
@@ -18,7 +19,7 @@
 #include <spdlog/spdlog.h>
 
 FreqTimeView::FreqTimeView(TrackInfoStore &tis, TaskingManager &tm)
-    : taskingManager(tm), trackInfoStore(tis), viewPosition(0), viewScale(150),
+    : taskingManager(tm), processingTimer(tm), trackInfoStore(tis), viewPosition(0), viewScale(150),
       frequencyScale(frequencyTransformer, VISUAL_SAMPLE_RATE >> 1), trackList(trackInfoStore, frequencyTransformer, tm)
 {
     lastFftMousePosX = 0;
@@ -35,9 +36,8 @@ FreqTimeView::FreqTimeView(TrackInfoStore &tis, TaskingManager &tm)
     auto freqProjection = std::make_shared<Log10Projection>(0.005);
     frequencyTransformer.setProjection(freqProjection);
 
-    auto intensityProjection = std::make_shared<SigmoidProjection>();
-    auto invertIntensity = std::make_shared<InvertProjection>(intensityProjection);
-    intensityTransformer.setProjection(invertIntensity);
+    auto intensityProjection = std::make_shared<SigmoidProjection>(6.0f);
+    intensityTransformer.setProjection(intensityProjection);
 
     lastTimerCallMs = juce::Time().getCurrentTime().toMilliseconds();
 
@@ -178,6 +178,11 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
         // call on the drawing backend to add the FFT data to the displayed textures
         if (fftDrawBackend != nullptr)
         {
+            // create a segment processing time waitgroup and pass it to fft drawing backend
+            auto processingTimeWaitgroup =
+                processingTimer.getNewProcessingTimerWaitgroup(newFftDataTask->sentTimeUnixMs);
+            processingTimeWaitgroup->add();
+
             // if time since last drawing was too large, clear all past data
             int64_t currentTime = juce::Time().getCurrentTime().toMilliseconds();
 
@@ -194,7 +199,7 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
             }
 
             // send fft data to drawing backend and update play cursor
-            fftDrawBackend->displayNewFftData(newFftDataTask);
+            fftDrawBackend->displayNewFftData(newFftDataTask, processingTimeWaitgroup);
             fftDrawBackend->submitNewPlayCursorPosition((int64_t)newFftDataTask->segmentStartSample +
                                                             (int64_t)newFftDataTask->segmentSampleLength,
                                                         newFftDataTask->sampleRate);
@@ -207,7 +212,11 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
                 std::lock_guard lock(lastFftDrawTimeMutex);
                 lastFftDrawTimeMs = currentTime;
             }
+
+            // complete first half of segment processing time waitgroup here
+            processingTimeWaitgroup->recordCompletion();
         }
+
         newFftDataTask->setCompleted(true);
         return false;
     }

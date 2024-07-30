@@ -32,6 +32,7 @@ void AudioSegment::parseFromApiPayload(const AudioSegmentPayload *payload, size_
     sampleRate = payload->daw_sample_rate();
     segmentStartSample = payload->segment_start_sample();
     noAudioSamples = payload->segment_sample_duration();
+    payloadSentTimeMs = payload->payload_sent_time_unix_ms();
 
     auto payloadAudioSamples = payload->segment_audio_samples();
 

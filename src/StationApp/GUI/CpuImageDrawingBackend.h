@@ -1,5 +1,6 @@
 #pragma once
 
+#include "StationApp/Audio/ProcessingTimerWaitgroup.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include <cstdint>
 #include <memory>
@@ -98,9 +99,11 @@ class CpuImageDrawingBackend : public FftDrawingBackend, public juce::Timer
      * @param data pointer to the floats containing fft bins intensities in decibels
      * @param channel 0 for left, 1 for right, 2 for both
      * @param sampleRate sample rate of the signal passed to FFT
+     * @param procTimeWg waitgroup to count processing time (add already called on it so just have to reportCOmpletion)
      */
     void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
-                       float *data, int channel, uint32_t sampleRate, TaskingManager *tm) override;
+                       float *data, int channel, uint32_t sampleRate, TaskingManager *tm,
+                       std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg) override;
 
     int64_t viewPosition; /**< Position of the view in samples */
     int64_t viewScale;    /**< Scale of the view in samples per pixels */

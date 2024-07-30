@@ -1,6 +1,7 @@
 #pragma once
 
 #include "StationApp/Audio/NewFftDataTask.h"
+#include "StationApp/Audio/ProcessingTimerWaitgroup.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FrequencyLinesDrawer.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
@@ -76,7 +77,8 @@ class FftDrawingBackend : public juce::Component
      *
      * @param fftData struct containing the FFt data position, length, channel info and data
      */
-    void displayNewFftData(std::shared_ptr<NewFftDataTask> fftData)
+    void displayNewFftData(std::shared_ptr<NewFftDataTask> fftData,
+                           std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
     {
         int fftSize = fftData->fftData->size() / fftData->noFFTs;
         int64_t fftSampleWidth = (int64_t)fftData->segmentSampleLength / (int64_t)fftData->noFFTs;
@@ -131,8 +133,9 @@ class FftDrawingBackend : public juce::Component
                         channelIndex = 1;
                     }
                 }
+                procTimeWg->add();
                 drawFftOnTile(fftData->trackIdentifier, j, tileStartSample, tileEndSample, fftSize, fftDataPointer,
-                              channelIndex, fftData->sampleRate, fftData->getTaskingManager());
+                              channelIndex, fftData->sampleRate, fftData->getTaskingManager(), procTimeWg);
             }
         }
     }
@@ -231,9 +234,11 @@ class FftDrawingBackend : public juce::Component
      * @param sampleRate sample rate of signal that was FFT'ed
      * @param tm a reference to the tasking manager so we trylock the message thread for repaint as long as it's not
      * shut down (by message thread)
+     * @param procTimeWg a waitgroup to be used to notify when work is done, no need to call add, parent already did
      */
     virtual void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end,
-                               int fftSize, float *data, int channel, uint32_t sampleRate, TaskingManager *tm) = 0;
+                               int fftSize, float *data, int channel, uint32_t sampleRate, TaskingManager *tm,
+                               std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg) = 0;
 
     TrackInfoStore &trackInfoStore;
     NormalizedUnitTransformer &freqTransformer;
