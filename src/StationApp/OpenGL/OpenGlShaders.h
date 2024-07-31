@@ -42,7 +42,7 @@ uniform int convolutionId;
 #define sharpen mat3(0, -1, 0, -1, 5, -1, 0, -1, 0)
 #define box_blur mat3(1, 1, 1, 1, 1, 1, 1, 1, 1) * 0.1111
 #define gaussian_blur mat3(1, 2, 1, 2, 4, 2, 1, 2, 1) * 0.0625
-#define emboss mat3(-2, -1, 0, -1, 1, 1, 0, 1, 2)
+#define emboss mat3(-2, -1, 0, -1, 1, 1, 0, 0, 3)
 
 // Find coordinate of matrix element from index
 vec2 kpos(int index)

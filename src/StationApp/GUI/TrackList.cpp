@@ -43,7 +43,18 @@ void TrackList::paint(juce::Graphics &g)
         // to be precise to select which 1 second tile to use.
         endTile = 1 + ((viewPosition + (getParentWidth() * viewScale)) / TILE_WIDTH);
     }
-    auto tracks = getVisibleTracks(startTile, endTile);
+
+    std::vector<TrackPresenceSummary> tracks;
+
+    if (selectedTrack.has_value())
+    {
+        tracks = lastUsedTrackList;
+    }
+    else
+    {
+        tracks = getVisibleTracks(startTile, endTile);
+        lastUsedTrackList = tracks;
+    }
 
     std::vector<juce::Rectangle<int>> drawnAreas;
     auto drawableBounds = getLocalBounds().reduced(LABELS_AREA_X_PADDING, LABELS_AREA_Y_PADDING);

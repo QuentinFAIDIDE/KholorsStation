@@ -123,7 +123,7 @@ void GpuTextureDrawingBackend::drawBorders(juce::Graphics &g)
     fillPath.lineTo(bounds.getCentreX(), bounds.getBottomRight().getY() - borderWidth);
     fillPath.closeSubPath();
 
-    g.setColour(COLOR_BACKGROUND);
+    g.setColour(COLOR_FREQVIEW_GRADIENT_BORDERS);
     g.fillPath(fillPath);
 
     g.setColour(COLOR_GRIDS_LEVEL_0);

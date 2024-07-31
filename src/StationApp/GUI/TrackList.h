@@ -226,4 +226,6 @@ class TrackList : public juce::Component
     std::optional<uint64_t> selectedTrack;
     int lastMouseX, lastMouseY;
     bool mouseOnComponent;
+
+    std::vector<TrackPresenceSummary> lastUsedTrackList;
 };
