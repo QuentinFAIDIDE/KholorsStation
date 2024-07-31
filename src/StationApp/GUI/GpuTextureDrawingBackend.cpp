@@ -27,6 +27,8 @@ GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, Normaliz
     mouseOnComponent = false;
     lastMouseX = 0;
     lastMouseY = 0;
+    lastTrackDrawOrderNonce = 0;
+    trackDrawOrderNonce = 1;
 }
 
 GpuTextureDrawingBackend::~GpuTextureDrawingBackend()
@@ -408,12 +410,16 @@ void GpuTextureDrawingBackend::renderOpenGL()
 
     // draw tiles with FFTs
     texturedPositionedShader->use();
-    for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+
+    ensureTrackTilesDrawOrderIsUpToDate();
+
+    for (size_t i = 0; i < trackTilesDrawOrder.size(); i++)
     {
-        if (secondTilesRingBuffer[i].tileIndexPosition >= 0 &&
-            (selection == std::nullopt || selection.value() == secondTilesRingBuffer[i].trackIdentifer))
+        if (secondTilesRingBuffer[trackTilesDrawOrder[i]].tileIndexPosition >= 0 &&
+            (selection == std::nullopt ||
+             selection.value() == secondTilesRingBuffer[trackTilesDrawOrder[i]].trackIdentifer))
         {
-            secondTilesRingBuffer[i].mesh->drawGlObjects();
+            secondTilesRingBuffer[trackTilesDrawOrder[i]].mesh->drawGlObjects();
         }
     }
 }
@@ -602,6 +608,8 @@ size_t GpuTextureDrawingBackend::createSecondTile(uint64_t trackIdentifier, int6
             std::lock_guard lock(clearedRangesMutex);
             clearedRanges.push(clearedRange);
         }
+        // remove the tile from the drawing order tracking
+        removeTrackTileFromDrawingOrder(secondTilesRingBuffer[newTileIndex].trackIdentifer, newTileIndex);
         // clear signal from the previous object
         for (size_t i = 0; i < SECOND_TILE_WIDTH; i++)
         {
@@ -615,6 +623,7 @@ size_t GpuTextureDrawingBackend::createSecondTile(uint64_t trackIdentifier, int6
     secondTilesRingBuffer[newTileIndex].tileIndexPosition = secondTileIndex;
     secondTilesRingBuffer[newTileIndex].samplePosition = secondTileIndex * VISUAL_SAMPLE_RATE;
     secondTilesRingBuffer[newTileIndex].trackIdentifer = trackIdentifier;
+    addTrackTileToDrawingOrder(secondTilesRingBuffer[newTileIndex].trackIdentifer, newTileIndex);
 
     juce::Colour col = COLOR_WHITE;
     auto optionalColor = knownTrackColors.find(trackIdentifier);
@@ -637,6 +646,73 @@ size_t GpuTextureDrawingBackend::createSecondTile(uint64_t trackIdentifier, int6
         secondTileNextIndex = 0;
     }
     return newTileIndex;
+}
+
+void GpuTextureDrawingBackend::addTrackTileToDrawingOrder(uint64_t trackIdentifer, size_t tileRingBufferIndex)
+{
+    trackDrawOrderNonce++;
+
+    for (auto it = trackTilesInDrawingOrder.begin(); it != trackTilesInDrawingOrder.end(); ++it)
+    {
+        // if current track tiles list is ours, we append our tile index to it
+        if (it->first == trackIdentifer)
+        {
+            it->second.insert(it->second.begin(), tileRingBufferIndex);
+            return;
+        }
+        // if the current track tiles list track id is larger than ours, we insert our track tiles list before it
+        if (it->first > trackIdentifer)
+        {
+            std::pair<uint64_t, std::list<size_t>> newTrackTilesList;
+            newTrackTilesList.first = trackIdentifer;
+            newTrackTilesList.second.insert(newTrackTilesList.second.begin(), tileRingBufferIndex);
+            trackTilesInDrawingOrder.insert(it, newTrackTilesList);
+            return;
+        }
+    }
+    // if our track was not already in list and if no track id was larger than ours
+    // we will insert our track tiles list at the end
+    std::pair<uint64_t, std::list<size_t>> newTrackTilesList;
+    newTrackTilesList.first = trackIdentifer;
+    newTrackTilesList.second.insert(newTrackTilesList.second.begin(), tileRingBufferIndex);
+    trackTilesInDrawingOrder.insert(trackTilesInDrawingOrder.end(), newTrackTilesList);
+}
+
+void GpuTextureDrawingBackend::removeTrackTileFromDrawingOrder(uint64_t trackIdentifier, size_t tileRingBufferIndex)
+{
+    trackDrawOrderNonce++;
+
+    for (auto it = trackTilesInDrawingOrder.begin(); it != trackTilesInDrawingOrder.end(); ++it)
+    {
+        if (it->first == trackIdentifier)
+        {
+            for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+            {
+                if (*it2 == tileRingBufferIndex)
+                {
+                    it->second.erase(it2);
+                    return;
+                }
+            }
+        }
+    }
+    spdlog::warn("Trying to remove a tile that does not exist from drawing order!");
+}
+
+void GpuTextureDrawingBackend::ensureTrackTilesDrawOrderIsUpToDate()
+{
+    if (trackDrawOrderNonce != lastTrackDrawOrderNonce)
+    {
+        trackTilesDrawOrder.resize(0);
+        for (auto it = trackTilesInDrawingOrder.begin(); it != trackTilesInDrawingOrder.end(); ++it)
+        {
+            for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+            {
+                trackTilesDrawOrder.push_back(*it2);
+            }
+        }
+        lastTrackDrawOrderNonce = trackDrawOrderNonce;
+    }
 }
 
 void GpuTextureDrawingBackend::setTilePixelIntensity(size_t tileRingBufferIndex, int x, int y, float intensity)

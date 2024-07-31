@@ -252,6 +252,34 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      */
     void setTrackColor(uint64_t trackIdentifier, juce::Colour col) override;
 
+    /**
+     * @brief Add this tile to the track drawing order.
+     *
+     * @param trackIdentifier
+     * @param tileIndexInRingBuffer
+     */
+    void addTrackTileToDrawingOrder(uint64_t trackIdentifier, size_t tileIndexInRingBuffer);
+
+    /**
+     * @brief Remove this tile from the track drawing order.
+     *
+     * @param trackIdentifier
+     * @param tileIndexInRingBuffer
+     */
+    void removeTrackTileFromDrawingOrder(uint64_t trackIdentifier, size_t tileIndexInRingBuffer);
+
+    /**
+     * @brief Called before using the trackTilesDrawOrder vector to ensure it's
+     * up to date.
+     */
+    void ensureTrackTilesDrawOrderIsUpToDate();
+
+    std::list<std::pair<uint64_t, std::list<size_t>>>
+        trackTilesInDrawingOrder; /**< list of ordered tracks with their tiles lists used to construct
+                                     trackTilesDrawOrder */
+    uint64_t trackDrawOrderNonce, lastTrackDrawOrderNonce; /**< nonce to know when to regenerate trackTilesDrawOrder */
+    std::vector<size_t> trackTilesDrawOrder;               /**< tile indices in ring buffer to draw in order */
+
     std::vector<TrackSecondTile> secondTilesRingBuffer; /**< Array of tiles that represent one second of track signal */
     size_t secondTileNextIndex; /**< Index of the next tile to create in the secondTilesRingBuffer */
     std::map<std::pair<uint64_t, int64_t>, size_t>

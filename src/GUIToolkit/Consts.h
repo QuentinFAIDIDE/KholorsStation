@@ -1,8 +1,8 @@
 #pragma once
 
-#define COLOR_BACKGROUND juce::Colour(25, 35, 79)
+#define COLOR_BACKGROUND juce::Colour(12, 17, 40)
 #define COLOR_BACKGROUND_LIGHTER juce::Colour(50, 64, 126)
-#define COLOR_APP_BACKGROUND juce::Colour(25, 35, 79)
+#define COLOR_APP_BACKGROUND juce::Colour(12, 17, 40)
 #define COLOR_BACKGROUND_HIGHLIGHT juce::Colour(50, 64, 126)
 #define COLOR_SAMPLE_BORDER juce::Colour(87, 110, 195)
 #define COLOR_TEXT COLOR_WHITE
