@@ -22,7 +22,7 @@
 // for now, but I should soon rely on textureSize instead
 // and remove this comment. If I forget well, do it!
 #define SECOND_TILE_WIDTH 64
-#define SECOND_TILE_HEIGHT 512
+#define SECOND_TILE_HEIGHT 1024
 
 #define FREQVIEW_ROUNDED_CORNERS_WIDTH 7
 #define FREQVIEW_BORDER_WIDTH 3

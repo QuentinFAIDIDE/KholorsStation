@@ -353,10 +353,14 @@ void GpuTextureDrawingBackend::renderOpenGL()
     for (size_t i = 0; i < currentFftsToDraw.size(); i++)
     {
         drawFftOnOpenGlThread(currentFftsToDraw[i]);
+        {
+            std::lock_guard lock(idleFftToDrawStructMutex);
+            idleFftToDrawStructs.push(currentFftsToDraw[i]);
+        }
     }
 
     // upload texture that changed, but only half of the time
-    if (renderOpenGlIter % 4 == 0)
+    if (renderOpenGlIter % 10 == 0)
     {
         for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
         {
@@ -456,26 +460,39 @@ void GpuTextureDrawingBackend::openGLContextClosing()
 
 void GpuTextureDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin,
                                              int64_t end, int fftSize, float *data, int channel, uint32_t sampleRate,
-                                             TaskingManager *tm, std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
+                                             TaskingManager *, std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
 {
+
+    // either allocate or pick idle FftToDraw struct
+    std::shared_ptr<FftToDraw> newFftToDraw;
     {
-        auto newFftToDraw = std::make_shared<FftToDraw>(trackIdentifier, secondTileIndex, begin, end, fftSize, data,
-                                                        channel, sampleRate, procTimeWg);
+        std::lock_guard lock(idleFftToDrawStructMutex);
+        if (idleFftToDrawStructs.size() == 0)
+        {
+            newFftToDraw = std::make_shared<FftToDraw>();
+        }
+        else
+        {
+            newFftToDraw = idleFftToDrawStructs.front();
+            idleFftToDrawStructs.pop();
+        }
+    }
+
+    // set the data of the FFT to draw
+    newFftToDraw->repurpose(trackIdentifier, secondTileIndex, begin, end, fftSize, data, channel, sampleRate,
+                            procTimeWg);
+
+    // push to the queue of FFT to draw for the openGL thread to pick it
+    {
         std::lock_guard lock(fftsToDrawMutex);
         fftsToDrawQueue.push(newFftToDraw);
     }
-    if (tm != nullptr)
+
+    // if possible, lock message manager thread and call for a redraw
+    juce::MessageManager::Lock mmLock;
+    juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+    if (tryLock.isLocked())
     {
-        juce::MessageManager::Lock mmLock;
-        juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
-        while (!tryLock.isLocked())
-        {
-            if (tm->shutdownWasCalled())
-            {
-                return;
-            }
-            tryLock.retryLock();
-        }
         repaint();
     }
 }

@@ -34,6 +34,10 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
 
     struct FftToDraw
     {
+        FftToDraw()
+        {
+        }
+
         FftToDraw(uint64_t _trackIdentifier, int64_t _secondTileIndex, int64_t _begin, int64_t _end, int fftSize,
                   float *data, int _channel, uint32_t _sampleRate,
                   std::shared_ptr<ProcessingTimerWaitgroup> _procTimeWg)
@@ -51,6 +55,25 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
             sampleRate = _sampleRate;
             procTimeWg = _procTimeWg;
         }
+
+        void repurpose(uint64_t _trackIdentifier, int64_t _secondTileIndex, int64_t _begin, int64_t _end, int fftSize,
+                       float *data, int _channel, uint32_t _sampleRate,
+                       std::shared_ptr<ProcessingTimerWaitgroup> _procTimeWg)
+        {
+            fftData.resize((size_t)fftSize);
+            for (size_t i = 0; i < (size_t)fftSize; i++)
+            {
+                fftData[i] = data[i];
+            }
+            channel = _channel;
+            trackIdentifier = _trackIdentifier;
+            secondTileIndex = _secondTileIndex;
+            begin = _begin;
+            end = _end;
+            sampleRate = _sampleRate;
+            procTimeWg = _procTimeWg;
+        }
+
         std::vector<float> fftData; /**< data to draw inside the tile */
         uint64_t trackIdentifier;   /**< identifier of the track tied to the track */
         int64_t secondTileIndex;    /**< index of the tile to draw in */
@@ -309,6 +332,8 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     std::queue<std::shared_ptr<FftToDraw>>
         fftsToDrawQueue;        /**< queue of FFT to be drawn. Depends on the fftsToDrawLock */
     std::mutex fftsToDrawMutex; /**< protect concurrent acces to the queue of ffts to draw */
+    std::queue<std::shared_ptr<FftToDraw>> idleFftToDrawStructs; /**< already allocated structs waiting to be filled */
+    std::mutex idleFftToDrawStructMutex;
 
     std::mutex openGlThreadColorsMutex; /**< Locking color updates queues and color map for the openGL thread */
     std::queue<std::pair<uint64_t, juce::Colour>>

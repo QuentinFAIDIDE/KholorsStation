@@ -132,10 +132,6 @@ void TaskingManager::taskingThreadLoop()
             {
                 recordTaskInHistory(currentTask);
             }
-            else
-            {
-                spdlog::debug("Task not going to task history: " + currentTask->marshal());
-            }
         }
 
         // wait on condition variable with timeout
@@ -203,8 +199,6 @@ void TaskingManager::broadcastNestedTaskNow(std::shared_ptr<Task> priorityTask)
             break;
         }
     }
-
-    spdlog::trace("Nested task executed: " + priorityTask->marshal());
 }
 
 void TaskingManager::throwIfCallerIsNotTaskingThread(std::string caller)
@@ -289,8 +283,6 @@ void TaskingManager::recordTaskInHistory(std::shared_ptr<Task> taskToRecord)
 
     history[historyNextIndex] = taskToRecord;
     historyNextIndex = (historyNextIndex + 1) % ACTIVITY_HISTORY_RING_BUFFER_SIZE;
-
-    spdlog::debug("Task recorded in history: " + taskToRecord->marshal());
 }
 
 bool TaskingManager::undoLastActivity()
@@ -335,7 +327,6 @@ bool TaskingManager::undoLastActivity()
                     break;
                 }
             }
-            spdlog::debug("Canceled last task: " + tasksToCancel[i]->marshal());
         }
 
         canceledTasks.push(history[lastActivityIndex]);
@@ -397,8 +388,6 @@ bool TaskingManager::redoLastActivity()
 
         history[historyNextIndex] = taskToRestore;
         historyNextIndex = (historyNextIndex + 1) % ACTIVITY_HISTORY_RING_BUFFER_SIZE;
-
-        spdlog::debug("Restored canceled task: " + taskToRestore->marshal());
 
         // if the next canceled task exists and has same task group id, we restore it as well
         if (!canceledTasks.empty() && canceledTasks.top()->getTaskGroupIndex() == taskGroupIndex)

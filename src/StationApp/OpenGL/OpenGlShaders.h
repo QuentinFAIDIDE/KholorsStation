@@ -51,7 +51,7 @@ vec2 kpos(int index)
         vec2(-1, -1), vec2(0, -1), vec2(1, -1),
         vec2(-1, 0), vec2(0, 0), vec2(1, 0), 
         vec2(-1, 1), vec2(0, 1), vec2(1, 1)
-    )[index] / vec2(64, 512).xy;
+    )[index] / vec2(64, 1024).xy;
 }
 
 // Extract region of dimension 3x3 from sampler centered in uv
