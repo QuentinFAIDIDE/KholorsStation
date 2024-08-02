@@ -280,12 +280,13 @@ void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, fftwf_plan *plan, 
     fftwf_execute(*plan);
     // copy back the output intensities normalized
     float re, im; /**< real and imaginary parts buffers */
+    float noItensityF = float(FFT_INPUT_NO_INTENSITIES);
     for (size_t i = 0; i < FFT_OUTPUT_NO_FREQS; i++)
     {
         // Read and normalize output complex.
         // Note that zero padding is not accounted for.
-        re = out[i][0] / float(FFT_INPUT_NO_INTENSITIES);
-        im = out[i][1] / float(FFT_INPUT_NO_INTENSITIES);
+        re = out[i][0] / noItensityF;
+        im = out[i][1] / noItensityF;
         // absolute value of the complex number
         job->output[i] = std::sqrt((re * re) + (im * im)) * HANN_AMPLITUDE_CORRECTION_FACTOR;
         // convert it to dB
