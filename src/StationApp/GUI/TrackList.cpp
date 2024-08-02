@@ -419,6 +419,9 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
 
     float absMinDb = std::abs(MIN_DB);
 
+    size_t fftShift = 0;
+    int64_t startSampleFftShift = 0;
+
     // for each sfft
     for (size_t i = 0; i < newSffts->noFFTs; i++)
     {
@@ -428,7 +431,7 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
         for (size_t j = 0; j < fftNumFreqBins; j += 4)
         {
             // we normalize the db intensity between 0 and 1
-            float dbIntensity = (*newSffts->fftData)[(i * fftNumFreqBins) + j];
+            float dbIntensity = (*newSffts->fftData)[fftShift + j];
             float intensityAtFreqBin = absMinDb + dbIntensity;
             float weightedIntensity = intensityAtFreqBin * freqWeight[j];
             avgIntensity += weightedIntensity;
@@ -446,7 +449,7 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
             continue;
         }
         // compute its position and tile index
-        int64_t startSample = newSffts->segmentStartSample + ((int64_t)i * fftSampleWidth);
+        int64_t startSample = newSffts->segmentStartSample + startSampleFftShift;
         int64_t endSample = startSample + fftSampleWidth;
         if (newSffts->sampleRate != VISUAL_SAMPLE_RATE)
         {
@@ -468,11 +471,9 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
             size_t tileIndex = getOrCreateTile(j);
             //   if track not recorded in tile
             int64_t trackIndexInTile = getTrackIndexInTileOrInsert(tileIndex, newSffts->trackIdentifier);
+            // this is triggered if we reached the maximum number of displayable tiles
             if (trackIndexInTile < 0)
             {
-                // this tile is full, we need to abort :'(
-                spdlog::warn("Aborted recording track activity in tile because a one-second tile had more than maximum "
-                             "number of tracks active.");
                 continue;
             }
             // add tile summed intensities to the channel(s)
@@ -492,6 +493,9 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
                 tile.rightChanFftCount[trackIndexInTile] += 1;
             }
         }
+
+        fftShift += fftNumFreqBins;
+        startSampleFftShift += fftSampleWidth;
     }
 }
 

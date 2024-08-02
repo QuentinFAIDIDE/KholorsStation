@@ -2,6 +2,7 @@
 
 #include "../Maths/NormalizedBijectiveProjection.h"
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -75,6 +76,8 @@ class NormalizedUnitTransformer
         return (*lookupTableOut)[lookupIndexSt];
     }
 
+    friend class TmpNormalizedUnitTransformer;
+
   private:
     std::pair<SharedFloatVectPtr, SharedFloatVectPtr> generateLookupTables()
     {
@@ -107,4 +110,73 @@ class NormalizedUnitTransformer
     SharedFloatVectPtr lookupTableIn;
     SharedFloatVectPtr lookupTableOut;
     uint64_t nonce; /**< value that changes when the transfo changes. Never initialized, no need to. */
+};
+
+/**
+ * @brief Returned by a unit transformer in order for a thread to have its own copy of
+ * the current unit transformer that doesn't need to get the shared lock on transforming.
+ */
+class TmpNormalizedUnitTransformer
+{
+  public:
+    TmpNormalizedUnitTransformer(NormalizedUnitTransformer &reference)
+    {
+        copyTransformer(reference);
+    }
+
+    void copyTransformer(NormalizedUnitTransformer &reference)
+    {
+        std::lock_guard lock(reference.mutex);
+        lookupTableIn.resize(UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE);
+        for (size_t i = 0; i < lookupTableIn.size(); i++)
+        {
+            lookupTableIn[i] = (*reference.lookupTableIn)[i];
+        }
+        lookupTableOut.resize(UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE);
+        for (size_t i = 0; i < lookupTableOut.size(); i++)
+        {
+            lookupTableOut[i] = (*reference.lookupTableOut)[i];
+        }
+        nonce = reference.nonce;
+    }
+
+    uint64_t getNonce()
+    {
+        return nonce;
+    }
+
+    float transform(float in)
+    {
+        int64_t lookupIndex = in * float(UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE);
+        if (lookupIndex >= UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE)
+        {
+            lookupIndex = UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE - 1;
+        }
+        if (lookupIndex < 0)
+        {
+            lookupIndex = 0;
+        }
+        size_t lookupIndexSt = (size_t)lookupIndex;
+        return lookupTableIn[lookupIndexSt];
+    }
+
+    float transformInv(float in)
+    {
+        int64_t lookupIndex = in * float(UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE);
+        if (lookupIndex >= UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE)
+        {
+            lookupIndex = UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE - 1;
+        }
+        if (lookupIndex < 0)
+        {
+            lookupIndex = 0;
+        }
+        size_t lookupIndexSt = (size_t)lookupIndex;
+        return lookupTableOut[lookupIndexSt];
+    }
+
+  private:
+    std::vector<float> lookupTableIn;
+    std::vector<float> lookupTableOut;
+    uint64_t nonce;
 };

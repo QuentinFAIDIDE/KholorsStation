@@ -50,31 +50,7 @@ MainComponent::~MainComponent()
 void MainComponent::paint(juce::Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
-}
 
-void MainComponent::resized()
-{
-    juce::Rectangle<int> localBounds = getLocalBounds();
-    localBounds.removeFromTop(MENU_BAR_HEIGHT);
-    infoBar.setBounds(localBounds.removeFromBottom(BOTTOM_INFO_LINE_HEIGHT));
-    freqTimeView.setBounds(localBounds);
-}
-
-bool MainComponent::taskHandler(std::shared_ptr<Task> task)
-{
-    auto quitTask = std::dynamic_pointer_cast<QuittingTask>(task);
-    if (quitTask != nullptr)
-    {
-        juce::JUCEApplicationBase::quit();
-        quitTask->setCompleted(true);
-        return true;
-    }
-
-    return false;
-}
-
-void MainComponent::paintOverChildren(juce::Graphics &g)
-{
     int middlePadding = 6;
     int rightPadding = 25;
 
@@ -101,27 +77,27 @@ void MainComponent::paintOverChildren(juce::Graphics &g)
     auto artifaktLogoBounds = topspace.removeFromRight(rightPadding + TOP_LOGO_WIDTH);
     artifaktLogoBounds.removeFromRight(rightPadding);
     sharedSvgs->artifaktNdLogo->drawWithin(g, artifaktLogoBounds.toFloat(), juce::RectanglePlacement::centred, 1.0f);
+}
 
-    // draw the shadow over the freqview
-    juce::Path shadowPath = getShadowPath();
-    g.setColour(juce::Colour(3, 6, 31).withAlpha(0.3f));
-    g.fillPath(shadowPath);
+void MainComponent::resized()
+{
+    juce::Rectangle<int> localBounds = getLocalBounds();
+    localBounds.removeFromTop(MENU_BAR_HEIGHT);
+    infoBar.setBounds(localBounds.removeFromBottom(BOTTOM_INFO_LINE_HEIGHT));
+    freqTimeView.setBounds(localBounds);
+}
 
-    auto bordersGradient = juce::ColourGradient(
-        juce::Colour(juce::uint8(234), 239, 255, 0.45f),
-        getLocalBounds().removeFromRight(getWidth() / 4).removeFromTop(getHeight() / 8).getTopLeft().toFloat(),
-        juce::Colour(juce::uint8(215), 224, 255, 0.f),
-        getLocalBounds().getBottomLeft().translated(getWidth() / 3, -getHeight() / 5).toFloat(), false);
+bool MainComponent::taskHandler(std::shared_ptr<Task> task)
+{
+    auto quitTask = std::dynamic_pointer_cast<QuittingTask>(task);
+    if (quitTask != nullptr)
+    {
+        juce::JUCEApplicationBase::quit();
+        quitTask->setCompleted(true);
+        return true;
+    }
 
-    auto freqViewBounds = getLocalBounds()
-                              .withTrimmedTop(MENU_BAR_HEIGHT)
-                              .withTrimmedBottom(TIME_GRID_HEIGHT + BOTTOM_INFO_LINE_HEIGHT)
-                              .withTrimmedLeft(FREQUENCY_GRID_WIDTH)
-                              .withTrimmedRight(TRACK_LIST_WIDTH)
-                              .expanded(FREQVIEW_OUTER_BORDER_WIDTH, FREQVIEW_OUTER_BORDER_WIDTH);
-
-    g.setGradientFill(bordersGradient);
-    g.fillRoundedRectangle(freqViewBounds.toFloat(), FREQVIEW_ROUNDED_CORNERS_WIDTH);
+    return false;
 }
 
 juce::Path MainComponent::getShadowPath()

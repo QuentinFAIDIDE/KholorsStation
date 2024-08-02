@@ -25,7 +25,6 @@ class MainComponent final : public juce::Component, public TaskListener
     ~MainComponent();
 
     void paint(juce::Graphics &) override;
-    void paintOverChildren(juce::Graphics &) override;
     void resized() override;
     bool taskHandler(std::shared_ptr<Task> task) override;
 

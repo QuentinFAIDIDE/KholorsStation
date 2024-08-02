@@ -17,9 +17,9 @@
 
 GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft,
                                                    NormalizedUnitTransformer &it)
-    : FftDrawingBackend(tis, ft, it), background(COLOR_FREQVIEW_GRADIENT_CENTER, COLOR_FREQVIEW_GRADIENT_BORDERS),
-      ignoreNewData(true), viewPosition(0), viewScale(150), convolutionId(GpuConvolutionId::Emboss), bpm(120),
-      needToResetTiles(false)
+    : FftDrawingBackend(tis, ft, it), tmpFreqTransformer(ft), tmpIntensityTransformer(it),
+      background(COLOR_FREQVIEW_GRADIENT_CENTER, COLOR_FREQVIEW_GRADIENT_BORDERS), ignoreNewData(true), viewPosition(0),
+      viewScale(150), convolutionId(GpuConvolutionId::Emboss), bpm(120), needToResetTiles(false)
 {
     openGLContext.setRenderer(this);
     openGLContext.attachTo(*this);
@@ -354,11 +354,16 @@ void GpuTextureDrawingBackend::renderOpenGL()
     {
         drawFftOnOpenGlThread(currentFftsToDraw[i]);
     }
-    // upload texture that changed
-    for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+
+    // upload texture that changed, but only half of the time
+    if (renderOpenGlIter % 4 == 0)
     {
-        secondTilesRingBuffer[i].mesh->refreshGpuTextureIfChanged();
+        for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+        {
+            secondTilesRingBuffer[i].mesh->refreshGpuTextureIfChanged();
+        }
     }
+    renderOpenGlIter++;
 
     // apply color updates
     std::vector<std::pair<uint64_t, juce::Colour>> colorUpdates;
@@ -477,6 +482,16 @@ void GpuTextureDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t s
 
 void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> fftData)
 {
+    // if necessary, update the frequency transformers
+    if (tmpFreqTransformer.getNonce() != freqTransformer.getNonce())
+    {
+        tmpFreqTransformer.copyTransformer(freqTransformer);
+    }
+    if (tmpIntensityTransformer.getNonce() != intensityTransformer.getNonce())
+    {
+        tmpIntensityTransformer.copyTransformer(intensityTransformer);
+    }
+
     // if the tile does not exists, create it
     size_t tileToDrawIn;
     auto existingTrackTile = getTileIndexIfExists(fftData->trackIdentifier, fftData->secondTileIndex);
@@ -503,19 +518,23 @@ void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> 
     // it is necessary to adjust the frequency bin fetching to potentially different sample rates
     float rateAdjustedNoFreqBins = float(fftData->fftData.size()) / sampleRateRatio;
 
+    size_t halfTileHeight = (SECOND_TILE_HEIGHT >> 1);
+    float floatHalfTileHeight = float(halfTileHeight);
+
+    float verticalPosShift = 1.0f / (floatHalfTileHeight - 1.0f);
+
     // iterate from left to right
     for (size_t horizontalPixel = startPixel; horizontalPixel <= endPixel; horizontalPixel++)
     {
+        float vposFloat = 0.0f;
         // iterate from center towards borders
-        for (size_t verticalPos = 0; verticalPos < (SECOND_TILE_HEIGHT >> 1); verticalPos++)
+        for (size_t verticalPos = 0; verticalPos < halfTileHeight; verticalPos++)
         {
-            size_t frequencyBinIndex =
-                ((rateAdjustedNoFreqBins *
-                  freqTransformer.transformInv((float(verticalPos)) / float(SECOND_TILE_HEIGHT >> 1))) +
-                 0.5f);
+            size_t frequencyBinIndex = rateAdjustedNoFreqBins * tmpFreqTransformer.transformInv(vposFloat);
+            vposFloat += verticalPosShift;
 
             float intensityDb;
-            if (frequencyBinIndex <= 0 || frequencyBinIndex >= fftData->fftData.size() - 1)
+            if (frequencyBinIndex < 0 || frequencyBinIndex >= fftData->fftData.size())
             {
                 intensityDb = MIN_DB;
             }
@@ -524,19 +543,16 @@ void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> 
                 intensityDb = fftData->fftData[frequencyBinIndex];
             }
 
-            float intensityNormalized = juce::jmap(intensityDb, MIN_DB, 0.0f, 0.0f, 1.0f);
-            intensityNormalized = juce::jlimit(0.0f, 1.0f, intensityNormalized);
-            intensityNormalized = intensityTransformer.transform(intensityNormalized);
+            float intensityNormalized = (-MIN_DB + intensityDb) / (-MIN_DB);
+            intensityNormalized = tmpIntensityTransformer.transform(intensityNormalized);
 
             if (fftData->channel == 0 || fftData->channel == 2)
             {
-                setTilePixelIntensity(tileToDrawIn, horizontalPixel, (SECOND_TILE_HEIGHT >> 1) - verticalPos,
-                                      intensityNormalized);
+                setTilePixelIntensity(tileToDrawIn, horizontalPixel, halfTileHeight - verticalPos, intensityNormalized);
             }
             if (fftData->channel == 1 || fftData->channel == 2)
             {
-                setTilePixelIntensity(tileToDrawIn, horizontalPixel, (SECOND_TILE_HEIGHT >> 1) + verticalPos,
-                                      intensityNormalized);
+                setTilePixelIntensity(tileToDrawIn, horizontalPixel, halfTileHeight + verticalPos, intensityNormalized);
             }
         }
     }
@@ -611,13 +627,8 @@ size_t GpuTextureDrawingBackend::createSecondTile(uint64_t trackIdentifier, int6
         // remove the tile from the drawing order tracking
         removeTrackTileFromDrawingOrder(secondTilesRingBuffer[newTileIndex].trackIdentifer, newTileIndex);
         // clear signal from the previous object
-        for (size_t i = 0; i < SECOND_TILE_WIDTH; i++)
-        {
-            for (size_t j = 0; j < SECOND_TILE_HEIGHT; j++)
-            {
-                secondTilesRingBuffer[newTileIndex].mesh->setPixelAt(i, j, 0.0f);
-            }
-        }
+        secondTilesRingBuffer[newTileIndex].mesh->clearAllData();
+        secondTilesRingBuffer[newTileIndex].mesh->refreshGpuTextureIfChanged();
     }
     // initialize the new tile metadata and tracking in sets
     secondTilesRingBuffer[newTileIndex].tileIndexPosition = secondTileIndex;

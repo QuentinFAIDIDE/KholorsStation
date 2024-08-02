@@ -4,6 +4,7 @@
 #include "StationApp/Audio/ProcessingTimerWaitgroup.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
+#include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "StationApp/OpenGL/RadialGradientRectangle.h"
 #include "StationApp/OpenGL/TexturedRectangle.h"
 #include "TaskManagement/TaskingManager.h"
@@ -274,6 +275,8 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      */
     void ensureTrackTilesDrawOrderIsUpToDate();
 
+    TmpNormalizedUnitTransformer tmpFreqTransformer, tmpIntensityTransformer;
+
     std::list<std::pair<uint64_t, std::list<size_t>>>
         trackTilesInDrawingOrder; /**< list of ordered tracks with their tiles lists used to construct
                                      trackTilesDrawOrder */
@@ -328,4 +331,6 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
 
     std::optional<uint64_t> currentlySelectedTrack;
     std::mutex selectedTrackMutex;
+
+    int64_t renderOpenGlIter; /**< a simple counter which is iterated at each render to track even/odd rendering */
 };

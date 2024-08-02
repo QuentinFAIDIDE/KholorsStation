@@ -162,19 +162,23 @@ void TexturedRectangle::setPosition(int64_t viewPositionSamples, int64_t width, 
 
 void TexturedRectangle::setPixelAt(int x, int y, float intensity)
 {
+    float icorr = intensity;
+    if (icorr < 0.0f)
+    {
+        icorr = 0.0f;
+    }
+    if (icorr > 1.0f)
+    {
+        icorr = 1.0f;
+    }
     size_t openGlTexelIndex = (size_t)((y * textureWidth) + x);
     // NOTE: we only modify the alpha value (last of the four float)
-    texture[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = juce::jlimit(0.0f, 1.0f, intensity);
+    texture[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = icorr;
     textureNonce++;
 }
 
 void TexturedRectangle::clearAllData()
 {
-    for (size_t i = 0; i < (size_t)textureWidth; i++)
-    {
-        for (size_t j = 0; j < (size_t)textureHeight; j++)
-        {
-            setPixelAt(i, j, 0.0f);
-        }
-    }
+    std::fill(texture.begin(), texture.end(), 0.0f);
+    textureNonce++;
 }
