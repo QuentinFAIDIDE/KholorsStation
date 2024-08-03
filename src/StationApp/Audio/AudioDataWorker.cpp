@@ -4,6 +4,7 @@
 #include "AudioTransport/SyncServer.h"
 #include "AudioTransport/TrackInfo.h"
 #include "StationApp/Audio/BpmUpdateTask.h"
+#include "StationApp/Audio/FftResultVectorReuseTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/TrackInfoUpdateTask.h"
 #include "TaskManagement/TaskingManager.h"
@@ -22,6 +23,7 @@ AudioDataWorker::AudioDataWorker(AudioTransport::SyncServer &server, TaskingMana
     {
         dataProcessingThreads.emplace_back(std::thread(&AudioDataWorker::workerThreadLoop, this));
     }
+    tm.registerTaskListener(this);
 }
 
 void AudioDataWorker::workerThreadLoop()
@@ -99,6 +101,18 @@ void AudioDataWorker::workerThreadLoop()
             audioDataServer.freeStoredDatum(audioDataUpdate->storageIdentifier);
         }
     }
+}
+
+bool AudioDataWorker::taskHandler(std::shared_ptr<Task> task)
+{
+    auto reuseVectorTask = std::dynamic_pointer_cast<FftResultVectorReuseTask>(task);
+    if (reuseVectorTask != nullptr && !reuseVectorTask->isCompleted())
+    {
+        fftProcessor.reuseResultArray(reuseVectorTask->resultArray);
+        reuseVectorTask->setCompleted(true);
+        return true;
+    }
+    return false;
 }
 
 AudioDataWorker::~AudioDataWorker()

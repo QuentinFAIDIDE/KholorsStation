@@ -228,4 +228,6 @@ class TrackList : public juce::Component
     bool mouseOnComponent;
 
     std::vector<TrackPresenceSummary> lastUsedTrackList;
+
+    float sampleRateRatio;
 };

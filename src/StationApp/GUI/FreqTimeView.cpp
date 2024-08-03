@@ -1,5 +1,6 @@
 #include "FreqTimeView.h"
 #include "StationApp/Audio/BpmUpdateTask.h"
+#include "StationApp/Audio/FftResultVectorReuseTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/Audio/TrackColorUpdateTask.h"
@@ -13,6 +14,7 @@
 #include "StationApp/Maths/NormalizedBijectiveProjection.h"
 #include "juce_core/juce_core.h"
 #include <cstddef>
+#include <ctime>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -165,7 +167,7 @@ void FreqTimeView::timerCallback()
     lastTimerCallMs = currentTime;
 
     fftDrawBackend->repaint();
-    repaint();
+    timeScale.repaint();
 }
 
 bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
@@ -217,6 +219,9 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
             // complete first half of segment processing time waitgroup here
             processingTimeWaitgroup->recordCompletion();
         }
+
+        auto reuseResultArrayTask = std::make_shared<FftResultVectorReuseTask>(newFftDataTask->fftData);
+        taskingManager.broadcastNestedTaskNow(reuseResultArrayTask);
 
         newFftDataTask->setCompleted(true);
         return false;
@@ -337,7 +342,8 @@ void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
 
         if (needRepaint)
         {
-            repaint();
+            fftDrawBackend->repaint();
+            timeScale.repaint();
         }
     }
 }

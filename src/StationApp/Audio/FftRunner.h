@@ -105,6 +105,13 @@ class FftRunner
      */
     void processJob(std::shared_ptr<FftRunnerJob> jobRef, fftwf_plan *plan, float *in, fftwf_complex *out);
 
+    /**
+     * @brief Reuse the vector returned by processJob for another processJob call.
+     *
+     * @param ptr a vector that processJob returned and that is not used anymore
+     */
+    void reuseResultArray(std::shared_ptr<std::vector<float>> ptr);
+
   private:
     /**
      * @brief Main loop of the threads that are performing FFT.
@@ -122,4 +129,15 @@ class FftRunner
     std::mutex emptyJobsMutex;          /**< Prevent race condition if many threads want to run FFTs */
     std::mutex fftwMutex;               /**< Mutex for non thread safe fftw init functions */
     std::vector<float> hannWindowTable; /**< factors of the hann windowing function for our desired input size */
+
+    std::queue<std::shared_ptr<std::vector<float>>> freeResultsArrays; /**< array to hold responses to reuse */
+    std::mutex resultsArrayMutex;
+
+    std::queue<std::shared_ptr<std::vector<std::shared_ptr<FftRunnerJob>>>>
+        freeJobLists; /**< list of fft jobs to reuse (prevent too much heap allocs) */
+    std::mutex jobListsMutex;
+
+    float lowIntensityBounds; /**< if an intensity is lower than this, no need to perform conversion to db */
+    float highIntensityBounds;
+    float noItensityF;
 };

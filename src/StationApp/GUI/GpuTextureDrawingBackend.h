@@ -61,9 +61,13 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
                        std::shared_ptr<ProcessingTimerWaitgroup> _procTimeWg)
         {
             fftData.resize((size_t)fftSize);
-            for (size_t i = 0; i < (size_t)fftSize; i++)
+            float *srcData = data;
+            float *dstData = fftData.data();
+            for (size_t i = 0; i < (size_t)fftSize; ++i)
             {
-                fftData[i] = data[i];
+                *dstData = *srcData;
+                dstData++;
+                srcData++;
             }
             channel = _channel;
             trackIdentifier = _trackIdentifier;

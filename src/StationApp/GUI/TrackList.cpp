@@ -415,11 +415,15 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
             freqWeight[j] = binWidth;
             binFrequencies[j] = maxFreq * ((float(j) + 0.5f) / float(fftNumFreqBins));
         }
+
+        sampleRateRatio = float(VISUAL_SAMPLE_RATE) / float(newSffts->sampleRate);
     }
 
-    float absMinDb = std::abs(MIN_DB);
+    float *fftShift = newSffts->fftData->data();
+    float *currentFftDataPos;
+    float *freqWeightPos;
+    float *binFreqsPtr;
 
-    size_t fftShift = 0;
     int64_t startSampleFftShift = 0;
 
     // for each sfft
@@ -428,18 +432,26 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
         float avgIntensity = 0.0f;
         float avgFreq = 0.0f;
 
+        currentFftDataPos = fftShift;
+        freqWeightPos = freqWeight.data();
+        binFreqsPtr = binFrequencies.data();
+
         for (size_t j = 0; j < fftNumFreqBins; j += 4)
         {
             // we normalize the db intensity between 0 and 1
-            float dbIntensity = (*newSffts->fftData)[fftShift + j];
-            float intensityAtFreqBin = absMinDb + dbIntensity;
-            float weightedIntensity = intensityAtFreqBin * freqWeight[j];
+            float dbIntensity = *currentFftDataPos;
+            float intensityAtFreqBin = -MIN_DB + dbIntensity;
+            float weightedIntensity = intensityAtFreqBin * (*freqWeightPos);
             avgIntensity += weightedIntensity;
-            avgFreq += binFrequencies[j] * weightedIntensity;
+            avgFreq += (*binFreqsPtr) * weightedIntensity;
+
+            currentFftDataPos += 4;
+            freqWeightPos += 4;
+            binFreqsPtr += 4;
         }
         // we moved this division of dbIntensity out of the loop to save perf
-        avgIntensity = avgIntensity / absMinDb;
-        avgFreq = avgFreq / absMinDb;
+        avgIntensity = avgIntensity / (-MIN_DB);
+        avgFreq = avgFreq / (-MIN_DB);
 
         avgFreq = avgFreq / avgIntensity;
 
@@ -453,7 +465,6 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
         int64_t endSample = startSample + fftSampleWidth;
         if (newSffts->sampleRate != VISUAL_SAMPLE_RATE)
         {
-            float sampleRateRatio = float(VISUAL_SAMPLE_RATE) / float(newSffts->sampleRate);
             startSample = float(startSample) * sampleRateRatio;
             endSample = float(endSample) * sampleRateRatio;
         }

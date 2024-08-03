@@ -2,8 +2,12 @@
 
 #include "AudioTransport/SyncServer.h"
 #include "StationApp/Audio/FftRunner.h"
+#include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
-class AudioDataWorker
+#include <memory>
+#include <nlohmann/json.hpp>
+
+class AudioDataWorker : public TaskListener
 {
   public:
     /**
@@ -20,6 +24,8 @@ class AudioDataWorker
      * @brief Loop the worker threads will run until stopProcessing is called.
      */
     void workerThreadLoop();
+
+    bool taskHandler(std::shared_ptr<Task> task) override;
 
   private:
     bool shouldStop;            /**< This will switch to true if we are waiting to stop the task processing */

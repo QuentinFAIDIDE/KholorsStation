@@ -15,10 +15,13 @@ BottomInfoLine::BottomInfoLine(TaskingManager &tm)
     : taskingManager(tm), lastFrequency(0), lastSampleTime(0), mouseOverSfftView(false)
 {
     averageSegmentProcessingTimeMs = 0;
+    setOpaque(true);
 }
 
 void BottomInfoLine::paint(juce::Graphics &g)
 {
+    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+
     g.setColour(COLOR_UNITS);
     g.fillRect(getLocalBounds().withHeight(1));
 
