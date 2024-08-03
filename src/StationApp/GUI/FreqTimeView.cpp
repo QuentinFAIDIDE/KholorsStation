@@ -134,7 +134,6 @@ void FreqTimeView::timerCallback()
             {
                 emitMousePositionInfoTask(true, lastFftMousePosX, lastFftMousePosY);
             }
-            repaint();
         }
         // if play cursor is between 3/4 of view and right side, apply constant view moving speed
         else if (lastPlayCursorPos >= (rightScreenSideSamplePos - screenQuarter + 1) &&
@@ -153,7 +152,6 @@ void FreqTimeView::timerCallback()
             {
                 emitMousePositionInfoTask(true, lastFftMousePosX, lastFftMousePosY);
             }
-            repaint();
         }
     }
     // if some tracks have been cleared from some ranges on fftDrawing backend, replicate that
@@ -165,6 +163,9 @@ void FreqTimeView::timerCallback()
                                       tracksClearedInMainView[i].startSample, tracksClearedInMainView[i].length);
     }
     lastTimerCallMs = currentTime;
+
+    fftDrawBackend->repaint();
+    repaint();
 }
 
 bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)

@@ -154,8 +154,6 @@ void GpuTextureDrawingBackend::updateViewPosition(uint32_t samplePosition)
         viewPosition = samplePosition;
         glThreadUniformsNonce++;
     }
-    const juce::MessageManagerLock mmlock;
-    repaint();
 }
 
 void GpuTextureDrawingBackend::updateViewScale(uint32_t samplesPerPixel)
@@ -165,8 +163,6 @@ void GpuTextureDrawingBackend::updateViewScale(uint32_t samplesPerPixel)
         viewScale = samplesPerPixel;
         glThreadUniformsNonce++;
     }
-    const juce::MessageManagerLock mmlock;
-    repaint();
 }
 
 void GpuTextureDrawingBackend::updateBpm(float nbpm, TaskingManager *tm)
@@ -175,20 +171,6 @@ void GpuTextureDrawingBackend::updateBpm(float nbpm, TaskingManager *tm)
         std::lock_guard lock(glThreadUniformsMutex);
         bpm = nbpm;
         glThreadUniformsNonce++;
-    }
-    if (tm != nullptr)
-    {
-        juce::MessageManager::Lock mmLock;
-        juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
-        while (!tryLock.isLocked())
-        {
-            if (tm->shutdownWasCalled())
-            {
-                return;
-            }
-            tryLock.retryLock();
-        }
-        repaint();
     }
 }
 
@@ -487,14 +469,6 @@ void GpuTextureDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t s
         std::lock_guard lock(fftsToDrawMutex);
         fftsToDrawQueue.push(newFftToDraw);
     }
-
-    // if possible, lock message manager thread and call for a redraw
-    juce::MessageManager::Lock mmLock;
-    juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
-    if (tryLock.isLocked())
-    {
-        repaint();
-    }
 }
 
 void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> fftData)
@@ -778,16 +752,4 @@ void GpuTextureDrawingBackend::setSelectedTrack(std::optional<uint64_t> selected
         std::lock_guard lock(selectedTrackMutex);
         currentlySelectedTrack = selectedTrack;
     }
-
-    juce::MessageManager::Lock mmLock;
-    juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
-    while (!tryLock.isLocked())
-    {
-        if (tm->shutdownWasCalled())
-        {
-            return;
-        }
-        tryLock.retryLock();
-    }
-    repaint();
 }

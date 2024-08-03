@@ -10,7 +10,6 @@ TexturedRectangle::TexturedRectangle(int64_t width, int64_t height, juce::Colour
     halfTextureHeight = (size_t)(textureHeight >> 1);
     rowWidth = TEXTURE_PIXEL_FLOAT_LEN * (size_t)textureWidth;
     sideStrafeStep = TEXTURE_PIXEL_FLOAT_LEN * 2 * (size_t)textureWidth;
-    sideStrafe = TEXTURE_PIXEL_FLOAT_LEN * ((size_t)textureHeight - 1) * (size_t)textureWidth;
 
     // TODO: set proper position
 
@@ -190,6 +189,8 @@ void TexturedRectangle::setRepeatedVerticalHalfLine(int channel, size_t startX, 
     // we start to read from src at the last (highest frequency) intensity
     float *srcIntensityPtr = intensities + (halfTextureHeight - 1);
     float *dstTexelPtr = texture.data() + ((startX * TEXTURE_PIXEL_FLOAT_LEN) + 3);
+
+    sideStrafe = TEXTURE_PIXEL_FLOAT_LEN * ((size_t)textureHeight - 1) * (size_t)textureWidth;
 
     for (size_t i = 0; i < halfTextureHeight; i++)
     {
