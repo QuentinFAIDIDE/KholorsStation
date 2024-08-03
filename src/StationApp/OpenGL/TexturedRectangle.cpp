@@ -7,6 +7,11 @@ TexturedRectangle::TexturedRectangle(int64_t width, int64_t height, juce::Colour
 {
     vertices.reserve(4);
 
+    halfTextureHeight = (size_t)(textureHeight >> 1);
+    rowWidth = TEXTURE_PIXEL_FLOAT_LEN * (size_t)textureWidth;
+    sideStrafeStep = TEXTURE_PIXEL_FLOAT_LEN * 2 * (size_t)textureWidth;
+    sideStrafe = TEXTURE_PIXEL_FLOAT_LEN * ((size_t)textureHeight - 1) * (size_t)textureWidth;
+
     // TODO: set proper position
 
     // upper left corner 0
@@ -174,6 +179,48 @@ void TexturedRectangle::setPixelAt(int x, int y, float intensity)
     size_t openGlTexelIndex = (size_t)((y * textureWidth) + x);
     // NOTE: we only modify the alpha value (last of the four float)
     texture[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = icorr;
+    textureNonce++;
+}
+
+void TexturedRectangle::setRepeatedVerticalHalfLine(int channel, size_t startX, size_t endX, float *intensities)
+{
+    size_t widthX = TEXTURE_PIXEL_FLOAT_LEN * (1 + (endX - startX));
+
+    // we start to draw in dst at the top x pixel
+    // we start to read from src at the last (highest frequency) intensity
+    float *srcIntensityPtr = intensities + (halfTextureHeight - 1);
+    float *dstTexelPtr = texture.data() + ((startX * TEXTURE_PIXEL_FLOAT_LEN) + 3);
+
+    for (size_t i = 0; i < halfTextureHeight; i++)
+    {
+        if (channel == 0 || channel == 2)
+        {
+            for (size_t x = startX; x <= endX; x++)
+            {
+                *dstTexelPtr = *srcIntensityPtr;
+                dstTexelPtr += TEXTURE_PIXEL_FLOAT_LEN;
+            }
+            dstTexelPtr -= widthX;
+        }
+
+        if (channel == 1 || channel == 2)
+        {
+            dstTexelPtr += sideStrafe;
+
+            for (size_t x = startX; x <= endX; x++)
+            {
+                *dstTexelPtr = *srcIntensityPtr;
+                dstTexelPtr += TEXTURE_PIXEL_FLOAT_LEN;
+            }
+            dstTexelPtr -= widthX;
+
+            dstTexelPtr -= sideStrafe;
+        }
+
+        sideStrafe -= sideStrafeStep;
+        dstTexelPtr += rowWidth;
+        srcIntensityPtr--;
+    }
     textureNonce++;
 }
 

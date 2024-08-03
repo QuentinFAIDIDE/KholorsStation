@@ -358,4 +358,6 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     std::mutex selectedTrackMutex;
 
     int64_t renderOpenGlIter; /**< a simple counter which is iterated at each render to track even/odd rendering */
+
+    std::vector<float> fftIntensitiesBuffer; /**< a buffer to set FFT intensities and pass to the textured rectangles */
 };

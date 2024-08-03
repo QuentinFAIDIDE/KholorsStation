@@ -50,6 +50,19 @@ class TexturedRectangle : public GlMesh
     void setPixelAt(int x, int y, float intensity);
 
     /**
+     * @brief Write all intensities of the provided vector (range [0, 1]) on the
+     * channel (left/right/both) and repeat it between startX and endX.
+     * It's an ultra optimized version of the previous pattern of repeatedly calling setPixelAt.
+     *
+     *
+     * @param channel 0 for left (top), 1 for right (bottom), 2 for both
+     * @param startX first horizontal pixel to copy fft at
+     * @param endX last horizontal pixel to copy fft at
+     * @param intensities intensities of the vertical line, must be sized of half texture height
+     */
+    void setRepeatedVerticalHalfLine(int channel, size_t startX, size_t endX, float *intensities);
+
+    /**
      * @brief Clears all the texture data. It just clear the buffer
      * so calling refreshGpuTextureIfChanged is necessary after.
      */
@@ -80,4 +93,6 @@ class TexturedRectangle : public GlMesh
     GLuint ebo; /**< index buffer object identifier (ids of vertices for triangles to draw) */
     GLuint vao; /**< vertex array object identifier to draw with a oneliner */
     GLuint tbo; /**< Texture buffer object identifier */
+
+    size_t halfTextureHeight, rowWidth, sideStrafeStep, sideStrafe; /**< used for drawing whole ffts */
 };

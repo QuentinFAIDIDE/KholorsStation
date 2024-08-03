@@ -142,6 +142,21 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
         return;
     }
 
+    bool sufficientVolume = false;
+    for (int chan = 0; chan < buffer.getNumChannels(); chan++)
+    {
+        if (buffer.getRMSLevel(chan, 0, buffer.getNumSamples()) > MIN_SEGMENT_DB)
+        {
+            sufficientVolume = true;
+            break;
+        }
+    }
+
+    if (!sufficientVolume)
+    {
+        return;
+    }
+
     // get a pointer to a preallocated structure we can ship our audio data into
     std::shared_ptr<AudioBlockInfo> blockInfo = audioInfoForwarder.getFreeBlockInfoStruct();
     if (blockInfo == nullptr)

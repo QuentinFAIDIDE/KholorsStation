@@ -6,6 +6,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #define MAX_DB_BOOST 30.0f
+#define MIN_SEGMENT_DB -50.0f
 #define DEFAULT_SERVER_PORT 7849
 
 /**

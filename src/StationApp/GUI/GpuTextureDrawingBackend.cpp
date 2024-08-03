@@ -360,7 +360,7 @@ void GpuTextureDrawingBackend::renderOpenGL()
     }
 
     // upload texture that changed, but only half of the time
-    if (renderOpenGlIter % 10 == 0)
+    if (renderOpenGlIter % 5 == 0)
     {
         for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
         {
@@ -538,40 +538,40 @@ void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> 
     size_t halfTileHeight = (SECOND_TILE_HEIGHT >> 1);
     float floatHalfTileHeight = float(halfTileHeight);
 
-    float verticalPosShift = 1.0f / (floatHalfTileHeight - 1.0f);
+    float verticalPosStrafe = 1.0f / (floatHalfTileHeight - 1.0f);
 
-    // iterate from left to right
-    for (size_t horizontalPixel = startPixel; horizontalPixel <= endPixel; horizontalPixel++)
+    fftIntensitiesBuffer.reserve(halfTileHeight);
+    float *baseIntensitiesPointer = fftIntensitiesBuffer.data();
+    float *nextIntensityToWrite = baseIntensitiesPointer;
+
+    float vposFloat = 0.0f;
+    // iterate from center towards borders
+    for (size_t verticalPos = 0; verticalPos < halfTileHeight; verticalPos++)
     {
-        float vposFloat = 0.0f;
-        // iterate from center towards borders
-        for (size_t verticalPos = 0; verticalPos < halfTileHeight; verticalPos++)
+        size_t frequencyBinIndex = rateAdjustedNoFreqBins * tmpFreqTransformer.transformInv(vposFloat);
+        vposFloat += verticalPosStrafe;
+
+        float intensityDb;
+        if (frequencyBinIndex < 0 || frequencyBinIndex >= fftData->fftData.size())
         {
-            size_t frequencyBinIndex = rateAdjustedNoFreqBins * tmpFreqTransformer.transformInv(vposFloat);
-            vposFloat += verticalPosShift;
-
-            float intensityDb;
-            if (frequencyBinIndex < 0 || frequencyBinIndex >= fftData->fftData.size())
-            {
-                intensityDb = MIN_DB;
-            }
-            else
-            {
-                intensityDb = fftData->fftData[frequencyBinIndex];
-            }
-
-            float intensityNormalized = (-MIN_DB + intensityDb) / (-MIN_DB);
-            intensityNormalized = tmpIntensityTransformer.transform(intensityNormalized);
-
-            if (fftData->channel == 0 || fftData->channel == 2)
-            {
-                setTilePixelIntensity(tileToDrawIn, horizontalPixel, halfTileHeight - verticalPos, intensityNormalized);
-            }
-            if (fftData->channel == 1 || fftData->channel == 2)
-            {
-                setTilePixelIntensity(tileToDrawIn, horizontalPixel, halfTileHeight + verticalPos, intensityNormalized);
-            }
+            intensityDb = MIN_DB;
         }
+        else
+        {
+            intensityDb = fftData->fftData[frequencyBinIndex];
+        }
+
+        float intensityNormalized = (-MIN_DB + intensityDb) / (-MIN_DB);
+        intensityNormalized = tmpIntensityTransformer.transform(intensityNormalized);
+
+        *nextIntensityToWrite = intensityNormalized;
+        nextIntensityToWrite++;
+    }
+
+    if (!ignoreNewData)
+    {
+        secondTilesRingBuffer[tileToDrawIn].mesh->setRepeatedVerticalHalfLine(fftData->channel, startPixel, endPixel,
+                                                                              baseIntensitiesPointer);
     }
 
     fftData->procTimeWg->recordCompletion();
