@@ -8,8 +8,6 @@ juce_add_gui_app(
   # name of the app's author
   COMPANY_NAME
   "ArtifaktNd"
-  ICON_BIG
-  "/usr/share/pixmaps/kholors.png"
   PRODUCT_NAME
   "KholorsStation") # The name of the final executable, which can differ from
 # the target name

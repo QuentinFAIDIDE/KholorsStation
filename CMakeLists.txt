@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
 project(Kholors2 VERSION 0.0.1)
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
+
 enable_testing()
 
 find_package(nlohmann_json 3.11.2 REQUIRED)

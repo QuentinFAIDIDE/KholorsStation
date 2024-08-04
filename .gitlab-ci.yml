@@ -1,0 +1,57 @@
+stages:
+  - build-image
+  - build
+  - test
+
+build-image:
+  stage: build-image
+  image: quay.io/podman/stable:latest
+  script:
+    - podman login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - podman build -t ${CI_REGISTRY_IMAGE}/builder:latest -f base-builder.Containerfile .
+    - podman push ${CI_REGISTRY_IMAGE}/builder:latest
+  tags:
+    - linux-local
+  only:
+    changes:
+      - base-builder.Containerfile
+  except:
+    refs:
+      - tags
+
+build-linux:
+  stage: build
+  image: ${CI_REGISTRY_IMAGE}/builder:latest
+  cache:
+    - key: "linux-${CI_PROJECT_NAME}-${CI_COMMIT_REF_NAME}-build"
+      paths:
+        - build
+        - libs
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake ..
+    - make -j4
+  except:
+    refs:
+      - tags
+  tags:
+    - linux-local
+
+test-linux:
+  stage: test
+  image: ${CI_REGISTRY_IMAGE}/builder:latest
+  cache:
+    - key: "linux-${CI_PROJECT_NAME}-${CI_COMMIT_REF_NAME}-build"
+      paths:
+        - build
+        - libs
+  script:
+    - mkdir -p build
+    - cd build
+    - ctest
+  except:
+    refs:
+      - tags
+  tags:
+    - linux-local
