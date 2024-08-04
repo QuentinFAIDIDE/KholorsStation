@@ -9,8 +9,8 @@ find_package(fmt REQUIRED)
 find_package(FFTW3 REQUIRED)
 
 include(FetchContent)
-# to use gdb
-set(CMAKE_BUILD_TYPE Debug)
+
+set(CMAKE_BUILD_TYPE Release)
 
 # Juce lib setup
 set(LIB_JUCE_TAG "7.0.9")
@@ -32,14 +32,14 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
   GIT_TAG ${LIB_JUCE_TAG}
   GIT_SHALLOW TRUE
-  GIT_CONFIG advice.detachedHead=false # Disable detached HEAD warning for
-                                       # fetching a specific tag
+  GIT_CONFIG advice.detachedHead=false
              SOURCE_DIR
              "${FETCHCONTENT_BASE_DIR}/JUCE"
              SUBBUILD_DIR
              "${FETCHCONTENT_BASE_DIR}/JUCE-Subbuild"
              BINARY_DIR
-             "${FETCHCONTENT_BASE_DIR}/JUCE-Build")
+             "${FETCHCONTENT_BASE_DIR}/JUCE-Build"
+             EXCLUDE_FROM_ALL)
 
 FetchContent_MakeAvailable(juce)
 
@@ -48,8 +48,37 @@ set(ABSL_ENABLE_INSTALL ON)
 FetchContent_Declare(
   gRPC
   GIT_REPOSITORY https://github.com/grpc/grpc
-  GIT_TAG v1.55.0)
+  GIT_TAG v1.55.0
+  EXCLUDE_FROM_ALL)
 set(FETCHCONTENT_QUIET OFF)
 FetchContent_MakeAvailable(gRPC)
 
 add_subdirectory(src)
+
+if(UNIX AND NOT APPLE)
+  # install icons
+  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/res/kholors.svg
+          DESTINATION ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/scalable/apps)
+  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/res/kholors.png
+          DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps)
+  # install launcher file
+  install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/res/KholorsStation.desktop
+          DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
+  # install binary
+  install(TARGETS StationApp DESTINATION bin)
+  # install VST3 Retrieve the output directory for the target
+  get_target_property(TARGET_OUTPUT_DIR SinkPlugin ARCHIVE_OUTPUT_DIRECTORY)
+  if(NOT TARGET_OUTPUT_DIR)
+    get_target_property(TARGET_OUTPUT_DIR SinkPlugin RUNTIME_OUTPUT_DIRECTORY)
+  endif()
+
+  if(NOT TARGET_OUTPUT_DIR)
+    get_target_property(TARGET_OUTPUT_DIR SinkPlugin LIBRARY_OUTPUT_DIRECTORY)
+  endif()
+
+  if(TARGET_OUTPUT_DIR)
+    install(DIRECTORY ${TARGET_OUTPUT_DIR}/VST3/KholorsSink.vst3
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/vst3)
+  endif()
+
+endif()
