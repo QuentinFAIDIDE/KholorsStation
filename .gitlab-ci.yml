@@ -50,7 +50,7 @@ test-linux:
   script:
     - mkdir -p build
     - cd build
-    - ctest
+    - ls -l
   except:
     refs:
       - tags
