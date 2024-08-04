@@ -13,6 +13,8 @@ build-image:
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/base-builder.Containerfile"
       --destination "${CI_REGISTRY_IMAGE}/builder:latest"
+  tags:
+    - linux-local
   only:
     changes:
       - base-builder.Containerfile
