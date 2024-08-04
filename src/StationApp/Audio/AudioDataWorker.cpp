@@ -6,6 +6,7 @@
 #include "StationApp/Audio/BpmUpdateTask.h"
 #include "StationApp/Audio/FftResultVectorReuseTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
+#include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/Audio/TrackInfoUpdateTask.h"
 #include "TaskManagement/TaskingManager.h"
 #include <memory>
@@ -16,7 +17,7 @@
 #define NUM_AUDIO_WORKER_THREADS 2
 
 AudioDataWorker::AudioDataWorker(AudioTransport::SyncServer &server, TaskingManager &tm)
-    : shouldStop(false), taskingManager(tm), audioDataServer(server)
+    : shouldStop(false), taskingManager(tm), audioDataServer(server), processingTimerDelayMs(0)
 {
     // create the worker threads
     for (size_t i = 0; i < NUM_AUDIO_WORKER_THREADS; i++)
@@ -80,6 +81,12 @@ void AudioDataWorker::workerThreadLoop()
                     audioSegment->sampleRate, audioSegment->segmentStartSample, audioSegment->noAudioSamples,
                     (uint32_t)numFFTs, shortTimeFFTs, audioSegment->payloadSentTimeMs);
 
+                // if the delay is too severe, skip processing this audio segment
+                if (processingTimerDelayMs > MAX_AUDIO_SEGMENT_PROCESSING_DELAY_MS)
+                {
+                    newDataTask->skip = true;
+                }
+
                 taskingManager.broadcastTask(newDataTask);
             }
             // if it's a TrackInfo, copy it and emit a task
@@ -112,6 +119,13 @@ bool AudioDataWorker::taskHandler(std::shared_ptr<Task> task)
         reuseVectorTask->setCompleted(true);
         return true;
     }
+
+    auto processingTimerDelayUpdate = std::dynamic_pointer_cast<ProcessingTimeUpdateTask>(task);
+    if (processingTimerDelayUpdate != nullptr)
+    {
+        processingTimerDelayMs = processingTimerDelayUpdate->averageProcesingTimeMs;
+    }
+
     return false;
 }
 

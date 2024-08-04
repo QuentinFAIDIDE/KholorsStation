@@ -7,6 +7,8 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
+#define MAX_AUDIO_SEGMENT_PROCESSING_DELAY_MS 500.0f
+
 class AudioDataWorker : public TaskListener
 {
   public:
@@ -34,4 +36,5 @@ class AudioDataWorker : public TaskListener
     TaskingManager &taskingManager;                 /**< Tasking manager to emit new tasks */
     AudioTransport::SyncServer &audioDataServer;    /**< Audio server to read audio data from */
     FftRunner fftProcessor;                         /**< Multi threaded FFT processor */
+    float processingTimerDelayMs;                   /**< last average audio segment processing delay */
 };

@@ -21,7 +21,8 @@ class ProcessingTimer
      * @brief Called by the ProcessingTimerWaitgroup to report an audio segment
      * processing time.
      *
-     * @param processingTimerWgIdentifier unique identifier of the waitgroup that emits completion (for reusing it)
+     * @param processingTimerWgIdentifier unique identifier of the waitgroup that emits completion (for reusing it). If
+     * smaller than zero, we ignore the waitgroup reuse (currently used for skipping processing when we don't use one).
      * @param processingTimeMs the time it took to process an audio segment.
      */
     void recordCompletion(int64_t processingTimerWgIdentifier, int64_t processingTimeMs);

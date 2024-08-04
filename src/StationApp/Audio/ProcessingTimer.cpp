@@ -28,7 +28,10 @@ ProcessingTimer::~ProcessingTimer()
 void ProcessingTimer::recordCompletion(int64_t processingTimerWgIdentifier, int64_t processingTimeMs)
 {
     std::lock_guard lock(mutex);
-    idleWaitgroups.push((size_t)processingTimerWgIdentifier);
+    if (processingTimerWgIdentifier >= 0)
+    {
+        idleWaitgroups.push((size_t)processingTimerWgIdentifier);
+    }
     nextProcessingTimes.push_back(processingTimeMs);
     if (nextProcessingTimes.size() >= AVERAGING_TIMER_SIZE)
     {

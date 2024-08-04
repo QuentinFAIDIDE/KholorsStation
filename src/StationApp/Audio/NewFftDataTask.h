@@ -26,6 +26,7 @@ class NewFftDataTask : public SilentTask
         noFFTs = _noFFTs;
         fftData = _data;
         sentTimeUnixMs = _sentTimeUnixMs;
+        skip = false;
     }
 
     /**
@@ -58,4 +59,5 @@ class NewFftDataTask : public SilentTask
     int64_t sentTimeUnixMs;                      /**< time at which the plugin sent the payload */
     uint32_t noFFTs;                             /**< Number of FFTs generated for this segment */
     std::shared_ptr<std::vector<float>> fftData; /**< raw FFT result in dBs (noFFTs FFTs of len FFT_OUTPUT_NO_FREQS) */
+    bool skip;
 };

@@ -176,10 +176,9 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
     if (newFftDataTask != nullptr && !newFftDataTask->isCompleted() && !newFftDataTask->hasFailed())
     {
         spdlog::debug("Received a NewFftData task in the FreqTimeView");
-        // TODO: if inside a loop and crossing the end, move the part that is beyond loop end to the beginning of
-        // the loop
+
         // call on the drawing backend to add the FFT data to the displayed textures
-        if (fftDrawBackend != nullptr)
+        if (!newFftDataTask->skip)
         {
             // create a segment processing time waitgroup and pass it to fft drawing backend
             auto processingTimeWaitgroup =
@@ -218,6 +217,11 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
 
             // complete first half of segment processing time waitgroup here
             processingTimeWaitgroup->recordCompletion();
+        }
+        else
+        {
+            // if we skip displaying this fft, we still report the processing time
+            processingTimer.recordCompletion(-1, juce::Time::currentTimeMillis() - newFftDataTask->sentTimeUnixMs);
         }
 
         auto reuseResultArrayTask = std::make_shared<FftResultVectorReuseTask>(newFftDataTask->fftData);

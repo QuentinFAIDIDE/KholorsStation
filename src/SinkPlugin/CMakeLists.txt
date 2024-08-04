@@ -5,8 +5,8 @@ juce_add_plugin(
        # VST LV2. AU and AUv3 plugins will only be enabled when building on
        # macOS.
   PRODUCT_NAME
-  "Kholors2 Sink" # The name of the final executable, which can differ from the
-                  # target name.
+  "KholorsSink" # The name of the final executable, which can differ from the
+  # target name.
   # PLUGIN_NAME                               # Name of the plugin that will be
   # displayed in the DAW. Can differ from PRODUCT_NAME. ICON_BIG # ICON_*
   # arguments specify a path to an image file to use as an icon for the

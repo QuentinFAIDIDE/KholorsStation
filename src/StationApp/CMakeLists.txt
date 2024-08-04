@@ -11,8 +11,8 @@ juce_add_gui_app(
   ICON_BIG
   "/usr/share/pixmaps/kholors.png"
   PRODUCT_NAME
-  "Kholors 2 Station") # The name of the final executable, which can differ from
-                       # the target name
+  "KholorsStation") # The name of the final executable, which can differ from
+# the target name
 
 # `juce_generate_juce_header` will create a JuceHeader.h for a given target,
 # which will be generated into your build tree. This should be included with
