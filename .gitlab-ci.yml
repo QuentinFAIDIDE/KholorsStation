@@ -9,10 +9,7 @@ build-image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [""]
   script:
-    - /kaniko/executor
-      --context "${CI_PROJECT_DIR}"
-      --dockerfile "${CI_PROJECT_DIR}/base-builder.Containerfile"
-      --destination "${CI_REGISTRY_IMAGE}/builder:latest"
+    - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "${CI_PROJECT_DIR}/base-builder.Containerfile" --destination "${CI_REGISTRY_IMAGE}/builder:latest"
   only:
     changes:
       - base-builder.Containerfile
