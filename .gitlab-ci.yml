@@ -3,6 +3,16 @@ stages:
   - build
   - test
 
+.linux-cmake-template: &linux-cmake-config
+  image: ${CI_REGISTRY_IMAGE}/builder:latest
+  cache:
+    - key: "linux-${CI_PROJECT_NAME}-${CI_COMMIT_REF_NAME}-build"
+      paths:
+        - build
+        - libs
+  tags:
+    - linux-local
+
 build-image:
   stage: build-image
   image:
@@ -19,12 +29,7 @@ build-image:
 
 build-linux:
   stage: build
-  image: ${CI_REGISTRY_IMAGE}/builder:latest
-  cache:
-    - key: "linux-${CI_PROJECT_NAME}-${CI_COMMIT_REF_NAME}-build"
-      paths:
-        - build
-        - libs
+  <<: *linux-cmake-config
   script:
     - mkdir -p build
     - cd build
@@ -33,21 +38,13 @@ build-linux:
   except:
     refs:
       - tags
-  tags:
-    - linux-local
 
 test-linux:
   stage: test
-  image: ${CI_REGISTRY_IMAGE}/builder:latest
-  cache:
-    - key: "linux-${CI_PROJECT_NAME}-${CI_COMMIT_REF_NAME}-build"
-      paths:
-        - build
-        - libs
+  <<: *linux-cmake-config
   script:
+    - cd build
     - ctest
   except:
     refs:
       - tags
-  tags:
-    - linux-local
