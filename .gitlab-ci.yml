@@ -45,9 +45,7 @@ test-linux:
         - build
         - libs
   script:
-    - mkdir -p build
-    - cd build
-    - ls -l
+    - ctest
   except:
     refs:
       - tags
