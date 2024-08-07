@@ -6,4 +6,8 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 chown -R root:root tree/usr
-chmod -R 533 tree/usr
+chmod -R 644 tree/usr
+chmod -R a+X tree/usr
+chmod a+x tree/usr/bin/KholorsStation
+
+cp -r tree/* /
