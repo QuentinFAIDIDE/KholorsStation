@@ -58,12 +58,12 @@ test-linux:
 versionning:
   image: node:21.7.3
   stage: versionning
-  only:
-    refs:
-      - master
   script:
     - npm install @semantic-release/gitlab@13.0.3
     - npx semantic-release
+  only:
+    refs:
+      - master
 
 linux-package:
   stage: package
@@ -71,7 +71,7 @@ linux-package:
   script:
     - cd build
     - make DESTDIR=./pkg install -j4
-  except:
+  only:
     refs:
       - tags
 
@@ -91,7 +91,7 @@ linux-release-archive:
   artifacts:
     paths:
       - build/package/kholors_*.tar.gz
-  except:
+  only:
     refs:
       - tags
 # all jobs after this stage (release) must use dependencies: [] to prevent download all artifacts
