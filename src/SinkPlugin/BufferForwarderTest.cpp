@@ -56,14 +56,14 @@ void testBufferForwarder01()
     }
     audioInfoForwarder.forwardAudioBlockInfo(blockInfo2);
 
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // there should now be a merge of those two buffers
     auto segs = fakePayloadSender.getAllReceivedSegments();
 
     if (segs.size() != 1)
     {
-        throw std::runtime_error("unexpected number of segments coalesced: " + std::to_string(segs.size()));
+        throw std::runtime_error("1 unexpected number of segments coalesced: " + std::to_string(segs.size()));
     }
 
     if (segs[0]->segment_sample_duration() != DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE)
@@ -128,12 +128,12 @@ void testBufferForwarder01()
     }
     audioInfoForwarder.forwardAudioBlockInfo(blockInfo3);
 
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     segs = fakePayloadSender.getAllReceivedSegments();
     if (segs.size() != 3)
     {
-        throw std::runtime_error("unexpected number of segments coalesced: " + std::to_string(segs.size()));
+        throw std::runtime_error("2 unexpected number of segments coalesced: " + std::to_string(segs.size()));
     }
 
     if (segs[1]->segment_sample_duration() != DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE)
@@ -212,12 +212,12 @@ void testBufferForwarder01()
     }
     audioInfoForwarder.forwardAudioBlockInfo(blockInfo4);
 
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     segs = fakePayloadSender.getAllReceivedSegments();
     if (segs.size() != 4)
     {
-        throw std::runtime_error("unexpected number of segments coalesced: " + std::to_string(segs.size()));
+        throw std::runtime_error("3 unexpected number of segments coalesced: " + std::to_string(segs.size()));
     }
 
     // other segment should be a perfect fill of the mocked iterated data from start to finish

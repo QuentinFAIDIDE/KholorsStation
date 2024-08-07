@@ -6,10 +6,9 @@ juce_add_plugin(
        # macOS.
   PRODUCT_NAME
   "KholorsSink" # The name of the final executable, which can differ from the
-  # target name.
-  # PLUGIN_NAME                               # Name of the plugin that will be
-  # displayed in the DAW. Can differ from PRODUCT_NAME. ICON_BIG # ICON_*
-  # arguments specify a path to an image file to use as an icon for the
+  # target name. PLUGIN_NAME                               # Name of the plugin
+  # that will be displayed in the DAW. Can differ from PRODUCT_NAME. ICON_BIG #
+  # ICON_* arguments specify a path to an image file to use as an icon for the
   # Standalone. ICON_SMALL
   COMPANY_NAME
   quentin-faidide # The name of this target's author. The value is inherited
@@ -126,5 +125,10 @@ target_link_libraries(
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
 
-add_test(NAME BufferForwarderTest
-         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/BufferForwarderTest)
+message(${CMAKE_CURRENT_BINARY_DIR}/BufferForwarderTest)
+
+add_test(
+  NAME BufferForwarderTest
+  COMMAND
+    ${CMAKE_CURRENT_BINARY_DIR}/BufferForwarderTest_artefacts/${CMAKE_BUILD_TYPE}/BufferForwarderTest
+)

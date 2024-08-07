@@ -14,6 +14,10 @@ include(FetchContent)
 
 set(CMAKE_BUILD_TYPE Release)
 
+option(RE2_BUILD_TESTING OFF)
+option(gRPC_BUILD_TESTS OFF)
+option(ZLIB_BUILD_EXAMPLES OFF)
+
 # Juce lib setup
 set(LIB_JUCE_TAG "7.0.9")
 # Xcode: Disable automatic build scheme generation globally. Instead, we
@@ -54,6 +58,9 @@ FetchContent_Declare(
   EXCLUDE_FROM_ALL)
 set(FETCHCONTENT_QUIET OFF)
 FetchContent_MakeAvailable(gRPC)
+
+# try to get rid of some tests in zlib that are annoying me when running ctest
+set_target_properties(example example64 PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
 add_subdirectory(src)
 
