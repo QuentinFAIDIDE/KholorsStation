@@ -97,7 +97,7 @@ linux-deb:
     - cp -r pkg/tree debian-pkg/kholors-${CI_COMMIT_TAG}
     - cd debian-pkg/kholors-${CI_COMMIT_TAG}
     - mkdir DEBIAN
-    - cp ../res/control DEBIAN/control
+    - cp ../../../res/control DEBIAN/control
     - CI_COMMIT_TAG_SHORTENED=$(echo "${CI_COMMIT_TAG}" | sed "s/v//g")
     - sed -i "s/VERSION_TO_REPLACE/${CI_COMMIT_TAG_SHORTENED}/g" DEBIAN/control
     - cd ..
