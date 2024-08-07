@@ -79,8 +79,10 @@ linux-package:
   script:
     - mkdir -p build
     - cd build
-    - cmake ..
-    - make DESTDIR=./pkg install -j4
+    - cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release
+    - rm -rf package
+    - mkdir package
+    - make DESTDIR=./package/tree install -j4
   only:
     refs:
       - tags
@@ -89,12 +91,7 @@ linux-release-archive:
   stage: release
   <<: *linux-cmake-config
   script:
-    - mkdir -p build
     - cd build
-    - cmake .. -DCMAKE_INSTALL_PREFIX=/usr
-    - rm -rf package
-    - mkdir package
-    - make DESTDIR=./package/tree install -j4
     - cp ../res/linux_install.sh package/install.sh
     - cp ../res/linux_uninstall.sh package/uninstall.sh
     - cd package
