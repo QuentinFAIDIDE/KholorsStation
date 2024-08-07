@@ -2,6 +2,7 @@ stages:
   - build-image
   - build
   - test
+  - versionning
 
 .linux-cmake-template: &linux-cmake-config
   image: ${CI_REGISTRY_IMAGE}/builder:latest
@@ -51,3 +52,13 @@ test-linux:
   except:
     refs:
       - tags
+
+versionning:
+  image: node:21.7.3
+  stage: versionning
+  only:
+    refs:
+      - master
+  script:
+    - npm install @semantic-release/gitlab@13.0.3
+    - npx semantic-release
