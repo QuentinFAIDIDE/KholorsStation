@@ -12,8 +12,6 @@ find_package(FFTW3 REQUIRED)
 
 include(FetchContent)
 
-set(CMAKE_BUILD_TYPE Release)
-
 option(RE2_BUILD_TESTING OFF)
 option(gRPC_BUILD_TESTS OFF)
 option(ZLIB_BUILD_EXAMPLES OFF)

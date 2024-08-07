@@ -20,7 +20,7 @@ SyncServer::SyncServer() : store(DEFAULT_STORE_PREALLOCS), service(store)
 {
     desiredServerState = std::pair<bool, uint32_t>(false, DEFAULT_SERVER_PORT);
     actualServerState = std::pair<bool, uint32_t>(false, DEFAULT_SERVER_PORT);
-
+    taskingManager = nullptr;
     grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 }
 

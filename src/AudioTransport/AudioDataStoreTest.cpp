@@ -7,12 +7,15 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <spdlog/common.h>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 
 using namespace AudioTransport;
 
 void AudioDataStoreTestSuite::runAll()
 {
+    spdlog::set_level(spdlog::level::debug);
     testPreallocation01();
     testParse01();
 }
@@ -153,6 +156,7 @@ void AudioDataStoreTestSuite::testParse01()
     payload.set_daw_time_signature_denominator(1);
     payload.set_daw_time_signature_numerator(4);
     payload.set_daw_is_looping(false);
+    payload.set_daw_is_playing(true);
     payload.set_daw_loop_start(10);
     payload.set_daw_loop_end(20);
     payload.set_segment_start_sample(100);

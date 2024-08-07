@@ -44,7 +44,10 @@ test-linux:
   <<: *linux-cmake-config
   script:
     - cd build
-    - ctest
+    # we have to disable example and example64 tests from zlib...
+    # our version of zlib does not yet include the january 2024 change
+    # that allow to skip them in project where add_subdirectory is used to add zlib.
+    - ctest -E "example"
   except:
     refs:
       - tags
