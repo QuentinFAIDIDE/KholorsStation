@@ -16,6 +16,7 @@
 #define DEFAULT_WINDOW_WIDTH 1440
 #define DEFAULT_WINDOW_HEIGHT 800
 #define APP_NAME_FONT_HEIGHT 40
+#define VERSION_FONT_HEIGHT 18
 #define FREQVIEW_OUTER_BORDER_WIDTH 2
 
 class MainComponent final : public juce::Component, public TaskListener

@@ -41,6 +41,8 @@ class GuiAppApplication final : public juce::JUCEApplication
     //==============================================================================
     void initialise(const juce::String &commandLine) override
     {
+        spdlog::info("Kholors " + std::string(GIT_DESCRIBE_VERSION));
+
         // This method is where you should put your application's initialisation code..
         juce::ignoreUnused(commandLine);
 

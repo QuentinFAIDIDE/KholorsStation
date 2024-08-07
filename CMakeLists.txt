@@ -1,5 +1,26 @@
 cmake_minimum_required(VERSION 3.22)
-project(Kholors2 VERSION 0.0.1)
+
+# ensure that git is available (we need it for version retrieval)
+find_package(Git)
+if(NOT GIT_EXECUTABLE)
+  message(FATAL_ERROR "Missing git")
+endif()
+
+# use git describe to generate a version tag
+execute_process(
+  COMMAND ${GIT_EXECUTABLE} describe --tags --dirty --match "v*"
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  OUTPUT_VARIABLE GIT_DESCRIBE_VERSION
+  RESULT_VARIABLE GIT_DESCRIBE_ERROR_CODE
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(GIT_DESCRIBE_ERROR_CODE)
+  message(FATAL_ERROR "Unable to call git describe")
+endif()
+# we inject the project version as a preprocessor variable into the code
+add_compile_definitions(GIT_DESCRIBE_VERSION="${GIT_DESCRIBE_VERSION}")
+
+# we don't really use this version
+project(Kholors2 VERSION 0.0.0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 

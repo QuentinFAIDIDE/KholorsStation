@@ -52,11 +52,14 @@ void MainComponent::paint(juce::Graphics &g)
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
     int middlePadding = 6;
+    int versionPadding = 3;
     int rightPadding = 25;
 
-    int mainTitleWidth = sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("KHOLORS II");
+    int mainTitleWidth = sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("KHOLORS");
     int subTitleWidth = sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("STATION");
-    int totalWidth = mainTitleWidth + middlePadding + subTitleWidth;
+    int versionWidth = sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT).getStringWidth(GIT_DESCRIBE_VERSION);
+
+    int totalWidth = mainTitleWidth + middlePadding + subTitleWidth + versionPadding + versionWidth;
 
     auto bounds = getLocalBounds();
     g.setFont(sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT));
@@ -66,13 +69,22 @@ void MainComponent::paint(juce::Graphics &g)
     topspace.removeFromLeft(rightPadding);
     auto titleSpace = topspace.removeFromLeft(totalWidth);
     auto leftTitleSpace = titleSpace.removeFromLeft(mainTitleWidth);
-    titleSpace.removeFromLeft(middlePadding);
 
-    g.drawText("KHOLORS II", leftTitleSpace, juce::Justification::centredRight, false);
+    titleSpace.removeFromLeft(middlePadding);
+    auto subTitleSpace = titleSpace.removeFromLeft(subTitleWidth);
+
+    titleSpace.removeFromLeft(versionPadding);
+    auto versionArea = titleSpace.removeFromLeft(versionWidth);
+    versionArea.setY(versionArea.getY() + 38);
+
+    g.drawText("KHOLORS", leftTitleSpace, juce::Justification::centredRight, false);
 
     g.setFont(sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT));
     g.setColour(COLOR_TEXT_DARKER);
-    g.drawText("STATION", titleSpace, juce::Justification::centredRight, false);
+    g.drawText("STATION", subTitleSpace, juce::Justification::centredRight, false);
+
+    g.setFont(sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT));
+    g.drawText(GIT_DESCRIBE_VERSION, versionArea, juce::Justification::topRight, false);
 
     auto artifaktLogoBounds = topspace.removeFromRight(rightPadding + TOP_LOGO_WIDTH);
     artifaktLogoBounds.removeFromRight(rightPadding);

@@ -1,6 +1,8 @@
 juce_add_gui_app(
   StationApp
   # VERSION ...                       # Set this if the app version is different
+  VERSION
+  ${GIT_DESCRIBE_VERSION}
   # to the project version ICON_BIG ...                      # ICON_* arguments
   # specify a path to an image file to use as an icon ICON_SMALL ...
   # DOCUMENT_EXTENSIONS ...           # Specify file extensions that should be
