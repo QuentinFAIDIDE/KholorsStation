@@ -3,6 +3,8 @@ stages:
   - build
   - test
   - versionning
+  - package
+  - release
 
 .linux-cmake-template: &linux-cmake-config
   image: ${CI_REGISTRY_IMAGE}/builder:latest
@@ -62,3 +64,34 @@ versionning:
   script:
     - npm install @semantic-release/gitlab@13.0.3
     - npx semantic-release
+
+linux-package:
+  stage: package
+  <<: *linux-cmake-config
+  script:
+    - cd build
+    - make DESTDIR=./pkg install -j4
+  except:
+    refs:
+      - tags
+
+linux-release-archive:
+  stage: release
+  <<: *linux-cmake-config
+  script:
+    - cd build
+    - cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+    - rm -rf package || true
+    - mkdir package
+    - make DESTDIR=./package/tree install -j4
+    - cp ../res/linux_install.sh package/install.sh
+    - cp ../res/linux_uninstall.sh package/uninstall.sh
+    - cd package
+    - tar -czvf kholors_${CI_COMMIT_TAG}.tar.gz *
+  artifacts:
+    paths:
+      - build/kholors_${CI_COMMIT_TAG}.tar.gz
+  except:
+    refs:
+      - tags
+# all jobs after this stage (release) must use dependencies: [] to prevent download all artifacts
