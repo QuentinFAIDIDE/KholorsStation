@@ -81,7 +81,7 @@ linux-release-archive:
   script:
     - cd build
     - cmake .. -DCMAKE_INSTALL_PREFIX=/usr
-    - rm -rf package || true
+    - rm -rf package
     - mkdir package
     - make DESTDIR=./package/tree install -j4
     - cp ../res/linux_install.sh package/install.sh
@@ -90,7 +90,7 @@ linux-release-archive:
     - tar -czvf kholors_${CI_COMMIT_TAG}.tar.gz *
   artifacts:
     paths:
-      - build/kholors_${CI_COMMIT_TAG}.tar.gz
+      - build/package/kholors_*.tar.gz
   except:
     refs:
       - tags
