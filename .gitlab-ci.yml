@@ -102,7 +102,7 @@ linux-deb:
     - sed -i "s/VERSION_TO_REPLACE/${CI_COMMIT_TAG_SHORTENED}/g" DEBIAN/control
     - cd ..
     - dpkg-deb --build kholors-${CI_COMMIT_TAG}
-    - apt -f install kholors-${CI_COMMIT_TAG}.deb
+    - apt install ./kholors-${CI_COMMIT_TAG}.deb
   artifacts:
     paths:
       - build/debian-pkg/kholors_*.deb
