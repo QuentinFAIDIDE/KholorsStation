@@ -27,7 +27,7 @@ void SyncServerTestSuite::smokeTest01()
     {
         throw std::runtime_error("Server state is not running");
     }
-    sleep(2);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     if (!server.isRunning())
     {
         throw std::runtime_error("Server state is not running");

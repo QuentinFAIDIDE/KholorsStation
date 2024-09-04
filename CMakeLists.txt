@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
+set(CMAKE_CXX_STANDARD 20)
+
 # ensure that git is available (we need it for version retrieval)
 find_package(Git)
 if(NOT GIT_EXECUTABLE)
@@ -29,7 +31,7 @@ enable_testing()
 find_package(nlohmann_json 3.11.2 REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)
-find_package(FFTW3 REQUIRED)
+find_package(FFTW3f CONFIG REQUIRED)
 
 include(FetchContent)
 
@@ -73,13 +75,17 @@ set(ABSL_ENABLE_INSTALL ON)
 FetchContent_Declare(
   gRPC
   GIT_REPOSITORY https://github.com/grpc/grpc
-  GIT_TAG v1.55.0
+  GIT_TAG v1.50.2
   EXCLUDE_FROM_ALL)
 set(FETCHCONTENT_QUIET OFF)
 FetchContent_MakeAvailable(gRPC)
 
+if (WIN32)
+    message(STATUS "include dir: ${spdlog_INCLUDE_DIRS}")
+endif ()
+
 # try to get rid of some tests in zlib that are annoying me when running ctest
-set_target_properties(example example64 PROPERTIES EXCLUDE_FROM_ALL TRUE)
+#set_target_properties(example example64 PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
 add_subdirectory(src)
 

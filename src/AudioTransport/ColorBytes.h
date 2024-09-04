@@ -31,9 +31,13 @@ struct ColorContainer
         memcpy(&colorBytes, colors, 4 * sizeof(uint8_t));
         return colorBytes;
     }
-    bool operator==(const ColorContainer &other)
+    bool operator==(const ColorContainer &other) const
     {
         return red == other.red && green == other.green && blue == other.blue && alpha == other.alpha;
+    }
+    bool operator!=(const ColorContainer &other) const
+    {
+        return red != other.red || green != other.green || blue != other.blue || alpha != other.alpha;
     }
 
     uint8_t red;

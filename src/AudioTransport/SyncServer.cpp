@@ -56,11 +56,11 @@ ServerStartError SyncServer::setServerToListenOnPort(uint32_t port)
     bool worked = runServerOnPort(port);
     if (!worked)
     {
-        return ERROR;
+        return SERV_ERROR;
     }
     else
     {
-        return NO_ERROR;
+        return SERV_NO_ERROR;
     }
 }
 

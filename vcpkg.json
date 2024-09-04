@@ -1,0 +1,8 @@
+{
+  "dependencies": [
+    "fftw3",
+    "fmt",
+    "nlohmann-json",
+    "spdlog"
+  ]
+}
