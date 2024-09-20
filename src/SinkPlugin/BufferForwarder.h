@@ -20,7 +20,7 @@
 #define NUM_PREALLOCATED_COALESCED_PAYLOADS 8
 #define PREALLOCATED_BLOCKINFO_SAMPLE_SIZE 4096
 #define DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE 4096
-#define MAX_PAYLOAD_IDLE_MS 250
+#define MAX_PAYLOAD_IDLE_MS 150
 
 /**
  * @brief A class that receives AudioBlockInfos from audio thread, and

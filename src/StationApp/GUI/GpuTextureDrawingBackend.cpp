@@ -64,7 +64,7 @@ void GpuTextureDrawingBackend::paint(juce::Graphics &g)
     {
         auto horizontalLine = getLocalBounds().withHeight(1).withY(lastMouseY);
         auto verticalLine = getLocalBounds().withWidth(1).withX(lastMouseX);
-        g.setColour(COLOR_GRIDS_LEVEL_0);
+        g.setColour(COLOR_WHITE);
         g.fillRect(horizontalLine);
         g.fillRect(verticalLine);
     }
