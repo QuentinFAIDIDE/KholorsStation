@@ -59,3 +59,17 @@ Either install with make:
 ```bash
 sudo make install -j24
 ```
+
+## Windows
+### Building
+The project can only be compiled with the visual studio C++ compiler, where it has been
+instructed to install the Windows development kit, cmake, ninja and vcpkg.
+
+A separate installation of NASM compiler is also necessary, as well as a valid time.
+
+The best way to build the project is to use the Visual Studio Developer Terminal.
+
+```
+cmake --preset windows
+cmake --build
+```

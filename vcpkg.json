@@ -4,5 +4,6 @@
     "fmt",
     "nlohmann-json",
     "spdlog"
-  ]
+  ],
+  "builtin-baseline": "d07689ef165f033de5c0710e4f67c193a85373e1"
 }
