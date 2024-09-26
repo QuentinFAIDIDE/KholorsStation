@@ -194,8 +194,12 @@ void GpuTextureDrawingBackend::newOpenGLContextCreated()
         // enable the error logging
         enableOpenGLErrorLogging();
 
+        spdlog::debug("Enabled gl logging");
+
         // initialize background openGL objects
         background.registerGlObjects();
+
+        spdlog::debug("Registered gl objects");
 
         // load tiles textures
         texturedPositionedShader->use();
@@ -206,6 +210,8 @@ void GpuTextureDrawingBackend::newOpenGLContextCreated()
                 secondTilesRingBuffer[i].mesh->registerGlObjects();
             }
         }
+
+        spdlog::debug("Tiles textures loaded");
     }
     else
     {
