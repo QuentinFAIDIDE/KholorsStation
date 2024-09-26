@@ -71,5 +71,10 @@ The best way to build the project is to use the Visual Studio Developer Terminal
 
 ```
 cmake --preset windows
-cmake --build
+cd build
+ninja
 ```
+
+You should then have an error at link step, for which you need to copy the dlls inside `.\build\\src\\SinkPlugin\\SinkPlugin_artefacts\\Debug\\VST3\\KholorsSink.vst3\\Contents\\x86-win\` to the `.\build\\src\\SinkPlugin` folder (Next to the `juce_vst3_helper.exe` binary).
+
+After performing this modification, the plugin and app should be ready to use.
