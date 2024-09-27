@@ -77,7 +77,6 @@ target_link_libraries(
   absl::flags
   absl::flags_parse
   spdlog::spdlog
-  fmt::fmt
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})

@@ -28,9 +28,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 
 enable_testing()
 
-find_package(nlohmann_json 3.11.2 REQUIRED)
-find_package(spdlog REQUIRED)
-find_package(fmt REQUIRED)
+set(CMAKE_FIND_STATIC_PREFER TRUE)
+
+find_package(nlohmann_json 3.11.3 REQUIRED)
 find_package(FFTW3f CONFIG REQUIRED)
 
 include(FetchContent)
@@ -80,9 +80,14 @@ FetchContent_Declare(
 set(FETCHCONTENT_QUIET OFF)
 FetchContent_MakeAvailable(gRPC)
 
-if (WIN32)
-    message(STATUS "include dir: ${spdlog_INCLUDE_DIRS}")
-endif ()
+# Configure the FetchContent for spdlog
+FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG v1.14.1
+)
+set(SPDLOG_BUILD_SHARED OFF)
+FetchContent_MakeAvailable(spdlog)
 
 # try to get rid of some tests in zlib that are annoying me when running ctest
 #set_target_properties(example example64 PROPERTIES EXCLUDE_FROM_ALL TRUE)

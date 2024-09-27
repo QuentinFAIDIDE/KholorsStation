@@ -63,7 +63,8 @@ sudo make install -j24
 ## Windows
 ### Building
 The project can only be compiled with the visual studio C++ compiler, where it has been
-instructed to install the Windows development kit, cmake, ninja and vcpkg.
+instructed to install the Windows development kit, cmake, ninja and vcpkg. You will also need
+git in your PATH in order to fetch the version tag.
 
 A separate installation of NASM compiler is also necessary, as well as a valid time.
 
