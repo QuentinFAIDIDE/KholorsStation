@@ -11,10 +11,12 @@ file(
   "*.h")
 list(FILTER all_module_headers EXCLUDE REGEX ".*Test\\.h$")
 
-add_library(TaskManagement SHARED ${all_module_cpp} ${all_module_headers})
+add_library(TaskManagement STATIC ${all_module_cpp} ${all_module_headers})
+target_link_libraries(TaskManagement
+                      nlohmann_json::nlohmann_json spdlog::spdlog)
 
 add_executable(TaskingManagerTest TaskingManagerTest.cpp)
 target_link_libraries(TaskingManagerTest TaskManagement
-                      nlohmann_json::nlohmann_json spdlog fmt)
+                      nlohmann_json::nlohmann_json spdlog::spdlog)
 add_test(NAME TaskingManagerTest
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/TaskingManagerTest)

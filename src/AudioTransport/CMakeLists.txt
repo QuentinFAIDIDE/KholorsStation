@@ -76,8 +76,7 @@ target_link_libraries(
   TaskManagement
   absl::flags
   absl::flags_parse
-  spdlog
-  fmt
+  spdlog::spdlog
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})

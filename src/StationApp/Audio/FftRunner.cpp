@@ -4,7 +4,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
-#include <unistd.h>
+#include <chrono>
 #include <vector>
 
 using namespace std::chrono_literals;
@@ -28,7 +28,7 @@ FftRunner::FftRunner() : exiting(false)
     hannWindowTable.resize(FFT_INPUT_NO_INTENSITIES);
     for (size_t i = 0; i < hannWindowTable.size(); i++)
     {
-        hannWindowTable[i] = 0.5 * (1 - std::cos(2.0f * M_PI * (float)i / float(hannWindowTable.size() - 1)));
+        hannWindowTable[i] = 0.5 * (1 - std::cos(2.0f * juce::MathConstants<float>::pi * (float)i / float(hannWindowTable.size() - 1)));
     }
 
     // Pick the number of threads and start them.
@@ -171,7 +171,7 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
                 std::cerr << "Too many threads are trying to perform ffts and buffered jobs could not handle batch "
                              "size for that amount of threads!"
                           << std::endl;
-                sleep(3);
+                std::this_thread::sleep_for(std::chrono::milliseconds(3000));
                 continue;
             }
 

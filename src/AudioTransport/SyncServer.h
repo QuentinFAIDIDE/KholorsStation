@@ -17,10 +17,10 @@ namespace AudioTransport
  */
 enum ServerStartError
 {
-    NO_ERROR = 0,
+    SERV_NO_ERROR = 0,
     PORT_NOT_AVAILABLE = 1,
     ALREADY_RUNNING = 2,
-    ERROR = 3
+    SERV_ERROR = 3
 };
 
 /**

@@ -1,8 +1,6 @@
 juce_add_gui_app(
   StationApp
   # VERSION ...                       # Set this if the app version is different
-  VERSION
-  ${GIT_DESCRIBE_VERSION}
   # to the project version ICON_BIG ...                      # ICON_* arguments
   # specify a path to an image file to use as an icon ICON_SMALL ...
   # DOCUMENT_EXTENSIONS ...           # Specify file extensions that should be
@@ -87,8 +85,7 @@ target_link_libraries(
           TaskManagement
           Utils
           nlohmann_json::nlohmann_json
-          spdlog
-          fmt
-          fftw3f
+          spdlog::spdlog
+          FFTW3::fftw3f
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)

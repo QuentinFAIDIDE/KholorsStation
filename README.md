@@ -59,3 +59,23 @@ Either install with make:
 ```bash
 sudo make install -j24
 ```
+
+## Windows
+### Building
+The project can only be compiled with the visual studio C++ compiler, where it has been
+instructed to install the Windows development kit, cmake, ninja and vcpkg. You will also need
+git in your PATH in order to fetch the version tag.
+
+A separate installation of NASM compiler is also necessary, as well as a valid time.
+
+The best way to build the project is to use the Visual Studio Developer Terminal.
+
+```
+cmake --preset windows
+cd build
+ninja
+```
+
+You should then have an error at link step, for which you need to copy the dlls inside `.\build\\src\\SinkPlugin\\SinkPlugin_artefacts\\Debug\\VST3\\KholorsSink.vst3\\Contents\\x86-win\` to the `.\build\\src\\SinkPlugin` folder (Next to the `juce_vst3_helper.exe` binary).
+
+After performing this modification, the plugin and app should be ready to use.
