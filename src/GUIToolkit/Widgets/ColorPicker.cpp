@@ -55,12 +55,12 @@ void ColorPicker::paint(juce::Graphics &g)
             g.fillRect(rectBounds);
             if (i == currentlySelectedColor)
             {
-                g.setColour(COLOR_TEXT);
+                g.setColour(KHOLORS_COLOR_TEXT);
                 g.drawRect(rectBounds, 2);
             }
             else
             {
-                g.setColour(COLOR_TEXT_DARKER);
+                g.setColour(KHOLORS_COLOR_TEXT_DARKER);
                 g.drawRect(rectBounds, 1);
             }
         }
@@ -72,7 +72,7 @@ void ColorPicker::paint(juce::Graphics &g)
                 g.fillRect(rectBounds);
             }
 
-            g.setColour(COLOR_WHITE);
+            g.setColour(KHOLORS_COLOR_WHITE);
             auto horizontalLine = rectBounds.withHeight(CROSS_SQUARE_LINE_WIDTH)
                                       .translated(0, (COLOR_SQUARE_WIDTH - CROSS_SQUARE_LINE_WIDTH) / 2);
             auto verticalLine = rectBounds.withWidth(CROSS_SQUARE_LINE_WIDTH)
@@ -82,12 +82,12 @@ void ColorPicker::paint(juce::Graphics &g)
 
             if (i == currentlySelectedColor)
             {
-                g.setColour(COLOR_TEXT);
+                g.setColour(KHOLORS_COLOR_TEXT);
                 g.drawRect(rectBounds, 2);
             }
             else
             {
-                g.setColour(COLOR_TEXT_DARKER);
+                g.setColour(KHOLORS_COLOR_TEXT_DARKER);
                 g.drawRect(rectBounds, 1);
             }
         }
@@ -147,7 +147,7 @@ void ColorPicker::mouseDown(const juce::MouseEvent &me)
 
 std::vector<juce::Colour> ColorPicker::getDefaultColours()
 {
-    return std::vector<juce::Colour> COLOR_PALETTE;
+    return std::vector<juce::Colour> KHOLORS_COLOR_PALETTE;
 }
 
 bool ColorPicker::taskHandler(std::shared_ptr<Task> task)

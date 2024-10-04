@@ -174,22 +174,6 @@ uniform vec4 gridColorLevel2;
 
 void main()
 {
-    float grid0position = (gl_FragCoord.x - float(grid0PixelShift)) / grid0PixelWidth;
-    float grid1position = (gl_FragCoord.x - float(grid1PixelShift)) / grid1PixelWidth;
-    float grid2position = (gl_FragCoord.x - float(grid2PixelShift)) / grid2PixelWidth;
-
-
-    // vertical grid tempo bars
-    if ( abs( grid0position - round(grid0position) )*grid0PixelWidth < 1.5 && grid0PixelWidth > 25 ) {
-        FragColor = vec4(gridColorLevel0.r, gridColorLevel0.g, gridColorLevel0.b, gridColorLevel0.a);
-    } else if ( abs( grid1position - round(grid1position) )*grid1PixelWidth < 1.5 && grid1PixelWidth > 25 ) {
-        FragColor = vec4(gridColorLevel1.r, gridColorLevel1.g, gridColorLevel1.b, gridColorLevel1.a);
-    } else if ( abs( grid2position - round(grid2position) )*grid2PixelWidth < 1.5 && grid2PixelWidth > 25 ) {
-        FragColor = vec4(gridColorLevel2.r, gridColorLevel2.g, gridColorLevel2.b, gridColorLevel2.a);
-
-    // background
-    } else {
-        FragColor = outColor;
-    }
+    FragColor = outColor;
 }
 )";

@@ -21,7 +21,7 @@ void FrequencyScale::paint(juce::Graphics &g)
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
     // draw the "FREQUENCIES" axis title
-    g.setColour(COLOR_WHITE);
+    g.setColour(KHOLORS_COLOR_WHITE);
     drawRotatedTitle(g);
 
     // generate necessary labels
@@ -156,11 +156,11 @@ void FrequencyScale::drawLabels(juce::Graphics &g, std::vector<LabelBox> &labs)
         }
 
         g.setFont(unitFont);
-        g.setColour(COLOR_UNITS);
+        g.setColour(KHOLORS_COLOR_UNITS);
         g.drawText(labs[i].unit, unitDrawArea, juce::Justification::centredRight, false);
 
         g.setFont(valueFont);
-        g.setColour(COLOR_WHITE);
+        g.setColour(KHOLORS_COLOR_WHITE);
         g.drawText(labs[i].text, valueDrawArea, juce::Justification::centredRight, false);
 
         drawnAreas.push_back(labs[i].bounds);

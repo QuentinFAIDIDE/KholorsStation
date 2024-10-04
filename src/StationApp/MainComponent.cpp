@@ -63,7 +63,7 @@ void MainComponent::paint(juce::Graphics &g)
 
     auto bounds = getLocalBounds();
     g.setFont(sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT));
-    g.setColour(COLOR_TEXT);
+    g.setColour(KHOLORS_COLOR_TEXT);
 
     auto topspace = bounds.removeFromTop(MENU_BAR_HEIGHT);
     topspace.removeFromLeft(rightPadding);
@@ -80,7 +80,7 @@ void MainComponent::paint(juce::Graphics &g)
     g.drawText("KHOLORS", leftTitleSpace, juce::Justification::centredRight, false);
 
     g.setFont(sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT));
-    g.setColour(COLOR_TEXT_DARKER);
+    g.setColour(KHOLORS_COLOR_TEXT_DARKER);
     g.drawText("STATION", subTitleSpace, juce::Justification::centredRight, false);
 
     g.setFont(sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT));

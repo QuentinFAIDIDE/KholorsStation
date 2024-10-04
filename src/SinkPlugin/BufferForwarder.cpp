@@ -94,7 +94,7 @@ void BufferForwarder::forwardAudioBlockInfo(std::shared_ptr<AudioBlockInfo> bloc
 void BufferForwarder::initializeTrackInfo(uint64_t id)
 {
     trackIdentifier = id;
-    std::vector<juce::Colour> choices = COLOR_PALETTE;
+    std::vector<juce::Colour> choices = KHOLORS_COLOR_PALETTE;
     auto color = choices[id % choices.size()];
     trackColorRed = color.getRed();
     trackColorGreen = color.getGreen();

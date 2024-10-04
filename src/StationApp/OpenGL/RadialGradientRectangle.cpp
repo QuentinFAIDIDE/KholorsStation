@@ -94,6 +94,10 @@ RadialGradientRectangle::RadialGradientRectangle(juce::Colour centerCol, juce::C
 
 void RadialGradientRectangle::registerGlObjects()
 {
+    if (!juce::OpenGLHelpers::isContextActive()) {
+        throw std::runtime_error("called registerGlObjects without a gl context");
+    }
+
     // generate openGL objects ids
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
@@ -107,7 +111,7 @@ void RadialGradientRectangle::registerGlObjects()
     glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
     // register and upload indices of the vertices to form the triangles (ebo)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(unsigned int) * triangleIds.size()), triangleIds.data(),
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(GLuint) * triangleIds.size()), triangleIds.data(),
                  GL_STATIC_DRAW);
 
     Vertex::registerVertexFormat();
@@ -116,6 +120,10 @@ void RadialGradientRectangle::registerGlObjects()
 
 void RadialGradientRectangle::drawGlObjects()
 {
+    if (!juce::OpenGLHelpers::isContextActive()) {
+        throw std::runtime_error("called drawGlObjects without a gl context");
+    }
+
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, triangleIds.size(), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);

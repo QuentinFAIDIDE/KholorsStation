@@ -62,7 +62,7 @@ void AudioPluginAudioProcessorEditor::paint(juce::Graphics &g)
     auto leftAreaHeader = leftArea.removeFromTop(SECTIONS_HEADER_HEIGHT);
     auto rightAreaHeader = rightArea.removeFromTop(SECTIONS_HEADER_HEIGHT);
 
-    g.setColour(COLOR_TEXT);
+    g.setColour(KHOLORS_COLOR_TEXT);
     g.setFont(juce::Font(SECTIONS_HEADER_TITLE_FONT_SIZE));
     g.drawText(TRANS("Track Color"), leftAreaHeader, juce::Justification::centredLeft, false);
     g.drawText(TRANS("Track Infos"), rightAreaHeader, juce::Justification::centredLeft, false);
@@ -83,12 +83,12 @@ void AudioPluginAudioProcessorEditor::drawHeader(juce::Graphics &g)
     auto boldTitleArea = titleArea.removeFromLeft(mainTitleWidth);
     titleArea.removeFromLeft(middlePadding);
 
-    g.setColour(COLOR_TEXT);
+    g.setColour(KHOLORS_COLOR_TEXT);
     g.setFont(sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT));
     g.drawText("KHOLORS II", boldTitleArea, juce::Justification::centred, false);
 
     g.setFont(sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT));
-    g.setColour(COLOR_TEXT_DARKER);
+    g.setColour(KHOLORS_COLOR_TEXT_DARKER);
     g.drawText("SINK", titleArea, juce::Justification::centredRight, false);
 }
 
@@ -116,5 +116,5 @@ void AudioPluginAudioProcessorEditor::resized()
     rightArea.removeFromTop(SECTIONS_HEADER_HEIGHT);
 
     colorPicker.setBounds(leftArea);
-    textEntry.setBounds(rightArea.removeFromTop(TABS_HEIGHT));
+    textEntry.setBounds(rightArea.removeFromTop(KHOLORS_TABS_HEIGHT));
 }

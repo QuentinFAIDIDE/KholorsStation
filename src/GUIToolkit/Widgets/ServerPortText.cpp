@@ -14,7 +14,7 @@ ServerPortText::ServerPortText(TaskingManager &tm)
 
 void ServerPortText::paint(juce::Graphics &g)
 {
-    g.setFont(sharedFonts->monospaceFont.withHeight(DEFAULT_FONT_SIZE));
+    g.setFont(sharedFonts->monospaceFont.withHeight(KHOLORS_DEFAULT_FONT_SIZE));
 
     std::optional<uint32_t> portToDisplay;
     {
@@ -24,12 +24,12 @@ void ServerPortText::paint(juce::Graphics &g)
 
     if (portToDisplay.has_value())
     {
-        g.setColour(COLOR_TEXT);
+        g.setColour(KHOLORS_COLOR_TEXT);
         g.drawText(std::to_string(*portToDisplay), getLocalBounds(), juce::Justification::centredRight, true);
     }
     else
     {
-        g.setColour(COLOR_TEXT_WARN);
+        g.setColour(KHOLORS_COLOR_TEXT_WARN);
         g.drawText(TRANS("UNKNOWN"), getLocalBounds(), juce::Justification::centredRight, true);
     }
 }

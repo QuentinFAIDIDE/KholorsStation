@@ -47,9 +47,8 @@ void AudioDataWorker::workerThreadLoop()
         auto audioDataUpdate = audioDataServer.waitForDatum();
         if (audioDataUpdate.has_value())
         {
-            spdlog::debug("Received audio datum from server");
             // if it's an audio segment, perform SFFT and update cursor position
-            auto audioSegment = std::dynamic_pointer_cast<AudioTransport::AudioSegment>(audioDataUpdate->datum);
+            std::shared_ptr<AudioTransport::AudioSegment> audioSegment = std::dynamic_pointer_cast<AudioTransport::AudioSegment>(audioDataUpdate->datum);
             if (audioSegment != nullptr)
             {
                 // eventually resize the buffer that will hold the data we perform FFT on. Should not do anything most
@@ -84,6 +83,7 @@ void AudioDataWorker::workerThreadLoop()
                 // if the delay is too severe, skip processing this audio segment
                 if (processingTimerDelayMs > MAX_AUDIO_SEGMENT_PROCESSING_DELAY_MS)
                 {
+                    spdlog::warn("skipped a NewFftDataTask due to high processing delay");
                     newDataTask->skip = true;
                 }
 

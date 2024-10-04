@@ -52,6 +52,7 @@ std::optional<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::waitForDa
         std::lock_guard lock(pendingAudioDataMutex);
         if (isStopping)
         {
+            spdlog::debug("Abort listening to datums in server due to shutdown.");
             return std::nullopt;
         }
     }
@@ -66,7 +67,10 @@ std::optional<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::waitForDa
         }
         auto datum = pendingAudioData.front();
         pendingAudioData.pop();
-        return datum;
+        spdlog::debug("Server received an audio datum");
+        std::optional<AudioDataStore::AudioDatumWithStorageId> resp;
+        resp = datum;
+        return resp;
     }
     else
     {
@@ -122,7 +126,7 @@ void AudioDataStore::stopServing()
 bool AudioDataStore::hasStoppedServing()
 {
     std::lock_guard lock(pendingAudioDataMutex);
-    return hasStoppedServing();
+    return isStopping;
 }
 
 void AudioDataStore::freeStoredDatum(uint64_t storageIndentifier)
@@ -177,6 +181,7 @@ void AudioDataStore::parseNewData(const AudioSegmentPayload *payload)
         std::lock_guard lock(pendingAudioDataMutex);
         if (isStopping)
         {
+            spdlog::debug("aborted parseNewData due to server stopping");
             return;
         }
     }
@@ -218,6 +223,7 @@ void AudioDataStore::parseNewData(const AudioSegmentPayload *payload)
     auto trackInfoFound = trackInfoByIdentifier.find(trackInfo.identifier);
     if (trackInfoFound == trackInfoByIdentifier.end() || trackInfoFound->second != trackInfo)
     {
+
         // we update or insert the new value
         trackInfoByIdentifier[trackInfo.identifier] = trackInfo;
 
@@ -297,8 +303,9 @@ std::vector<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::extractPayl
         // if the length is zero then by protocol, it means segment
         //  signal is near zero and we won't generate a segment
         // but if the length is different than samples
+    } else {
+        spdlog::debug("ignored a zero size payload");
     }
-
     return extractedAudioBuffers;
 }
 

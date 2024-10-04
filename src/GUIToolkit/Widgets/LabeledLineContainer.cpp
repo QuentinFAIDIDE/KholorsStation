@@ -17,25 +17,25 @@ std::shared_ptr<juce::Component> LabeledLineContainer::getContent()
 void LabeledLineContainer::paint(juce::Graphics &g)
 {
     auto bounds = g.getClipBounds();
-    g.setColour(COLOR_BACKGROUND);
+    g.setColour(KHOLORS_COLOR_BACKGROUND);
     g.fillRect(bounds);
 
     if (isMouseOverOrDragging(true))
     {
-        g.setColour(COLOR_HIGHLIGHT);
+        g.setColour(KHOLORS_COLOR_HIGHLIGHT);
     }
     else
     {
-        g.setColour(COLOR_SEPARATOR_LINE);
+        g.setColour(KHOLORS_COLOR_SEPARATOR_LINE);
     }
 
     g.drawRect(bounds);
 
-    g.setFont(juce::Font(DEFAULT_FONT_SIZE));
+    g.setFont(juce::Font(KHOLORS_DEFAULT_FONT_SIZE));
 
     if (!isMouseOverOrDragging(true))
     {
-        g.setColour(COLOR_UNITS);
+        g.setColour(KHOLORS_COLOR_UNITS);
     }
 
     g.drawText(label, labelLocalBounds, juce::Justification::centredLeft, true);

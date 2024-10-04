@@ -23,7 +23,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     {
         TrackSecondTile()
         {
-            mesh = std::make_shared<TexturedRectangle>(SECOND_TILE_WIDTH, SECOND_TILE_HEIGHT, COLOR_WHITE);
+            mesh = std::make_shared<TexturedRectangle>(SECOND_TILE_WIDTH, SECOND_TILE_HEIGHT, KHOLORS_COLOR_WHITE);
             tileIndexPosition = -1;
         }
         std::shared_ptr<TexturedRectangle> mesh;

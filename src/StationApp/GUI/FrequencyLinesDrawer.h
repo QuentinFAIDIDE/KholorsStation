@@ -25,7 +25,7 @@ class FrequencyLinesDrawer : public juce::Component
 
     void paint(juce::Graphics &g)
     {
-        g.setColour(COLOR_GRIDS_LEVEL_0);
+        g.setColour(KHOLORS_COLOR_GRIDS_LEVEL_0);
         int halfScreen = getHeight() >> 1;
         for (size_t i = 0; i < frequenciesToDraw.size(); i++)
         {
@@ -43,7 +43,7 @@ class FrequencyLinesDrawer : public juce::Component
             }
         }
 
-        g.setColour(COLOR_GRIDS_LEVEL_0);
+        g.setColour(KHOLORS_COLOR_GRIDS_LEVEL_0);
         for (size_t i = 0; i < frequenciesToDrawThinner.size(); i++)
         {
             float freqPosition = float(frequenciesToDrawThinner[i]) / float(maxDrawableFreq);

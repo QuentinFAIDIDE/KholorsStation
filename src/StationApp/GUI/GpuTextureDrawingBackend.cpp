@@ -18,7 +18,7 @@
 GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft,
                                                    NormalizedUnitTransformer &it)
     : FftDrawingBackend(tis, ft, it), tmpFreqTransformer(ft), tmpIntensityTransformer(it),
-      background(COLOR_FREQVIEW_GRADIENT_CENTER, COLOR_FREQVIEW_GRADIENT_BORDERS), ignoreNewData(true), viewPosition(0),
+      background(KHOLORS_COLOR_FREQVIEW_GRADIENT_CENTER, KHOLORS_COLOR_FREQVIEW_GRADIENT_BORDERS), ignoreNewData(true), viewPosition(0),
       viewScale(150), convolutionId(GpuConvolutionId::Emboss), bpm(120), needToResetTiles(false)
 {
     openGLContext.setRenderer(this);
@@ -55,7 +55,7 @@ void GpuTextureDrawingBackend::paint(juce::Graphics &g)
         auto areaRightToCursor = getLocalBounds().withTrimmedLeft(playCursorStartPixel);
         auto playCursorBounds = areaRightToCursor.withWidth(PLAY_CURSOR_WIDTH);
 
-        g.setColour(COLOR_WHITE);
+        g.setColour(KHOLORS_COLOR_WHITE);
         g.fillRect(playCursorBounds);
     }
 
@@ -64,7 +64,7 @@ void GpuTextureDrawingBackend::paint(juce::Graphics &g)
     {
         auto horizontalLine = getLocalBounds().withHeight(1).withY(lastMouseY);
         auto verticalLine = getLocalBounds().withWidth(1).withX(lastMouseX);
-        g.setColour(COLOR_WHITE);
+        g.setColour(KHOLORS_COLOR_WHITE);
         g.fillRect(horizontalLine);
         g.fillRect(verticalLine);
     }
@@ -125,15 +125,15 @@ void GpuTextureDrawingBackend::drawBorders(juce::Graphics &g)
     fillPath.lineTo(bounds.getCentreX(), bounds.getBottomRight().getY() - borderWidth);
     fillPath.closeSubPath();
 
-    g.setColour(COLOR_FREQVIEW_GRADIENT_BORDERS);
+    g.setColour(KHOLORS_COLOR_FREQVIEW_GRADIENT_BORDERS);
     g.fillPath(fillPath);
 
-    g.setColour(COLOR_GRIDS_LEVEL_0);
+    g.setColour(KHOLORS_COLOR_GRIDS_LEVEL_0);
     int borders2Width = 2;
     g.drawRoundedRectangle(bounds.toFloat(), roundedCornersWidth, borders2Width);
 
     auto middleLine = bounds.withY(bounds.getHeight() / 2).withHeight(1);
-    g.setColour(COLOR_GRIDS_LEVEL_0);
+    g.setColour(KHOLORS_COLOR_GRIDS_LEVEL_0);
     g.fillRect(middleLine);
 }
 
@@ -187,6 +187,8 @@ void GpuTextureDrawingBackend::newOpenGLContextCreated()
 
         texturedPositionedShader->use();
         texturedPositionedShader->setUniform("sfftTexture", 0);
+
+        uploadShadersUniforms();
 
         // log some info about openGL version and all
         logOpenGLInfoCallback(openGLContext);
@@ -282,17 +284,17 @@ void GpuTextureDrawingBackend::uploadShadersUniforms()
 
         backgroundGridShader->setUniform("viewHeightPixels", (GLfloat)(viewHeight));
 
-        backgroundGridShader->setUniform("gridColorLevel0", COLOR_GRIDS_LEVEL_0.getFloatRed(),
-                                         COLOR_GRIDS_LEVEL_0.getFloatGreen(), COLOR_GRIDS_LEVEL_0.getFloatBlue(),
-                                         COLOR_GRIDS_LEVEL_0.getFloatAlpha());
+        backgroundGridShader->setUniform("gridColorLevel0", KHOLORS_COLOR_GRIDS_LEVEL_0.getFloatRed(),
+                                         KHOLORS_COLOR_GRIDS_LEVEL_0.getFloatGreen(), KHOLORS_COLOR_GRIDS_LEVEL_0.getFloatBlue(),
+                                         KHOLORS_COLOR_GRIDS_LEVEL_0.getFloatAlpha());
 
-        backgroundGridShader->setUniform("gridColorLevel1", COLOR_GRIDS_LEVEL_1.getFloatRed(),
-                                         COLOR_GRIDS_LEVEL_1.getFloatGreen(), COLOR_GRIDS_LEVEL_1.getFloatBlue(),
-                                         COLOR_GRIDS_LEVEL_1.getFloatAlpha());
+        backgroundGridShader->setUniform("gridColorLevel1", KHOLORS_COLOR_GRIDS_LEVEL_1.getFloatRed(),
+                                         KHOLORS_COLOR_GRIDS_LEVEL_1.getFloatGreen(), KHOLORS_COLOR_GRIDS_LEVEL_1.getFloatBlue(),
+                                         KHOLORS_COLOR_GRIDS_LEVEL_1.getFloatAlpha());
 
-        backgroundGridShader->setUniform("gridColorLevel2", COLOR_GRIDS_LEVEL_2.getFloatRed(),
-                                         COLOR_GRIDS_LEVEL_2.getFloatGreen(), COLOR_GRIDS_LEVEL_2.getFloatBlue(),
-                                         COLOR_GRIDS_LEVEL_2.getFloatAlpha());
+        backgroundGridShader->setUniform("gridColorLevel2", KHOLORS_COLOR_GRIDS_LEVEL_2.getFloatRed(),
+                                         KHOLORS_COLOR_GRIDS_LEVEL_2.getFloatGreen(), KHOLORS_COLOR_GRIDS_LEVEL_2.getFloatBlue(),
+                                         KHOLORS_COLOR_GRIDS_LEVEL_2.getFloatAlpha());
 
         lastUsedGlThreadUnifNonce = glThreadUniformsNonce;
     }
@@ -633,7 +635,7 @@ size_t GpuTextureDrawingBackend::createSecondTile(uint64_t trackIdentifier, int6
     secondTilesRingBuffer[newTileIndex].trackIdentifer = trackIdentifier;
     addTrackTileToDrawingOrder(secondTilesRingBuffer[newTileIndex].trackIdentifer, newTileIndex);
 
-    juce::Colour col = COLOR_WHITE;
+    juce::Colour col = KHOLORS_COLOR_WHITE;
     auto optionalColor = knownTrackColors.find(trackIdentifier);
     if (optionalColor != knownTrackColors.end())
     {

@@ -260,11 +260,11 @@ void TrackList::drawLabel(juce::Graphics &g, juce::Rectangle<int> bounds, std::s
 
     if (selectedTrack.has_value() && selectedTrack.value() != trackIdentifier)
     {
-        g.setColour(COLOR_WHITE.withAlpha(TRACK_NOT_SELECTED_ALPHA));
+        g.setColour(KHOLORS_COLOR_WHITE.withAlpha(TRACK_NOT_SELECTED_ALPHA));
     }
     else
     {
-        g.setColour(COLOR_WHITE);
+        g.setColour(KHOLORS_COLOR_WHITE);
     }
 
     g.drawEllipse(circleBounds.toFloat(), 1.0f);

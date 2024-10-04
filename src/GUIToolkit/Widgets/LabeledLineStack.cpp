@@ -27,8 +27,8 @@ void LabeledLineStack::paint(juce::Graphics &g)
 {
     auto bounds = getLocalBounds().reduced(LABELED_LINE_STACK_BORDER_PADDING);
     auto labelSpace = bounds.removeFromTop(LABELED_LINE_STACK_LABEL_HEIGHT);
-    g.setFont(sharedFonts->robotoBold.withHeight(DEFAULT_FONT_SIZE));
-    g.setColour(COLOR_TEXT_DARKER);
+    g.setFont(sharedFonts->robotoBold.withHeight(KHOLORS_DEFAULT_FONT_SIZE));
+    g.setColour(KHOLORS_COLOR_TEXT_DARKER);
     g.drawText(TRANS(stackName), labelSpace, juce::Justification::bottomLeft, false);
 }
 

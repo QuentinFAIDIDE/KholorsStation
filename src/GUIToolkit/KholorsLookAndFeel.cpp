@@ -9,50 +9,50 @@
 
 KholorsLookAndFeel::KholorsLookAndFeel()
 {
-    setColour(juce::PopupMenu::ColourIds::backgroundColourId, COLOR_BACKGROUND);
-    setColour(juce::PopupMenu::ColourIds::highlightedBackgroundColourId, COLOR_SELECTED_BACKGROUND);
+    setColour(juce::PopupMenu::ColourIds::backgroundColourId, KHOLORS_COLOR_BACKGROUND);
+    setColour(juce::PopupMenu::ColourIds::highlightedBackgroundColourId, KHOLORS_COLOR_SELECTED_BACKGROUND);
 
     setColour(juce::TabbedButtonBar::ColourIds::tabOutlineColourId, juce::Colours::transparentBlack);
     setColour(juce::TabbedButtonBar::ColourIds::frontOutlineColourId, juce::Colours::transparentBlack);
 
     setColour(juce::TabbedComponent::ColourIds::outlineColourId, juce::Colours::transparentBlack);
 
-    setColour(juce::ScrollBar::ColourIds::thumbColourId, COLOR_HIGHLIGHT);
+    setColour(juce::ScrollBar::ColourIds::thumbColourId, KHOLORS_COLOR_HIGHLIGHT);
 
-    setColour(juce::CaretComponent::ColourIds::caretColourId, COLOR_HIGHLIGHT);
+    setColour(juce::CaretComponent::ColourIds::caretColourId, KHOLORS_COLOR_HIGHLIGHT);
 
-    setColour(juce::TreeView::ColourIds::linesColourId, COLOR_TEXT.withAlpha(0.8f));
-    setColour(juce::TreeView::ColourIds::selectedItemBackgroundColourId, COLOR_SELECTED_BACKGROUND);
+    setColour(juce::TreeView::ColourIds::linesColourId, KHOLORS_COLOR_TEXT.withAlpha(0.8f));
+    setColour(juce::TreeView::ColourIds::selectedItemBackgroundColourId, KHOLORS_COLOR_SELECTED_BACKGROUND);
 
     setColour(juce::ListBox::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(juce::ListBox::ColourIds::outlineColourId, juce::Colours::transparentBlack);
 
-    setColour(juce::TextEditor::ColourIds::textColourId, COLOR_INPUT_TEXT);
+    setColour(juce::TextEditor::ColourIds::textColourId, KHOLORS_COLOR_INPUT_TEXT);
     setColour(juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     setColour(juce::TextEditor::ColourIds::outlineColourId, juce::Colours::transparentBlack);
     setColour(juce::TextEditor::ColourIds::focusedOutlineColourId, juce::Colours::transparentBlack);
-    setColour(juce::TextEditor::ColourIds::highlightColourId, COLOR_HIGHLIGHT);
+    setColour(juce::TextEditor::ColourIds::highlightColourId, KHOLORS_COLOR_HIGHLIGHT);
 
-    setColour(juce::ColourSelector::ColourIds::backgroundColourId, COLOR_BACKGROUND);
+    setColour(juce::ColourSelector::ColourIds::backgroundColourId, KHOLORS_COLOR_BACKGROUND);
 
-    setColour(juce::ResizableWindow::backgroundColourId, COLOR_BACKGROUND);
+    setColour(juce::ResizableWindow::backgroundColourId, KHOLORS_COLOR_BACKGROUND);
 }
 
 void KholorsLookAndFeel::drawTabButton(juce::TabBarButton &tb, juce::Graphics &g, bool isMouseOver, bool)
 {
     auto bounds = g.getClipBounds();
 
-    g.setColour(COLOR_TEXT);
-    g.setFont(juce::Font(DEFAULT_FONT_SIZE));
+    g.setColour(KHOLORS_COLOR_TEXT);
+    g.setFont(juce::Font(KHOLORS_DEFAULT_FONT_SIZE));
 
     if (tb.isFrontTab())
     {
-        g.setColour(COLOR_HIGHLIGHT);
+        g.setColour(KHOLORS_COLOR_HIGHLIGHT);
     }
 
     if (isMouseOver)
     {
-        g.setColour(COLOR_HIGHLIGHT);
+        g.setColour(KHOLORS_COLOR_HIGHLIGHT);
     }
 
     g.drawText(tb.getButtonText().toUpperCase(), bounds.reduced(4, 0), juce::Justification::centred, true);
@@ -60,12 +60,12 @@ void KholorsLookAndFeel::drawTabButton(juce::TabBarButton &tb, juce::Graphics &g
 
 juce::Font KholorsLookAndFeel::getPopupMenuFont()
 {
-    return juce::Font(DEFAULT_FONT_SIZE + 2);
+    return juce::Font(KHOLORS_DEFAULT_FONT_SIZE + 2);
 }
 
 juce::Font KholorsLookAndFeel::getMenuBarFont(juce::MenuBarComponent &, int, const juce::String &)
 {
-    return juce::Font(DEFAULT_FONT_SIZE + 3);
+    return juce::Font(KHOLORS_DEFAULT_FONT_SIZE + 3);
 }
 
 void KholorsLookAndFeel::getIdealPopupMenuItemSize(const juce::String &text, bool isSeparator, int, int &idealWidth,
@@ -85,17 +85,17 @@ void KholorsLookAndFeel::getIdealPopupMenuItemSize(const juce::String &text, boo
 
 int KholorsLookAndFeel::getTabButtonBestWidth(juce::TabBarButton &tbb, int)
 {
-    auto font = juce::Font(DEFAULT_FONT_SIZE);
+    auto font = juce::Font(KHOLORS_DEFAULT_FONT_SIZE);
     int i = tbb.getIndex();
-    return font.getStringWidth(tbb.getTabbedButtonBar().getTabNames()[i]) + TAB_BUTTONS_INNER_PADDING;
+    return font.getStringWidth(tbb.getTabbedButtonBar().getTabNames()[i]) + KHOLORS_TAB_BUTTONS_INNER_PADDING;
 }
 
 void KholorsLookAndFeel::drawTabbedButtonBarBackground(juce::TabbedButtonBar &, juce::Graphics &g)
 {
-    g.setColour(COLOR_BACKGROUND);
+    g.setColour(KHOLORS_COLOR_BACKGROUND);
     g.fillAll();
 
-    g.setColour(COLOR_SEPARATOR_LINE);
+    g.setColour(KHOLORS_COLOR_SEPARATOR_LINE);
     auto line = g.getClipBounds().withHeight(1);
     g.drawRect(line);
 }
@@ -104,9 +104,9 @@ void KholorsLookAndFeel::drawTabAreaBehindFrontButton(juce::TabbedButtonBar &tb,
 {
     int currentTabIndex = tb.getCurrentTabIndex();
     auto tabBounds = tb.getTabButton(currentTabIndex)->getBounds();
-    g.setColour(COLOR_HIGHLIGHT);
-    auto line = tabBounds.withY(tabBounds.getY() + tabBounds.getHeight() - TAB_HIGHLIGHT_LINE_WIDTH)
-                    .withHeight(TAB_HIGHLIGHT_LINE_WIDTH);
+    g.setColour(KHOLORS_COLOR_HIGHLIGHT);
+    auto line = tabBounds.withY(tabBounds.getY() + tabBounds.getHeight() - KHOLORS_TAB_HIGHLIGHT_LINE_WIDTH)
+                    .withHeight(KHOLORS_TAB_HIGHLIGHT_LINE_WIDTH);
     g.fillRect(line);
 }
 

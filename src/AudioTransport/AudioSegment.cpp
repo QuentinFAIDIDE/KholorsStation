@@ -21,7 +21,7 @@ void AudioSegment::parseFromApiPayload(const AudioSegmentPayload *payload, size_
             "parseFromApiPayload called when segment_audio_samples has different size than segment_sample_duration");
     }
 
-    if (channel >= payload->segment_no_channels())
+    if (channelPicked >= payload->segment_no_channels())
     {
         throw std::invalid_argument("parseFromApiPayload called with invalid channel");
     }

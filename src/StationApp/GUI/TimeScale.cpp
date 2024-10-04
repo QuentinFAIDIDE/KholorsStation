@@ -43,7 +43,7 @@ void TimeScale::paint(juce::Graphics &g)
     drawTicks(g, currentViewPos, currentViewScale, currentBpm);
 
     g.setFont(juce::Font(TITLE_PIXELS_HEIGHT));
-    g.setColour(COLOR_WHITE);
+    g.setColour(KHOLORS_COLOR_WHITE);
     g.drawText(TRANS("Project Time").toUpperCase(), getLocalBounds().withTrimmedBottom(TITLE_PIXELS_FROM_BOTTOM),
                juce::Justification::centredBottom, false);
 }
@@ -67,10 +67,10 @@ void TimeScale::drawTicks(juce::Graphics &g, int64_t currentViewPosition, int64_
 
     int currentBarIndex = int((float(currentViewPosition) / grid0FrameWidth)) + 1;
 
-    g.setFont(DEFAULT_FONT_SIZE);
+    g.setFont(KHOLORS_DEFAULT_FONT_SIZE);
 
-    drawTickLevel(g, 4, 4, COLOR_WHITE.withAlpha(0.0f), grid0PixelWidth, grid0PixelShift, currentBarIndex);
-    drawTickLevel(g, 4, 2, COLOR_WHITE.withAlpha(0.0f), grid1PixelWidth, grid1PixelShift, -1);
+    drawTickLevel(g, 4, 4, KHOLORS_COLOR_WHITE.withAlpha(0.0f), grid0PixelWidth, grid0PixelShift, currentBarIndex);
+    drawTickLevel(g, 4, 2, KHOLORS_COLOR_WHITE.withAlpha(0.0f), grid1PixelWidth, grid1PixelShift, -1);
 }
 
 void TimeScale::drawTickLevel(juce::Graphics &g, int height, int width, juce::Colour color, float pixelStepWidth,
@@ -91,7 +91,7 @@ void TimeScale::drawTickLevel(juce::Graphics &g, int height, int width, juce::Co
             int barIndex = (quarterIndex / 4) + 1;
             int quarterInBar = 1 + (quarterIndex % 4);
             std::string barIndexText = std::to_string(barIndex) + "." + std::to_string(quarterInBar);
-            g.setColour(COLOR_WHITE.withAlpha(0.75f));
+            g.setColour(KHOLORS_COLOR_WHITE.withAlpha(0.75f));
             textBox.setX(currentTickPos - (TICK_LABEL_WIDTH >> 1));
             g.drawText(barIndexText, textBox, juce::Justification::centred, false);
         }

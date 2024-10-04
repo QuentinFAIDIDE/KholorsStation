@@ -25,7 +25,7 @@ TextEntry::TextEntry(TaskingManager &tm, std::string id, std::string shownName, 
     }
     textEditor.setMultiLine(false);
     textEditor.setFont(sharedFonts->monospaceFont);
-    textEditor.applyColourToAllText(COLOR_INPUT_TEXT);
+    textEditor.applyColourToAllText(KHOLORS_COLOR_INPUT_TEXT);
     textEditor.setText(def);
     textEditor.addListener(this);
     textEditor.setJustification(juce::Justification::centredRight);
@@ -34,7 +34,7 @@ TextEntry::TextEntry(TaskingManager &tm, std::string id, std::string shownName, 
 
 void TextEntry::paint(juce::Graphics &g)
 {
-    g.fillAll(COLOR_INPUT_BACKGROUND);
+    g.fillAll(KHOLORS_COLOR_INPUT_BACKGROUND);
     auto labelBounds = getLocalBounds().reduced(TEXT_INPUT_INNER_PADDING);
     labelBounds = labelBounds.removeFromLeft(INPUT_LABEL_WIDTH);
     g.drawText(name, labelBounds, juce::Justification::centredLeft, true);

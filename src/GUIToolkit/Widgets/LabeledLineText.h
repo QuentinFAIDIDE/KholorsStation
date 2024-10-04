@@ -13,8 +13,8 @@ class LabeledLineText : public juce::Component
 
     void paint(juce::Graphics &g)
     {
-        g.setFont(sharedFonts->monospaceFont.withHeight(DEFAULT_FONT_SIZE));
-        g.setColour(COLOR_TEXT);
+        g.setFont(sharedFonts->monospaceFont.withHeight(KHOLORS_DEFAULT_FONT_SIZE));
+        g.setColour(KHOLORS_COLOR_TEXT);
         g.drawText(text, getLocalBounds(), juce::Justification::centredRight, true);
     }
 

@@ -72,6 +72,7 @@ FetchContent_MakeAvailable(juce)
 
 # gRPC lib download and setup
 set(ABSL_ENABLE_INSTALL ON)
+set(protobuf_MSVC_STATIC_RUNTIME ON)
 FetchContent_Declare(
   gRPC
   GIT_REPOSITORY https://github.com/grpc/grpc

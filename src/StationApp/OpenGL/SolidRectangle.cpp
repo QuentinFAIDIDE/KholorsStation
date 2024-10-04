@@ -10,7 +10,7 @@ using namespace juce::gl;
 SolidRectangle::SolidRectangle()
 {
     vertices.reserve(4);
-    juce::Colour col = COLOR_BACKGROUND;
+    juce::Colour col = KHOLORS_COLOR_BACKGROUND;
 
     // NOTE: we use a unified vertex format that includes
     // texture coordinates because we can affort to send

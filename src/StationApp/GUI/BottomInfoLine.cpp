@@ -22,7 +22,7 @@ void BottomInfoLine::paint(juce::Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
-    g.setColour(COLOR_UNITS);
+    g.setColour(KHOLORS_COLOR_UNITS);
     g.fillRect(getLocalBounds().withHeight(1));
 
     std::string leftText =
@@ -44,8 +44,8 @@ void BottomInfoLine::paint(juce::Graphics &g)
 
     auto bounds = getLocalBounds();
     bounds.reduce(BOTTOM_INFO_LINE_SIDE_PADDING, 0);
-    g.setFont(juce::Font(DEFAULT_FONT_SIZE));
-    g.setColour(COLOR_WHITE);
+    g.setFont(juce::Font(KHOLORS_DEFAULT_FONT_SIZE));
+    g.setColour(KHOLORS_COLOR_WHITE);
     g.drawText(leftText, bounds, juce::Justification::centredLeft, true);
     g.drawText(rightText, bounds, juce::Justification::centredRight, true);
 }
