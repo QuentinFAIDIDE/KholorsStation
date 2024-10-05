@@ -15,7 +15,6 @@ RpcServerImplementation::RpcServerImplementation(AudioDataStore &storeToUse) : d
 grpc::Status RpcServerImplementation::UploadAudioSegment(grpc::ServerContext *, const AudioSegmentPayload *data,
                                                          AudioSegmentUploadResponse *response)
 {
-    spdlog::debug("Server implementation is handling received audio segment");
     try
     {
         dataStore.parseNewData(data);

@@ -67,7 +67,6 @@ std::optional<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::waitForDa
         }
         auto datum = pendingAudioData.front();
         pendingAudioData.pop();
-        spdlog::debug("Server received an audio datum");
         std::optional<AudioDataStore::AudioDatumWithStorageId> resp;
         resp = datum;
         return resp;
@@ -186,8 +185,6 @@ void AudioDataStore::parseNewData(const AudioSegmentPayload *payload)
         }
     }
 
-    spdlog::debug("Parsing a new api payload");
-
     if (payload == nullptr)
     {
         throw std::runtime_error("called parseNewData with nullptr payload");
@@ -303,8 +300,6 @@ std::vector<AudioDataStore::AudioDatumWithStorageId> AudioDataStore::extractPayl
         // if the length is zero then by protocol, it means segment
         //  signal is near zero and we won't generate a segment
         // but if the length is different than samples
-    } else {
-        spdlog::debug("ignored a zero size payload");
     }
     return extractedAudioBuffers;
 }
