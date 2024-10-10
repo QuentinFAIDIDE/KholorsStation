@@ -27,6 +27,7 @@ FreqTimeView::FreqTimeView(TrackInfoStore &tis, TaskingManager &tm)
     lastFftMousePosX = 0;
     lastFftMousePosY = 0;
     lastCursorShowStatus = false;
+    isViewMoving = false;
 
     setOpaque(true);
 
@@ -175,7 +176,6 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
     auto newFftDataTask = std::dynamic_pointer_cast<NewFftDataTask>(task);
     if (newFftDataTask != nullptr && !newFftDataTask->isCompleted() && !newFftDataTask->hasFailed())
     {
-        spdlog::debug("Received a NewFftData task in the FreqTimeView");
 
         // call on the drawing backend to add the FFT data to the displayed textures
         if (!newFftDataTask->skip)
