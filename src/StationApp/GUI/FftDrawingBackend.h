@@ -168,8 +168,9 @@ class FftDrawingBackend : public juce::Component
         int64_t newPlayCursorPos = samplePosition;
         if (sampleRate != VISUAL_SAMPLE_RATE)
         {
-            newPlayCursorPos = (int64_t)(float(samplePosition) * ((float)VISUAL_SAMPLE_RATE / (float)samplePosition));
+            newPlayCursorPos = (int64_t)(float(samplePosition) * ((float)VISUAL_SAMPLE_RATE / (float)sampleRate));
         }
+
         // only update the play cursor pos if it's bigger than previous one,
         // or if it's smaller and beyond a certain distance
         if (newPlayCursorPos > playCursorPosition ||
