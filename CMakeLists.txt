@@ -31,7 +31,13 @@ enable_testing()
 set(CMAKE_FIND_STATIC_PREFER TRUE)
 
 find_package(nlohmann_json 3.11.3 REQUIRED)
-find_package(FFTW3f CONFIG REQUIRED)
+if(UNIX)
+  find_package(FFTW3 CONFIG REQUIRED)
+  set(PLATFORM_SPECIFIC_FFTW3_LIB fftw3f)
+else()
+  find_package(FFTW3f CONFIG REQUIRED)
+  set(PLATFORM_SPECIFIC_FFTW3_LIB FFTW3::fftw3f)
+endif()
 
 include(FetchContent)
 
@@ -83,15 +89,15 @@ FetchContent_MakeAvailable(gRPC)
 
 # Configure the FetchContent for spdlog
 FetchContent_Declare(
-    spdlog
-    GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG v1.14.1
-)
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG v1.14.1)
 set(SPDLOG_BUILD_SHARED OFF)
 FetchContent_MakeAvailable(spdlog)
+set_target_properties(spdlog PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # try to get rid of some tests in zlib that are annoying me when running ctest
-#set_target_properties(example example64 PROPERTIES EXCLUDE_FROM_ALL TRUE)
+# set_target_properties(example example64 PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
 add_subdirectory(src)
 

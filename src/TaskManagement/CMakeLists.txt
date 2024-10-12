@@ -12,8 +12,9 @@ file(
 list(FILTER all_module_headers EXCLUDE REGEX ".*Test\\.h$")
 
 add_library(TaskManagement STATIC ${all_module_cpp} ${all_module_headers})
-target_link_libraries(TaskManagement
-                      nlohmann_json::nlohmann_json spdlog::spdlog)
+set_target_properties(TaskManagement PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(TaskManagement nlohmann_json::nlohmann_json
+                      spdlog::spdlog)
 
 add_executable(TaskingManagerTest TaskingManagerTest.cpp)
 target_link_libraries(TaskingManagerTest TaskManagement

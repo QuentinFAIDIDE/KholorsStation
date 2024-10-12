@@ -86,6 +86,6 @@ target_link_libraries(
           Utils
           nlohmann_json::nlohmann_json
           spdlog::spdlog
-          FFTW3::fftw3f
+          ${PLATFORM_SPECIFIC_FFTW3_LIB}
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
