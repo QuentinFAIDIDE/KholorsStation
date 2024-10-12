@@ -4,7 +4,7 @@
 #include <mutex>
 #include <nlohmann/json.hpp>
 
-#define DEFAULT_PREALLOCATED_PROC_TIMER_WAITGROUPS 32
+#define DEFAULT_PREALLOCATED_PROC_TIMER_WAITGROUPS 128
 #define AVERAGING_TIMER_SIZE 32
 
 ProcessingTimer::ProcessingTimer(TaskingManager &tm) : taskingManager(tm)
@@ -53,12 +53,11 @@ std::shared_ptr<ProcessingTimerWaitgroup> ProcessingTimer::getNewProcessingTimer
 {
     std::lock_guard lock(mutex);
 
+    // if all processing timers are in use, it means that we are
+    // on overload and we'll use that as a hint to ignore the FFT to draw
     if (idleWaitgroups.size() == 0)
     {
-        size_t newIndex = waitgroups.size();
-        auto newWg = std::make_shared<ProcessingTimerWaitgroup>(this, newIndex);
-        waitgroups.push_back(newWg);
-        idleWaitgroups.push(newIndex);
+        return nullptr;
     }
 
     size_t index = idleWaitgroups.front();

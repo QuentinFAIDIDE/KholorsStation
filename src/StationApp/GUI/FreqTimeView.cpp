@@ -183,40 +183,50 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
             // create a segment processing time waitgroup and pass it to fft drawing backend
             auto processingTimeWaitgroup =
                 processingTimer.getNewProcessingTimerWaitgroup(newFftDataTask->sentTimeUnixMs);
-            processingTimeWaitgroup->add();
 
-            // if time since last drawing was too large, clear all past data
-            int64_t currentTime = juce::Time().getCurrentTime().toMilliseconds();
-
-            int64_t lastFftDrawTimeMsCopy = 0;
+            // Only proceed if we have been able to get a preallocated processing timer.
+            // If not that means we are on overload.
+            if (processingTimeWaitgroup != nullptr)
             {
-                std::lock_guard lock(lastFftDrawTimeMutex);
-                lastFftDrawTimeMsCopy = lastFftDrawTimeMs;
-            }
+                processingTimeWaitgroup->add();
 
-            if ((currentTime - lastFftDrawTimeMsCopy) > MAX_IDLE_MS_TIME_BEFORE_CLEAR)
+                // if time since last drawing was too large, clear all past data
+                int64_t currentTime = juce::Time().getCurrentTime().toMilliseconds();
+
+                int64_t lastFftDrawTimeMsCopy = 0;
+                {
+                    std::lock_guard lock(lastFftDrawTimeMutex);
+                    lastFftDrawTimeMsCopy = lastFftDrawTimeMs;
+                }
+
+                if ((currentTime - lastFftDrawTimeMsCopy) > MAX_IDLE_MS_TIME_BEFORE_CLEAR)
+                {
+                    fftDrawBackend->clearDisplayedFFTs();
+                    trackList.clear();
+                }
+
+                // send fft data to drawing backend and update play cursor
+                fftDrawBackend->displayNewFftData(newFftDataTask, processingTimeWaitgroup);
+                fftDrawBackend->submitNewPlayCursorPosition((int64_t)newFftDataTask->segmentStartSample +
+                                                                (int64_t)newFftDataTask->segmentSampleLength,
+                                                            newFftDataTask->sampleRate);
+
+                // record which track is playing and where to display labels
+                trackList.recordSfft(newFftDataTask);
+
+                // record last drawing time
+                {
+                    std::lock_guard lock(lastFftDrawTimeMutex);
+                    lastFftDrawTimeMs = currentTime;
+                }
+
+                // complete first half of segment processing time waitgroup here
+                processingTimeWaitgroup->recordCompletion();
+            }
+            else
             {
-                fftDrawBackend->clearDisplayedFFTs();
-                trackList.clear();
+                spdlog::warn("A FFT drawing was skipped because too much FFTs are pending drawing.");
             }
-
-            // send fft data to drawing backend and update play cursor
-            fftDrawBackend->displayNewFftData(newFftDataTask, processingTimeWaitgroup);
-            fftDrawBackend->submitNewPlayCursorPosition((int64_t)newFftDataTask->segmentStartSample +
-                                                            (int64_t)newFftDataTask->segmentSampleLength,
-                                                        newFftDataTask->sampleRate);
-
-            // record which track is playing and where to display labels
-            trackList.recordSfft(newFftDataTask);
-
-            // record last drawing time
-            {
-                std::lock_guard lock(lastFftDrawTimeMutex);
-                lastFftDrawTimeMs = currentTime;
-            }
-
-            // complete first half of segment processing time waitgroup here
-            processingTimeWaitgroup->recordCompletion();
         }
         else
         {
