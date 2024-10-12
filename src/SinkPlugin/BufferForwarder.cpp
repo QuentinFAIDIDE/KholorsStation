@@ -318,7 +318,7 @@ void BufferForwarder::copyMetadataToPayload(std::shared_ptr<AudioTransport::Audi
         dest->set_daw_loop_end(0);
     }
 
-    dest->set_segment_start_sample(src->startSample);
+    dest->set_segment_start_sample(src->startSample+src->numUsedSamples);
     dest->set_segment_sample_duration(0);
     dest->set_segment_no_channels(src->numChannels);
 }

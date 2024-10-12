@@ -6,6 +6,7 @@
 #include <thread>
 #include <chrono>
 #include <vector>
+#include <spdlog/spdlog.h>
 
 using namespace std::chrono_literals;
 
@@ -326,6 +327,7 @@ void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, fftwf_plan *plan, 
     float *inPtr = in + (FFT_INPUT_NO_INTENSITIES - 1);
     if (diffToFullSize > 0)
     {
+        spdlog::warn("Received segment has a size not aligned zith FFT size!");
         for (size_t i = FFT_INPUT_NO_INTENSITIES - 1; i >= job->inputLength; --i)
         {
             *inPtr = 0.0f;
