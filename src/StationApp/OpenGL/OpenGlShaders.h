@@ -145,11 +145,13 @@ layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec2 aTexCoord;
 
 out vec4 outColor;
+out vec2 texCoord;
 
 void main()
 {
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, aPos.w);
+    gl_Position = aPos;
     outColor = aColor;
+    texCoord = aTexCoord;
 }
 )";
 
@@ -159,21 +161,13 @@ std::string gridBackgroundFragmentShader =
 out vec4 FragColor;
   
 in vec4 outColor;
+in vec2 texCoord;
 
-uniform float viewHeightPixels;
-uniform float grid0PixelWidth;
-uniform int grid0PixelShift;
-uniform float grid1PixelWidth;
-uniform int grid1PixelShift;
-uniform float grid2PixelWidth;
-uniform int grid2PixelShift;
-
-uniform vec4 gridColorLevel0;
-uniform vec4 gridColorLevel1;
-uniform vec4 gridColorLevel2;
+uniform sampler2D gridTexture;
 
 void main()
 {
-    FragColor = outColor;
+    float intensity = texture(gridTexture, texCoord).a;
+    FragColor = vec4(outColor.x, outColor.y, outColor.z, intensity);
 }
 )";

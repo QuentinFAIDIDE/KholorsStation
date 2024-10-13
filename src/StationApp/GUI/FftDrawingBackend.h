@@ -27,6 +27,8 @@
 #define FREQVIEW_ROUNDED_CORNERS_WIDTH 7
 #define FREQVIEW_BORDER_WIDTH 3
 
+#define FFT_POSITION_FORWARD_SAMPLE_SHIFT 1920
+
 /**
  * @brief Abstract class that receives the audio data (sfft freqs intensities) to display
  * on screen.
@@ -96,6 +98,10 @@ class FftDrawingBackend : public juce::Component
                 startSample = float(startSample) * sampleRateRatio;
                 endSample = float(endSample) * sampleRateRatio;
             }
+            // in order to align the FFTs to the grid we shift forward by a predefined number of samples
+            startSample += FFT_POSITION_FORWARD_SAMPLE_SHIFT;
+            endSample += FFT_POSITION_FORWARD_SAMPLE_SHIFT;
+
             int64_t secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
             int64_t secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
             // NOTE: we suppose that single FFT will never be larger than one second (tile width)

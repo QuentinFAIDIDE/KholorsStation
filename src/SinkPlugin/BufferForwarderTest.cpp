@@ -80,17 +80,16 @@ void testBufferForwarder01()
 
         if (std::abs(leftSample - float(i) / 2.0f) > std::numeric_limits<float>::epsilon())
         {
-            std::runtime_error("samples don't match");
+            throw std::runtime_error("samples don't match");
         }
 
         if (std::abs(rightSample - float(i) / 5.0f) > std::numeric_limits<float>::epsilon())
         {
-            std::runtime_error("samples don't match");
+            throw std::runtime_error("samples don't match");
         }
     }
 
-    size_t remainingSpace = DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE - 3000;
-    for (size_t i = 3000; i < remainingSpace; i++)
+    for (size_t i = 3000; i < DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE; i++)
     {
         int iter = (int)i - 3000;
         auto leftSample = segs[0]->segment_audio_samples()[i];
@@ -98,12 +97,12 @@ void testBufferForwarder01()
 
         if (std::abs(leftSample - float(iter) / 2.0f) > std::numeric_limits<float>::epsilon())
         {
-            std::runtime_error("samples don't match");
+            throw std::runtime_error("samples don't match");
         }
 
         if (std::abs(rightSample - float(iter) / 5.0f) > std::numeric_limits<float>::epsilon())
         {
-            std::runtime_error("samples don't match");
+            throw std::runtime_error("samples don't match");
         }
     }
 
@@ -119,8 +118,8 @@ void testBufferForwarder01()
     blockInfo3->startSample = 483100;
     blockInfo3->numChannels = 2;
     blockInfo3->numTotalSamples = 4096;
-    blockInfo3->firstChannelData.resize(3000);
-    blockInfo3->secondChannelData.resize(3000);
+    blockInfo3->firstChannelData.resize(4096);
+    blockInfo3->secondChannelData.resize(4096);
     for (size_t i = 0; i < 4096; i++)
     {
         blockInfo3->firstChannelData[i] = float(i) / 2.0f;
@@ -143,18 +142,18 @@ void testBufferForwarder01()
     }
 
     // segment zero should have a size of 4096, with 1904 samples from 1095 to 2999 times the factor
-    for (size_t i = 1095; i < 3000; i++)
+    for (size_t i = 1096; i < 3000; i++)
     {
-        auto leftSample = segs[1]->segment_audio_samples()[i - 1095];
-        auto rightSample = segs[1]->segment_audio_samples()[channelShift + i - 1095];
+        auto leftSample = segs[1]->segment_audio_samples()[i - 1096];
+        auto rightSample = segs[1]->segment_audio_samples()[channelShift + i - 1096];
         if (std::abs(leftSample - float(i) / 2.0f) > std::numeric_limits<float>::epsilon())
         {
-            std::runtime_error("samples don't match");
+            throw std::runtime_error("samples don't match");
         }
 
         if (std::abs(rightSample - float(i) / 5.0f) > std::numeric_limits<float>::epsilon())
         {
-            std::runtime_error("samples don't match");
+            throw std::runtime_error("samples don't match");
         }
     }
 
@@ -165,12 +164,12 @@ void testBufferForwarder01()
         auto rightSample = segs[1]->segment_audio_samples()[channelShift + i];
         if (std::abs(leftSample) > std::numeric_limits<float>::epsilon())
         {
-            std::runtime_error("samples don't match");
+            throw std::runtime_error("samples don't match");
         }
 
         if (std::abs(rightSample) > std::numeric_limits<float>::epsilon())
         {
-            std::runtime_error("samples don't match");
+            throw std::runtime_error("samples don't match");
         }
     }
 
@@ -181,12 +180,12 @@ void testBufferForwarder01()
         auto rightSample = segs[2]->segment_audio_samples()[channelShift + i];
         if (std::abs(leftSample - (float(i) / 2.0f)) > std::numeric_limits<float>::epsilon())
         {
-            std::runtime_error("samples don't match");
+            throw std::runtime_error("samples don't match");
         }
 
         if (std::abs(rightSample - (float(i) / 5.0f)) > std::numeric_limits<float>::epsilon())
         {
-            std::runtime_error("samples don't match");
+            throw std::runtime_error("samples don't match");
         }
     }
 
@@ -227,20 +226,94 @@ void testBufferForwarder01()
         auto rightSample = segs[3]->segment_audio_samples()[channelShift + i];
         if (std::abs(leftSample - (float(i) / 2.0f)) > std::numeric_limits<float>::epsilon())
         {
-            std::runtime_error("samples don't match");
+            throw std::runtime_error("samples don't match");
         }
 
         if (std::abs(rightSample - (float(i) / 5.0f)) > std::numeric_limits<float>::epsilon())
         {
-            std::runtime_error("samples don't match");
+            throw std::runtime_error("samples don't match");
         }
     }
 
     spdlog::info("test passed");
 }
 
+void testBufferForwarder02()
+{
+    TaskingManager tm;
+
+    AudioTransport::MockedAudioSegmentPayloadSender fakePayloadSender;
+    BufferForwarder audioInfoForwarder(fakePayloadSender, tm);
+
+    spdlog::set_level(spdlog::level::debug);
+
+    for (size_t i = 0; i < 15; i++)
+    {
+        std::shared_ptr<AudioBlockInfo> blockInfo = audioInfoForwarder.getFreeBlockInfoStruct();
+        blockInfo->bpm = 130;
+        blockInfo->sampleRate = 44100;
+        blockInfo->timeSignature = juce::Optional<juce::AudioPlayHead::TimeSignature>();
+        blockInfo->isLooping = false;
+        blockInfo->isPlaying = true;
+        blockInfo->loopBounds = juce::Optional<juce::AudioPlayHead::LoopPoints>();
+        blockInfo->numUsedSamples = 0;
+        blockInfo->startSample = (int64_t)(700 * i);
+        blockInfo->numChannels = 2;
+        blockInfo->numTotalSamples = 700;
+        blockInfo->firstChannelData.resize(700);
+        blockInfo->secondChannelData.resize(700);
+        for (size_t j = 0; j < 700; j++)
+        {
+            blockInfo->firstChannelData[j] = float((i * 700) + j) / 2.0f;
+            blockInfo->secondChannelData[j] = float((i * 700) + j) / 5.0f;
+        }
+        audioInfoForwarder.forwardAudioBlockInfo(blockInfo);
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    auto segs = fakePayloadSender.getAllReceivedSegments();
+    if (segs.size() != 2)
+    {
+        throw std::runtime_error("unexpected number of segments coalesced (!=2): " + std::to_string(segs.size()));
+    }
+
+    size_t channelShift = DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE;
+
+    // other segment should be a perfect fill of the mocked iterated data from start to finish
+    for (size_t i = 0; i < 4096; i++)
+    {
+        auto leftSample = segs[0]->segment_audio_samples()[i];
+        auto rightSample = segs[0]->segment_audio_samples()[channelShift + i];
+        if (std::abs(leftSample - (float(i) / 2.0f)) > std::numeric_limits<float>::epsilon())
+        {
+            throw std::runtime_error("samples don't match");
+        }
+
+        if (std::abs(rightSample - (float(i) / 5.0f)) > std::numeric_limits<float>::epsilon())
+        {
+            throw std::runtime_error("samples don't match");
+        }
+    }
+    for (size_t i = 0; i < 4096; i++)
+    {
+        auto leftSample = segs[1]->segment_audio_samples()[i];
+        auto rightSample = segs[1]->segment_audio_samples()[channelShift + i];
+        if (std::abs(leftSample - (float(4096 + i) / 2.0f)) > std::numeric_limits<float>::epsilon())
+        {
+            throw std::runtime_error("samples don't match");
+        }
+
+        if (std::abs(rightSample - (float(4096 + i) / 5.0f)) > std::numeric_limits<float>::epsilon())
+        {
+            throw std::runtime_error("samples don't match");
+        }
+    }
+}
+
 int main(int, char **)
 {
     // testing the basic stereo buffer coalescing
     testBufferForwarder01();
+    testBufferForwarder02();
 }

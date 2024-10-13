@@ -14,6 +14,8 @@
 #include <stdexcept>
 #include <string>
 
+#define BUFFERS_CONTINUATION_SAMPLE_TOLERANCE 60
+
 BufferForwarder::BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps, TaskingManager &tm)
     : taskManager(tm), payloadSender(ps), freeBlockInfos(NUM_PREALLOCATED_BLOCKINFO),
       blockInfosToCoalesce(NUM_PREALLOCATED_BLOCKINFO)
@@ -175,7 +177,7 @@ void BufferForwarder::coalescePayloadsThreadLoop()
                 // if the audio block info is the continuation of the payload data we keep filling
                 if (audioBlockInfoFollowsPayloadContent(currentlyFilledPayload, currentBlockInfo))
                 {
-                    spdlog::debug("Latest audio block info perfectly continues current payload signal");
+                    spdlog::debug("Latest audio block info roughly continues current payload signal");
                     // append the data to the buffer
                     size_t remainingSampleInAudioBlock =
                         appendAudioBlockToPayload(currentlyFilledPayload, currentBlockInfo);
@@ -191,7 +193,6 @@ void BufferForwarder::coalescePayloadsThreadLoop()
                 {
                     spdlog::debug("Latest audio block does not continue payload data, filling payload with zero before "
                                   "sending it");
-                    fillPayloadRemainingSpaceWithZeros(currentlyFilledPayload);
                 }
             }
         }
@@ -353,17 +354,17 @@ size_t BufferForwarder::appendAudioBlockToPayload(std::shared_ptr<AudioTransport
         return (size_t)remainingBlockInfoSamples;
     }
 
-    for (int chan = 0; chan < src->numChannels; chan++)
+    for (int chan = 0; chan < 2; chan++)
     {
         int channelShift = chan * DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE;
-        std::vector<float> &channelData = src->firstChannelData;
-        if (chan == 2)
+        float *channelData;
+        if (chan == 0 || src->numChannels < 2)
         {
-            channelData = src->secondChannelData;
+            channelData = src->firstChannelData.data();
         }
-        if (chan > 2)
+        else
         {
-            continue;
+            channelData = src->secondChannelData.data();
         }
         for (int i = 0; i < numMaxIter; i++)
         {
@@ -387,15 +388,29 @@ size_t BufferForwarder::appendAudioBlockToPayload(std::shared_ptr<AudioTransport
 bool BufferForwarder::audioBlockInfoFollowsPayloadContent(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload,
                                                           std::shared_ptr<AudioBlockInfo> src)
 {
-    return (payload->segment_start_sample() + (int64_t)payload->segment_sample_duration()) ==
-           (src->startSample + src->numUsedSamples);
+    // NOTE: Most DAW do not store items positions in samples and approximately reconstruct it when asked. This
+    // has the consequence that after processing a buffer of size N at position P, the next position might not
+    // be P+N and therefore we assert that a buffer continues another with a certain tolerance.
+    return std::abs((src->startSample + src->numUsedSamples) -
+                    (payload->segment_start_sample() + (int64_t)payload->segment_sample_duration())) <
+           BUFFERS_CONTINUATION_SAMPLE_TOLERANCE;
 }
 
 void BufferForwarder::fillPayloadRemainingSpaceWithZeros(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
 {
-    // since we're clearing buffer with zeros before use, filling with zeros is about sizing the segment up the
-    // allocated section (two times the size for the two maximum channels)
-    payload->mutable_segment_audio_samples()->Resize(DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE * 2, 0.0f);
+    if (payload->segment_sample_duration() >= DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE)
+    {
+        return;
+    }
+    for (int chan = 0; chan < 2; chan++)
+    {
+        int channelShift = chan * DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE;
+
+        for (size_t i = payload->segment_sample_duration(); i < DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE; i++)
+        {
+            payload->mutable_segment_audio_samples()->Set((uint64_t)channelShift + i, 0.0f);
+        }
+    }
     payload->set_segment_sample_duration(DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE);
 }
 

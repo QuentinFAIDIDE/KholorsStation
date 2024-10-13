@@ -5,13 +5,15 @@
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
-#include "StationApp/OpenGL/RadialGradientRectangle.h"
+#include "StationApp/OpenGL/BeatGridMesh.h"
 #include "StationApp/OpenGL/TexturedRectangle.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
 #include "juce_opengl/juce_opengl.h"
 #include <cstdint>
 #include <memory>
+
+#define MAX_TIME_SIGNATURE_GRID_VIEW_SCALE 250
 
 class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRenderer
 {
@@ -302,6 +304,8 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      */
     void ensureTrackTilesDrawOrderIsUpToDate();
 
+    juce::Colour backgroundColor;
+
     TmpNormalizedUnitTransformer tmpFreqTransformer, tmpIntensityTransformer;
 
     std::list<std::pair<uint64_t, std::list<size_t>>>
@@ -322,7 +326,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     std::unique_ptr<juce::OpenGLShaderProgram> backgroundGridShader;     /**< Shader to draw grids on background */
     juce::OpenGLContext openGLContext;
 
-    RadialGradientRectangle background; /**< OpenGL Mesh for background */
+    BeatGridMesh timeSignatureGrid, topBeatGrid; /**< OpenGL Mesh for background */
 
     std::atomic<bool> ignoreNewData; /**< after the openGL thread closes, prevent access to openGL resources */
 
@@ -346,10 +350,6 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
 
     bool needToResetTiles;      /**< true when the openGL thread is expected to clear all tiles */
     std::mutex tilesResetMutex; /**< mutex to protect acces to clearAllTiles */
-
-    float grid0FrameWidth, grid1FrameWidth, grid2FrameWidth; /**< width of the viewer grid levels in audio samples */
-    float grid0PixelWidth, grid1PixelWidth, grid2PixelWidth; /**< width of the viewer grid levels in pixels */
-    int grid0PixelShift, grid1PixelShift, grid2PixelShift;   /**< Pixel shift from left side in pixels of grid levels */
 
     std::mutex clearedRangesMutex;
     std::queue<ClearTrackInfoRange> clearedRanges; /**< A list of ranges on which specific tracks were cleared. Here to

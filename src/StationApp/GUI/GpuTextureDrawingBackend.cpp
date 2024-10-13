@@ -4,6 +4,7 @@
 #include "StationApp/GUI/FftDrawingBackend.h"
 
 #include "../OpenGL/OpenGlShaders.h"
+#include "StationApp/OpenGL/BeatGridMesh.h"
 #include "StationApp/OpenGL/GLInfoLogger.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
@@ -14,13 +15,15 @@
 #include <optional>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
+#include <string>
 
 GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft,
                                                    NormalizedUnitTransformer &it)
-    : FftDrawingBackend(tis, ft, it), tmpFreqTransformer(ft), tmpIntensityTransformer(it),
-      background(KHOLORS_COLOR_FREQVIEW_GRADIENT_CENTER, KHOLORS_COLOR_FREQVIEW_GRADIENT_BORDERS), ignoreNewData(true), viewPosition(0),
-      viewScale(150), convolutionId(GpuConvolutionId::Emboss), bpm(120), needToResetTiles(false)
+    : FftDrawingBackend(tis, ft, it), tmpFreqTransformer(ft), tmpIntensityTransformer(it), timeSignatureGrid(false),
+      topBeatGrid(true), ignoreNewData(true), viewPosition(0), viewScale(150), convolutionId(GpuConvolutionId::Emboss),
+      bpm(120), needToResetTiles(false)
 {
+    backgroundColor = KHOLORS_COLOR_BACKGROUND;
     openGLContext.setRenderer(this);
     openGLContext.attachTo(*this);
     secondTileNextIndex = 0;
@@ -185,6 +188,18 @@ void GpuTextureDrawingBackend::newOpenGLContextCreated()
     {
         spdlog::info("Sucessfully compiled OpenGL shaders");
 
+        backgroundGridShader->use();
+        backgroundGridShader->setUniform("gridTexture", 0);
+
+        // initialize background openGL objects
+        timeSignatureGrid.registerGlObjects();
+        timeSignatureGrid.generateBeatGridTexture(4);
+        timeSignatureGrid.refreshGpuTexture();
+
+        topBeatGrid.registerGlObjects();
+        topBeatGrid.generateBeatGridTexture(4);
+        topBeatGrid.refreshGpuTexture();
+
         texturedPositionedShader->use();
         texturedPositionedShader->setUniform("sfftTexture", 0);
 
@@ -195,13 +210,6 @@ void GpuTextureDrawingBackend::newOpenGLContextCreated()
 
         // enable the error logging
         enableOpenGLErrorLogging();
-
-        spdlog::debug("Enabled gl logging");
-
-        // initialize background openGL objects
-        background.registerGlObjects();
-
-        spdlog::debug("Registered gl objects");
 
         // load tiles textures
         texturedPositionedShader->use();
@@ -258,43 +266,9 @@ void GpuTextureDrawingBackend::uploadShadersUniforms()
         texturedPositionedShader->setUniform("viewWidth", (GLfloat)(viewWidth * viewScale));
         texturedPositionedShader->setUniform("convolutionId", (GLint)convolutionId);
 
-        int framesPerMinutes = (60 * VISUAL_SAMPLE_RATE);
-
-        grid0FrameWidth = (float(framesPerMinutes) / bpm);
-        grid1FrameWidth = (float(framesPerMinutes) / (bpm * 4));
-        grid2FrameWidth = (float(framesPerMinutes) / (bpm * 16));
-
-        grid2PixelWidth = grid2FrameWidth / float(viewScale);
-        grid1PixelWidth = grid2PixelWidth * 4;
-        grid0PixelWidth = grid1PixelWidth * 4;
-
-        grid0PixelShift = (int(grid0FrameWidth + 0.5f) - (viewPosition % int(grid0FrameWidth + 0.5f))) / viewScale;
-        grid1PixelShift = int(grid0PixelShift + 0.5f) % int(grid1PixelWidth + 0.5f);
-        grid2PixelShift = int(grid1PixelShift + 0.5f) % int(grid2PixelWidth + 0.5f);
-
         backgroundGridShader->use();
-        backgroundGridShader->setUniform("grid0PixelShift", (GLint)grid0PixelShift);
-        backgroundGridShader->setUniform("grid0PixelWidth", (GLfloat)grid0PixelWidth);
-
-        backgroundGridShader->setUniform("grid1PixelShift", (GLint)grid1PixelShift);
-        backgroundGridShader->setUniform("grid1PixelWidth", (GLfloat)grid1PixelWidth);
-
-        backgroundGridShader->setUniform("grid2PixelShift", (GLint)grid2PixelShift);
-        backgroundGridShader->setUniform("grid2PixelWidth", (GLfloat)grid2PixelWidth);
-
-        backgroundGridShader->setUniform("viewHeightPixels", (GLfloat)(viewHeight));
-
-        backgroundGridShader->setUniform("gridColorLevel0", KHOLORS_COLOR_GRIDS_LEVEL_0.getFloatRed(),
-                                         KHOLORS_COLOR_GRIDS_LEVEL_0.getFloatGreen(), KHOLORS_COLOR_GRIDS_LEVEL_0.getFloatBlue(),
-                                         KHOLORS_COLOR_GRIDS_LEVEL_0.getFloatAlpha());
-
-        backgroundGridShader->setUniform("gridColorLevel1", KHOLORS_COLOR_GRIDS_LEVEL_1.getFloatRed(),
-                                         KHOLORS_COLOR_GRIDS_LEVEL_1.getFloatGreen(), KHOLORS_COLOR_GRIDS_LEVEL_1.getFloatBlue(),
-                                         KHOLORS_COLOR_GRIDS_LEVEL_1.getFloatAlpha());
-
-        backgroundGridShader->setUniform("gridColorLevel2", KHOLORS_COLOR_GRIDS_LEVEL_2.getFloatRed(),
-                                         KHOLORS_COLOR_GRIDS_LEVEL_2.getFloatGreen(), KHOLORS_COLOR_GRIDS_LEVEL_2.getFloatBlue(),
-                                         KHOLORS_COLOR_GRIDS_LEVEL_2.getFloatAlpha());
+        timeSignatureGrid.updateGridPosition(viewPosition, viewScale, viewWidth, bpm);
+        topBeatGrid.updateGridPosition(viewPosition, viewScale, viewWidth, bpm);
 
         lastUsedGlThreadUnifNonce = glThreadUniformsNonce;
     }
@@ -394,12 +368,21 @@ void GpuTextureDrawingBackend::renderOpenGL()
     juce::gl::glBlendFunc(juce::gl::GL_SRC_ALPHA, juce::gl::GL_ONE_MINUS_SRC_ALPHA);
 
     // clear screen
-    juce::gl::glClearColor(0.078f, 0.078f, 0.078f, 1.0f);
+    juce::gl::glClearColor(backgroundColor.getFloatRed(), backgroundColor.getFloatGreen(),
+                           backgroundColor.getFloatBlue(), 1.0f);
     juce::gl::glClear(juce::gl::GL_COLOR_BUFFER_BIT);
 
     // draw background
     backgroundGridShader->use();
-    background.drawGlObjects();
+    int viewScaleCopy;
+    {
+        std::lock_guard lock(glThreadUniformsMutex);
+        viewScaleCopy = viewScale;
+    }
+    timeSignatureGrid.setVisible(viewScaleCopy < MAX_TIME_SIGNATURE_GRID_VIEW_SCALE);
+    topBeatGrid.setVisible(viewScaleCopy >= MAX_TIME_SIGNATURE_GRID_VIEW_SCALE);
+    timeSignatureGrid.drawGlObjects();
+    topBeatGrid.drawGlObjects();
 
     std::optional<uint64_t> selection;
     {
@@ -442,7 +425,8 @@ void GpuTextureDrawingBackend::openGLContextClosing()
     {
         secondTilesRingBuffer[i].mesh->freeGlObjects();
     }
-    background.freeGlObjects();
+    timeSignatureGrid.freeGlObjects();
+    topBeatGrid.freeGlObjects();
     backgroundGridShader->release();
     texturedPositionedShader->release();
     ignoreNewData = true;

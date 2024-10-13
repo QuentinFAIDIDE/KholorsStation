@@ -48,7 +48,8 @@ void AudioDataWorker::workerThreadLoop()
         if (audioDataUpdate.has_value())
         {
             // if it's an audio segment, perform SFFT and update cursor position
-            std::shared_ptr<AudioTransport::AudioSegment> audioSegment = std::dynamic_pointer_cast<AudioTransport::AudioSegment>(audioDataUpdate->datum);
+            std::shared_ptr<AudioTransport::AudioSegment> audioSegment =
+                std::dynamic_pointer_cast<AudioTransport::AudioSegment>(audioDataUpdate->datum);
             if (audioSegment != nullptr)
             {
                 // eventually resize the buffer that will hold the data we perform FFT on. Should not do anything most
