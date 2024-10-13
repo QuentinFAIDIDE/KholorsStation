@@ -6,6 +6,7 @@
 #include "GUIToolkit/IconsLoader.h"
 #include "StationApp/Audio/AudioDataWorker.h"
 #include "StationApp/GUI/BottomInfoLine.h"
+#include "StationApp/GUI/ClearButton.h"
 #include "StationApp/GUI/FreqTimeView.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
@@ -21,7 +22,9 @@
 #define FREQVIEW_OUTER_BORDER_WIDTH 2
 #define TOPBAR_RIGHT_PADDING 25
 #define HELP_BUTTON_WIDTH 85
+#define CLEAR_BUTTON_WIDTH 100
 #define TOPBAR_BUTTON_HEIGHT 55
+#define TOPBAR_BUTTONS_PADDING 10
 #define TOPBAR_BUTTONS_RIGHT_MARGIN 45
 
 class MainComponent final : public juce::Component, public TaskListener
@@ -46,6 +49,7 @@ class MainComponent final : public juce::Component, public TaskListener
     AudioDataWorker audioDataWorker; /**< Worker threads to parse audio data from server and emit Tasks accordingly */
     BottomInfoLine infoBar;          /**< bottom tip bar */
     HelpButton helpButton;
+    ClearButton clearButton;
 
     juce::SharedResourcePointer<IconsLoader> sharedSvgs; /**< singleton that loads svg files */
 

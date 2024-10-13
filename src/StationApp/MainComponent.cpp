@@ -4,6 +4,7 @@
 #include "StationApp/Audio/AudioDataWorker.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/BottomInfoLine.h"
+#include "StationApp/GUI/ClearButton.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FreqTimeView.h"
 #include "TaskManagement/TaskingManager.h"
@@ -15,7 +16,7 @@
 
 MainComponent::MainComponent()
     : trackInfoStore(taskManager), freqTimeView(trackInfoStore, taskManager),
-      audioDataWorker(audioDataServer, taskManager), infoBar(taskManager)
+      audioDataWorker(audioDataServer, taskManager), infoBar(taskManager), clearButton(taskManager)
 {
     addAndMakeVisible(freqTimeView);
     addAndMakeVisible(infoBar);
@@ -23,6 +24,7 @@ MainComponent::MainComponent()
     setSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 
     addAndMakeVisible(helpButton);
+    addAndMakeVisible(clearButton);
 
     taskManager.registerTaskListener(&trackInfoStore);
     taskManager.registerTaskListener(&freqTimeView);
@@ -99,10 +101,14 @@ void MainComponent::resized()
     infoBar.setBounds(localBounds.removeFromBottom(BOTTOM_INFO_LINE_HEIGHT));
     freqTimeView.setBounds(localBounds);
 
-    auto helpButtonArea = topBar.withTrimmedRight(TOPBAR_RIGHT_PADDING + TOP_LOGO_WIDTH + TOPBAR_BUTTONS_RIGHT_MARGIN)
-                              .removeFromRight(HELP_BUTTON_WIDTH);
-    helpButtonArea.reduce(0, (helpButtonArea.getHeight() - TOPBAR_BUTTON_HEIGHT) / 2);
+    auto buttonsArea = topBar.withTrimmedRight(TOPBAR_RIGHT_PADDING + TOP_LOGO_WIDTH + TOPBAR_BUTTONS_RIGHT_MARGIN);
+    buttonsArea.reduce(0, (buttonsArea.getHeight() - TOPBAR_BUTTON_HEIGHT) / 2);
+
+    auto helpButtonArea = buttonsArea.removeFromRight(HELP_BUTTON_WIDTH);
     helpButton.setBounds(helpButtonArea);
+
+    auto clearButtonArea = buttonsArea.removeFromRight(CLEAR_BUTTON_WIDTH);
+    clearButton.setBounds(clearButtonArea);
 }
 
 bool MainComponent::taskHandler(std::shared_ptr<Task> task)

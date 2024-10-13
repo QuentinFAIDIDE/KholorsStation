@@ -5,6 +5,7 @@
 #include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/Audio/TrackColorUpdateTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/GUI/ClearTask.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FrequencyScale.h"
 #include "StationApp/GUI/GpuTextureDrawingBackend.h"
@@ -271,6 +272,15 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
         selectionUpdate->setCompleted(true);
         return false;
     }
+
+    auto clearTask = std::dynamic_pointer_cast<ClearTask>(task);
+    if (clearTask != nullptr && !clearTask->isCompleted())
+    {
+        fftDrawBackend->clearDisplayedFFTs();
+        trackList.clear();
+        clearTask->setCompleted(true);
+        return false;
+    };
 
     // we are not stopping any tasks from being broadcasted further
     return false;
