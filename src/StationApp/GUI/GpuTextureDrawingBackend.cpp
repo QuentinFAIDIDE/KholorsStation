@@ -23,6 +23,8 @@ GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, Normaliz
       topBeatGrid(true), ignoreNewData(true), viewPosition(0), viewScale(150), convolutionId(GpuConvolutionId::Emboss),
       bpm(120), needToResetTiles(false)
 {
+    timeSignature = 4;
+    lastAppliedTimeSignature = 4;
     backgroundColor = KHOLORS_COLOR_BACKGROUND;
     openGLContext.setRenderer(this);
     openGLContext.attachTo(*this);
@@ -177,6 +179,14 @@ void GpuTextureDrawingBackend::updateBpm(float nbpm, TaskingManager *tm)
     }
 }
 
+void GpuTextureDrawingBackend::timeSignatureNumeratorUpdate(int numerator)
+{
+    {
+        std::lock_guard lock(glThreadUniformsMutex);
+        timeSignature = numerator;
+    }
+}
+
 void GpuTextureDrawingBackend::newOpenGLContextCreated()
 {
     spdlog::info("Initializing OpenGL context...");
@@ -268,6 +278,7 @@ void GpuTextureDrawingBackend::uploadShadersUniforms()
 
         backgroundGridShader->use();
         timeSignatureGrid.updateGridPosition(viewPosition, viewScale, viewWidth, bpm);
+        topBeatGrid.setTimeSignatureNumerator(timeSignature);
         topBeatGrid.updateGridPosition(viewPosition, viewScale, viewWidth, bpm);
 
         lastUsedGlThreadUnifNonce = glThreadUniformsNonce;
@@ -374,6 +385,20 @@ void GpuTextureDrawingBackend::renderOpenGL()
 
     // draw background
     backgroundGridShader->use();
+
+    // update time signature of the beat grid if necessary
+    int newTimeSignature;
+    {
+        std::lock_guard lock(glThreadUniformsMutex);
+        newTimeSignature = timeSignature;
+    }
+    if (newTimeSignature != lastAppliedTimeSignature)
+    {
+        topBeatGrid.generateBeatGridTexture(newTimeSignature);
+        topBeatGrid.refreshGpuTexture();
+        lastAppliedTimeSignature = newTimeSignature;
+    }
+
     int viewScaleCopy;
     {
         std::lock_guard lock(glThreadUniformsMutex);

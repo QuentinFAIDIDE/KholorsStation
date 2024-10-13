@@ -7,6 +7,7 @@
 #include "StationApp/Audio/FftResultVectorReuseTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/ProcessingTimer.h"
+#include "StationApp/Audio/TimeSignatureUpdateTask.h"
 #include "StationApp/Audio/TrackInfoUpdateTask.h"
 #include "TaskManagement/TaskingManager.h"
 #include <memory>
@@ -99,10 +100,13 @@ void AudioDataWorker::workerThreadLoop()
                     trackInfo->blueColorLevel);
                 taskingManager.broadcastTask(trackudpateTask);
             }
-            // if it's a DawInfo, copy it and emit a task
+            // if it's a DawInfo, copy it and emit related tasks
             auto dawInfo = std::dynamic_pointer_cast<AudioTransport::DawInfo>(audioDataUpdate->datum);
             if (dawInfo != nullptr)
             {
+                auto timeSignatureUpdate = std::make_shared<TimeSignatureUpdateTask>(dawInfo->timeSignatureNumerator);
+                taskingManager.broadcastTask(timeSignatureUpdate);
+
                 auto bpmUpdate = std::make_shared<BpmUpdateTask>(dawInfo->bpm);
                 taskingManager.broadcastTask(bpmUpdate);
             }

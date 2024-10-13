@@ -131,6 +131,13 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
     void updateBpm(float newBpm, TaskingManager *tm) override;
 
     /**
+     * @brief Update the time signature of the beat grid.
+     *
+     * @param timeSignatureNumerator number at numerator of the time signature fraction.
+     */
+    void timeSignatureNumeratorUpdate(int timeSignatureNumerator) override;
+
+    /**
      * @brief clears on screen data.
      * In this openGL version, queue clearing to be done by openGL Thread.
      */
@@ -321,6 +328,8 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
                                         std::pair(track_id, tile_index) */
 
     int64_t lastDrawTilesNonce; /**< The last nonce tilesNonce drawn */
+
+    int timeSignature, lastAppliedTimeSignature;
 
     std::unique_ptr<juce::OpenGLShaderProgram> texturedPositionedShader; /**< shader to draw ffts */
     std::unique_ptr<juce::OpenGLShaderProgram> backgroundGridShader;     /**< Shader to draw grids on background */

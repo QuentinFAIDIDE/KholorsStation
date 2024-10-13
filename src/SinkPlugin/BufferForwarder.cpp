@@ -193,6 +193,7 @@ void BufferForwarder::coalescePayloadsThreadLoop()
                 {
                     spdlog::debug("Latest audio block does not continue payload data, filling payload with zero before "
                                   "sending it");
+                    fillPayloadRemainingSpaceWithZeros(currentlyFilledPayload);
                 }
             }
         }

@@ -69,6 +69,15 @@ class FftDrawingBackend : public juce::Component
     {
     }
 
+    /**
+     * @brief Update the time signature of the beat grid.
+     *
+     * @param timeSignatureNumerator number at numerator of the time signature fraction.
+     */
+    virtual void timeSignatureNumeratorUpdate(int timeSignatureNumerator)
+    {
+    }
+
     virtual void resized() override
     {
         freqLines.setBounds(getLocalBounds());

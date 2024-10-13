@@ -3,6 +3,7 @@
 #include "StationApp/Audio/FftResultVectorReuseTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/ProcessingTimer.h"
+#include "StationApp/Audio/TimeSignatureUpdateTask.h"
 #include "StationApp/Audio/TrackColorUpdateTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/ClearTask.h"
@@ -262,6 +263,14 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
             lastReceivedBpm = bpmUpdateTask->bpm;
         }
         bpmUpdateTask->setCompleted(true);
+        return false;
+    }
+
+    auto timeSignatureUpdate = std::dynamic_pointer_cast<TimeSignatureUpdateTask>(task);
+    if (timeSignatureUpdate != nullptr && !timeSignatureUpdate->isCompleted())
+    {
+        fftDrawBackend->timeSignatureNumeratorUpdate(timeSignatureUpdate->numerator);
+        timeSignatureUpdate->setCompleted(true);
         return false;
     }
 

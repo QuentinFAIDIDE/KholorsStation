@@ -68,6 +68,8 @@ class BeatGridMesh : public GlMesh
      */
     void setVisible(bool visible);
 
+    void setTimeSignatureNumerator(int numerator);
+
   private:
     std::vector<float> texture; /**< Raw intensities to use as texture */
 

@@ -45,6 +45,11 @@ BeatGridMesh::~BeatGridMesh()
 {
 }
 
+void BeatGridMesh::setTimeSignatureNumerator(int numerator)
+{
+    lastTimeSignatureNumerator = numerator;
+}
+
 void BeatGridMesh::registerGlObjects()
 {
     // generate objects
@@ -145,7 +150,7 @@ void BeatGridMesh::updateGridPosition(int64_t viewPosition, int64_t viewScale, i
     int64_t beatSampleWidth = (((float)VISUAL_SAMPLE_RATE) * 60.0f) / bpm;
     if (isSuperGrid)
     {
-        beatSampleWidth = beatSampleWidth * 4;
+        beatSampleWidth = beatSampleWidth * lastTimeSignatureNumerator;
     }
     int64_t samplesToNextBeatBar = beatSampleWidth - (viewPosition % beatSampleWidth);
 
