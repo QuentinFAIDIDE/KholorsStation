@@ -5,6 +5,7 @@
 #define KHOLORS_COLOR_TEXT_DARKER juce::Colour(179, 179, 179)
 #define KHOLORS_COLOR_SEPARATOR_LINE juce::Colour(80, 80, 80)
 #define KHOLORS_COLOR_HIGHLIGHT juce::Colour(87, 110, 195)
+#define KHOLORS_COLOR_BUTTON_HIGHLIGHT juce::Colour(194, 219, 255)
 #define KHOLORS_COLOR_SELECTED_BACKGROUND juce::Colour(33, 45, 90)
 #define KHOLORS_COLOR_GRIDS_LEVEL_0 juce::Colour(juce::uint8(31), 38, 62, 1.0f)
 #define KHOLORS_COLOR_GRIDS_LEVEL_1 juce::Colour(juce::uint8(31), 38, 62, 1.0f)
@@ -40,7 +41,7 @@
 
 #define KHOLORS_TAB_HIGHLIGHT_LINE_WIDTH 2
 
-#define KHOLORS_COLOR_PALETTE                                                                                                  \
+#define KHOLORS_COLOR_PALETTE                                                                                          \
     {juce::Colour::fromString("ff399898"), juce::Colour::fromString("ff3c7a98"), juce::Colour::fromString("ff4056a5"), \
      juce::Colour::fromString("ff663fc6"), juce::Colour::fromString("ff8c2fd3"), juce::Colour::fromString("ffcc34c9"), \
      juce::Colour::fromString("ffc2448a"), juce::Colour::fromString("ffc64264"), juce::Colour::fromString("ff9b5f31"), \

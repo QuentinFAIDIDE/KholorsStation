@@ -1,6 +1,13 @@
 #pragma once
 
+#include "GUIToolkit/FontsLoader.h"
+#include "juce_graphics/juce_graphics.h"
 #include <juce_gui_extra/juce_gui_extra.h>
+
+#define KHOLORS_BUTTON_CORNERSIZE 8
+#define KHOLORS_BUTTON_BORDER_THICKNESS 2
+#define KHOLORS_BUTTON_DOWN_DISPLACEMENT 2
+#define BUTTON_TEXT_HEIGHT 19
 
 class KholorsLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -19,4 +26,11 @@ class KholorsLookAndFeel : public juce::LookAndFeel_V4
     int getPopupMenuBorderSizeWithOptions(const juce::PopupMenu::Options &) override;
     void drawMenuBarBackground(juce::Graphics &g, int width, int height, bool isMouseOverBar,
                                juce::MenuBarComponent &) override;
+    void drawButtonBackground(juce::Graphics &g, juce::Button &b, const juce::Colour &backgroundColor, bool highlighted,
+                              bool down) override;
+    void drawButtonText(juce::Graphics &, juce::TextButton &, bool shouldDrawButtonAsHighlighted,
+                        bool shouldDrawButtonAsDown) override;
+
+  private:
+    juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */
 };

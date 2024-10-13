@@ -1,6 +1,7 @@
 #include "KholorsLookAndFeel.h"
 
 #include "Consts.h"
+#include "juce_graphics/juce_graphics.h"
 #include "juce_gui_extra/juce_gui_extra.h"
 
 #define MENU_SEPARATOR_HEIGHT 6
@@ -32,6 +33,11 @@ KholorsLookAndFeel::KholorsLookAndFeel()
     setColour(juce::TextEditor::ColourIds::outlineColourId, juce::Colours::transparentBlack);
     setColour(juce::TextEditor::ColourIds::focusedOutlineColourId, juce::Colours::transparentBlack);
     setColour(juce::TextEditor::ColourIds::highlightColourId, KHOLORS_COLOR_HIGHLIGHT);
+
+    setColour(juce::TextButton::ColourIds::buttonColourId, KHOLORS_COLOR_BACKGROUND);
+    setColour(juce::TextButton::ColourIds::buttonOnColourId, KHOLORS_COLOR_BACKGROUND.darker());
+    setColour(juce::TextButton::ColourIds::textColourOnId, KHOLORS_COLOR_TEXT);
+    setColour(juce::TextButton::ColourIds::textColourOffId, KHOLORS_COLOR_TEXT_DARKER);
 
     setColour(juce::ColourSelector::ColourIds::backgroundColourId, KHOLORS_COLOR_BACKGROUND);
 
@@ -129,4 +135,37 @@ void KholorsLookAndFeel::drawResizableFrame(juce::Graphics &, int, int, const ju
 void KholorsLookAndFeel::drawMenuBarBackground(juce::Graphics &g, int, int, bool, juce::MenuBarComponent &)
 {
     g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
+}
+
+void KholorsLookAndFeel::drawButtonBackground(juce::Graphics &g, juce::Button &, const juce::Colour &backgroundColor,
+                                              bool highlighted, bool down)
+{
+    g.setColour(backgroundColor);
+    auto reducedClipBounds =
+        g.getClipBounds().toFloat().reduced(KHOLORS_BUTTON_BORDER_THICKNESS + KHOLORS_BUTTON_DOWN_DISPLACEMENT);
+    if (down)
+    {
+        reducedClipBounds.setX(reducedClipBounds.getX() + KHOLORS_BUTTON_DOWN_DISPLACEMENT);
+        reducedClipBounds.setY(reducedClipBounds.getY() + KHOLORS_BUTTON_DOWN_DISPLACEMENT);
+    }
+    g.fillRoundedRectangle(reducedClipBounds, KHOLORS_BUTTON_CORNERSIZE);
+}
+
+void KholorsLookAndFeel::drawButtonText(juce::Graphics &g, juce::TextButton &b, bool highlighted, bool down)
+{
+    g.setFont(sharedFonts->robotoBold.withHeight(BUTTON_TEXT_HEIGHT));
+    g.setColour(KHOLORS_COLOR_TEXT_DARKER);
+    if (highlighted)
+    {
+        g.setColour(KHOLORS_COLOR_TEXT);
+    }
+    auto textBounds = g.getClipBounds();
+    textBounds.reduce(KHOLORS_BUTTON_DOWN_DISPLACEMENT, KHOLORS_BUTTON_DOWN_DISPLACEMENT);
+    if (down)
+    {
+        g.setColour(KHOLORS_COLOR_BUTTON_HIGHLIGHT);
+        textBounds.setX(textBounds.getX() + KHOLORS_BUTTON_DOWN_DISPLACEMENT);
+        textBounds.setY(textBounds.getY() + KHOLORS_BUTTON_DOWN_DISPLACEMENT);
+    }
+    g.drawText(b.getButtonText().toUpperCase(), textBounds, juce::Justification::centred, true);
 }

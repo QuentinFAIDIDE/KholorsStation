@@ -22,6 +22,8 @@ MainComponent::MainComponent()
 
     setSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 
+    addAndMakeVisible(helpButton);
+
     taskManager.registerTaskListener(&trackInfoStore);
     taskManager.registerTaskListener(&freqTimeView);
 
@@ -53,7 +55,6 @@ void MainComponent::paint(juce::Graphics &g)
 
     int middlePadding = 6;
     int versionPadding = 3;
-    int rightPadding = 25;
 
     int mainTitleWidth = sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("KHOLORS");
     int subTitleWidth = sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("STATION");
@@ -66,7 +67,7 @@ void MainComponent::paint(juce::Graphics &g)
     g.setColour(KHOLORS_COLOR_TEXT);
 
     auto topspace = bounds.removeFromTop(MENU_BAR_HEIGHT);
-    topspace.removeFromLeft(rightPadding);
+    topspace.removeFromLeft(TOPBAR_RIGHT_PADDING);
     auto titleSpace = topspace.removeFromLeft(totalWidth);
     auto leftTitleSpace = titleSpace.removeFromLeft(mainTitleWidth);
 
@@ -86,17 +87,22 @@ void MainComponent::paint(juce::Graphics &g)
     g.setFont(sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT));
     g.drawText(GIT_DESCRIBE_VERSION, versionArea, juce::Justification::topRight, false);
 
-    auto artifaktLogoBounds = topspace.removeFromRight(rightPadding + TOP_LOGO_WIDTH);
-    artifaktLogoBounds.removeFromRight(rightPadding);
+    auto artifaktLogoBounds = topspace.removeFromRight(TOPBAR_RIGHT_PADDING + TOP_LOGO_WIDTH);
+    artifaktLogoBounds.removeFromRight(TOPBAR_RIGHT_PADDING);
     sharedSvgs->artifaktNdLogo->drawWithin(g, artifaktLogoBounds.toFloat(), juce::RectanglePlacement::centred, 1.0f);
 }
 
 void MainComponent::resized()
 {
     juce::Rectangle<int> localBounds = getLocalBounds();
-    localBounds.removeFromTop(MENU_BAR_HEIGHT);
+    auto topBar = localBounds.removeFromTop(MENU_BAR_HEIGHT);
     infoBar.setBounds(localBounds.removeFromBottom(BOTTOM_INFO_LINE_HEIGHT));
     freqTimeView.setBounds(localBounds);
+
+    auto helpButtonArea = topBar.withTrimmedRight(TOPBAR_RIGHT_PADDING + TOP_LOGO_WIDTH + TOPBAR_BUTTONS_RIGHT_MARGIN)
+                              .removeFromRight(HELP_BUTTON_WIDTH);
+    helpButtonArea.reduce(0, (helpButtonArea.getHeight() - TOPBAR_BUTTON_HEIGHT) / 2);
+    helpButton.setBounds(helpButtonArea);
 }
 
 bool MainComponent::taskHandler(std::shared_ptr<Task> task)

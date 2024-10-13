@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AudioTransport/SyncServer.h"
+#include "GUI/HelpButton.h"
 #include "GUIToolkit/FontsLoader.h"
 #include "GUIToolkit/IconsLoader.h"
 #include "StationApp/Audio/AudioDataWorker.h"
@@ -18,6 +19,10 @@
 #define APP_NAME_FONT_HEIGHT 40
 #define VERSION_FONT_HEIGHT 18
 #define FREQVIEW_OUTER_BORDER_WIDTH 2
+#define TOPBAR_RIGHT_PADDING 25
+#define HELP_BUTTON_WIDTH 85
+#define TOPBAR_BUTTON_HEIGHT 55
+#define TOPBAR_BUTTONS_RIGHT_MARGIN 45
 
 class MainComponent final : public juce::Component, public TaskListener
 {
@@ -40,6 +45,7 @@ class MainComponent final : public juce::Component, public TaskListener
     AudioTransport::SyncServer audioDataServer;           /**< Server that receives audio data */
     AudioDataWorker audioDataWorker; /**< Worker threads to parse audio data from server and emit Tasks accordingly */
     BottomInfoLine infoBar;          /**< bottom tip bar */
+    HelpButton helpButton;
 
     juce::SharedResourcePointer<IconsLoader> sharedSvgs; /**< singleton that loads svg files */
 
