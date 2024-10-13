@@ -21,6 +21,7 @@
 #define PREALLOCATED_BLOCKINFO_SAMPLE_SIZE 4096
 #define DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE 4096
 #define MAX_PAYLOAD_IDLE_MS 150
+#define MAX_FAILURE_RECONNECT_TIME_MS 5000
 
 /**
  * @brief A class that receives AudioBlockInfos from audio thread, and
@@ -248,4 +249,6 @@ class BufferForwarder : public TaskListener
     std::mutex trackNameMutex; /**< Lock to protect the string trackName */
 
     std::atomic<bool> dawIsCompatible; /**< tells if the DAW is compatible with Kholors station */
+
+    int64_t lastSucessfullPayloadUpload; /**< Last time at which a payload was succesffully sent */
 };

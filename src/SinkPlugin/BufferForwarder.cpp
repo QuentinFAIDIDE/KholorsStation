@@ -21,6 +21,8 @@ BufferForwarder::BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps, 
     shouldStop = false;
     dawIsCompatible = true;
 
+    lastSucessfullPayloadUpload = juce::Time::currentTimeMillis();
+
     // we'll fetch free blocks one by one
     freeBlockInfosFetchContainer = std::make_shared<std::vector<size_t>>();
     freeBlockInfosFetchContainer->reserve(1);
@@ -229,10 +231,15 @@ void BufferForwarder::sendPayloadsThreadLoop()
         if (success)
         {
             spdlog::debug("Successfully payload to the station");
+            lastSucessfullPayloadUpload = juce::Time::currentTimeMillis();
         }
         else
         {
             spdlog::debug("Failed to send payload to the station, it might not be reachable on this port.");
+            if (juce::Time::currentTimeMillis() - lastSucessfullPayloadUpload > MAX_FAILURE_RECONNECT_TIME_MS)
+            {
+                payloadSender.tryReconnect();
+            }
         }
 
         // release the payload so it can be reused
@@ -318,7 +325,7 @@ void BufferForwarder::copyMetadataToPayload(std::shared_ptr<AudioTransport::Audi
         dest->set_daw_loop_end(0);
     }
 
-    dest->set_segment_start_sample(src->startSample+src->numUsedSamples);
+    dest->set_segment_start_sample(src->startSample + src->numUsedSamples);
     dest->set_segment_sample_duration(0);
     dest->set_segment_no_channels(src->numChannels);
 }

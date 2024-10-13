@@ -21,6 +21,7 @@ class Client : public AudioSegmentPayloadSender
     Client(uint32_t port);
     void changeDestinationPort(uint32_t port);
     bool sendAudioSegment(const AudioSegmentPayload *payload) override;
+    void tryReconnect() override;
 
   private:
     std::unique_ptr<KholorsAudioTransport::Stub> stub;

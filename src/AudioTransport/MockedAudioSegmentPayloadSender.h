@@ -34,6 +34,10 @@ class MockedAudioSegmentPayloadSender : public AudioSegmentPayloadSender
         return receivedAudioSegments;
     }
 
+    void tryReconnect() override
+    {
+    }
+
   private:
     std::vector<std::shared_ptr<AudioSegmentPayload>> receivedAudioSegments;
     std::mutex mutex;

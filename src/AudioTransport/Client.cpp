@@ -68,6 +68,14 @@ void Client::changeDestinationPort(uint32_t port)
     stub = KholorsAudioTransport::NewStub(chan);
 }
 
+void Client::tryReconnect()
+{
+    std::unique_lock lock(portChangeMutex);
+    auto chan = grpc::CreateCustomChannel("127.0.0.1:" + std::to_string(lastPortUsed),
+                                          grpc::InsecureChannelCredentials(), channelArgs);
+    stub = KholorsAudioTransport::NewStub(chan);
+}
+
 bool Client::sendAudioSegment(const AudioSegmentPayload *payload)
 {
     std::shared_lock lock(portChangeMutex);
