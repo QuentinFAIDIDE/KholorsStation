@@ -6,6 +6,7 @@
 #include "StationApp/Audio/TimeSignatureUpdateTask.h"
 #include "StationApp/Audio/TrackColorUpdateTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/Audio/VolumeSensitivityTask.h"
 #include "StationApp/GUI/ClearTask.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FrequencyScale.h"
@@ -290,6 +291,15 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
         clearTask->setCompleted(true);
         return false;
     };
+
+    auto volumeSensitivityUpdateTask = std::dynamic_pointer_cast<VolumeSensitivityTask>(task);
+    if (volumeSensitivityUpdateTask != nullptr && !volumeSensitivityUpdateTask->isCompleted())
+    {
+        auto intensityProjection = std::make_shared<SigmoidProjection>(volumeSensitivityUpdateTask->sensitivity);
+        intensityTransformer.setProjection(intensityProjection);
+        volumeSensitivityUpdateTask->setCompleted(true);
+        return false;
+    }
 
     // we are not stopping any tasks from being broadcasted further
     return false;

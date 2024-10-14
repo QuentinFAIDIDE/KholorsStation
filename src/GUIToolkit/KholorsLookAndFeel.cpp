@@ -176,10 +176,6 @@ void KholorsLookAndFeel::drawLinearSlider(juce::Graphics &g, int x, int y, int w
 {
     auto area = juce::Rectangle<int>(x, y, width, height);
 
-    std::cout << "min: " << minSliderPos << std::endl;
-    std::cout << "max: " << maxSliderPos << std::endl;
-    std::cout << "actual: " << sliderPos << std::endl;
-
     float posRatio = (sl.getValue() - sl.getMinimum()) / (sl.getMaximum() - sl.getMinimum());
 
     g.setColour(KHOLORS_COLOR_TEXT_DARKER);

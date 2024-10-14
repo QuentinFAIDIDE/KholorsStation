@@ -17,7 +17,8 @@
 
 MainComponent::MainComponent()
     : trackInfoStore(taskManager), freqTimeView(trackInfoStore, taskManager),
-      audioDataWorker(audioDataServer, taskManager), infoBar(taskManager), clearButton(taskManager)
+      audioDataWorker(audioDataServer, taskManager), infoBar(taskManager), clearButton(taskManager),
+      volumeSensitivitySlider(taskManager)
 {
     addAndMakeVisible(freqTimeView);
     addAndMakeVisible(infoBar);
