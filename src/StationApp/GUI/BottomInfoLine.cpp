@@ -39,7 +39,7 @@ void BottomInfoLine::paint(juce::Graphics &g)
                   "   " +
                   std::to_string(int(ms + 0.5f)) + " ms";
 
-        rightText = std::to_string(int(lastFrequency + 0.5f)) + " Hz" + posTip;
+        rightText = std::to_string(int(lastFrequency + 0.5f)) + " Hz (" + noteFromFreq(lastFrequency) + ")" + posTip;
     }
 
     auto bounds = getLocalBounds();
@@ -93,4 +93,67 @@ bool BottomInfoLine::taskHandler(std::shared_ptr<Task> task)
     }
 
     return false;
+}
+
+std::string BottomInfoLine::noteFromFreq(float freq)
+{
+    float semiToneShiftFromA4 = 12.0f * std::log2(freq / 440);
+    int centDistanceToNearestNote = ((100.0f * (semiToneShiftFromA4 - std::round(semiToneShiftFromA4))) + 0.5f);
+    int noteId = (int)(semiToneShiftFromA4 + 0.5f);
+    int octaveInvariantNoteId = noteId % 12;
+    int octave = 4 + (noteId / 12);
+    std::string noteTxt;
+    switch (octaveInvariantNoteId)
+    {
+    case 0:
+        noteTxt = "A";
+        break;
+    case 1:
+        noteTxt = "A#";
+        break;
+    case 2:
+        noteTxt = "B";
+        break;
+    case 3:
+        noteTxt = "C";
+        break;
+    case 4:
+        noteTxt = "C#";
+        break;
+    case 5:
+        noteTxt = "D";
+        break;
+    case 6:
+        noteTxt = "D#";
+        break;
+    case 7:
+        noteTxt = "E";
+        break;
+    case 8:
+        noteTxt = "F";
+        break;
+    case 9:
+        noteTxt = "F#";
+        break;
+    case 10:
+        noteTxt = "G";
+        break;
+    case 11:
+        noteTxt = "G#";
+        break;
+    default:
+        noteTxt = "A";
+        break;
+    }
+    noteTxt += std::to_string(octave);
+    if (centDistanceToNearestNote < 0)
+    {
+        noteTxt += " ";
+    }
+    else
+    {
+        noteTxt += " +";
+    }
+    noteTxt += std::to_string(centDistanceToNearestNote) + "c";
+    return noteTxt;
 }

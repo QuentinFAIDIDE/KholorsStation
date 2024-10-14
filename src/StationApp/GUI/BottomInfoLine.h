@@ -21,6 +21,8 @@ class BottomInfoLine : public juce::Component, public TaskListener
     bool taskHandler(std::shared_ptr<Task> task) override;
 
   private:
+    std::string noteFromFreq(float freq);
+
     TaskingManager &taskingManager;
     std::atomic<float> lastFrequency;
     std::atomic<float> lastSampleTime;
