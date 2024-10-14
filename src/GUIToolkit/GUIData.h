@@ -7,6 +7,9 @@ namespace GUIData
     extern const char*  RobotoBlack_ttf;
     const int           RobotoBlack_ttfSize = 168060;
 
+    extern const char*  low_waves_svg;
+    const int           low_waves_svgSize = 1785;
+
     extern const char*  artifaktnd_logo_svg;
     const int           artifaktnd_logo_svgSize = 8415;
 
@@ -53,7 +56,7 @@ namespace GUIData
     const int           RobotoThinItalic_ttfSize = 172860;
 
     extern const char*  kholors_logo_svg;
-    const int           kholors_logo_svgSize = 2208;
+    const int           kholors_logo_svgSize = 5329;
 
     extern const char*  RobotoLightItalic_ttf;
     const int           RobotoLightItalic_ttfSize = 173172;
@@ -78,6 +81,9 @@ namespace GUIData
 
     extern const char*  RobotoThin_ttf;
     const int           RobotoThin_ttfSize = 168488;
+
+    extern const char*  high_waves_svg;
+    const int           high_waves_svgSize = 2318;
 
     extern const char*  RobotoBoldItalic_ttf;
     const int           RobotoBoldItalic_ttfSize = 171508;

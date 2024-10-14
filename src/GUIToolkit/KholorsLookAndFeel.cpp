@@ -169,3 +169,32 @@ void KholorsLookAndFeel::drawButtonText(juce::Graphics &g, juce::TextButton &b, 
     }
     g.drawText(b.getButtonText().toUpperCase(), textBounds, juce::Justification::centred, true);
 }
+
+void KholorsLookAndFeel::drawLinearSlider(juce::Graphics &g, int x, int y, int width, int height, float sliderPos,
+                                          float minSliderPos, float maxSliderPos, juce::Slider::SliderStyle,
+                                          juce::Slider &sl)
+{
+    auto area = juce::Rectangle<int>(x, y, width, height);
+
+    std::cout << "min: " << minSliderPos << std::endl;
+    std::cout << "max: " << maxSliderPos << std::endl;
+    std::cout << "actual: " << sliderPos << std::endl;
+
+    float posRatio = (sl.getValue() - sl.getMinimum()) / (sl.getMaximum() - sl.getMinimum());
+
+    g.setColour(KHOLORS_COLOR_TEXT_DARKER);
+    g.fillRoundedRectangle(area.reduced(0, (area.getHeight() - (LINEAR_SLIDER_HEIGHT - 2)) / 2).toFloat(),
+                           LINEAR_SLIDER_BAR_CORNER_RADIUS);
+
+    g.setColour(KHOLORS_COLOR_HIGHLIGHT);
+    g.fillRoundedRectangle(
+        area.reduced(0, (area.getHeight() - LINEAR_SLIDER_HEIGHT) / 2).toFloat().withWidth(area.getWidth() * posRatio),
+        LINEAR_SLIDER_BAR_CORNER_RADIUS);
+
+    auto handleArea =
+        area.reduced(0, (area.getHeight() - LINEAR_SLIDER_HANDLE_RADIUS) / 2)
+            .toFloat()
+            .withX(area.getX() + (area.getWidth() * posRatio) - ((float)LINEAR_SLIDER_HANDLE_RADIUS / 2.0f))
+            .withWidth(LINEAR_SLIDER_HANDLE_RADIUS);
+    g.fillEllipse(handleArea);
+}

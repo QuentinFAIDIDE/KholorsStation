@@ -8,6 +8,7 @@
 #include "StationApp/GUI/BottomInfoLine.h"
 #include "StationApp/GUI/ClearButton.h"
 #include "StationApp/GUI/FreqTimeView.h"
+#include "StationApp/GUI/SensitivitySlider.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_core/juce_core.h"
@@ -24,8 +25,10 @@
 #define HELP_BUTTON_WIDTH 85
 #define CLEAR_BUTTON_WIDTH 100
 #define TOPBAR_BUTTON_HEIGHT 55
-#define TOPBAR_BUTTONS_PADDING 10
+#define TOPBAR_BUTTONS_PADDING 8
 #define TOPBAR_BUTTONS_RIGHT_MARGIN 45
+#define SENSITIVITY_SLIDER_WIDTH 200
+#define SENSITIVITY_SLIDER_PICTOGRAM_WIDTH 36
 
 class MainComponent final : public juce::Component, public TaskListener
 {
@@ -50,6 +53,7 @@ class MainComponent final : public juce::Component, public TaskListener
     BottomInfoLine infoBar;          /**< bottom tip bar */
     HelpButton helpButton;
     ClearButton clearButton;
+    SensitivitySlider volumeSensitivitySlider;
 
     juce::SharedResourcePointer<IconsLoader> sharedSvgs; /**< singleton that loads svg files */
 

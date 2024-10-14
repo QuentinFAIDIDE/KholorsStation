@@ -61,7 +61,9 @@ sudo make install -j24
 ```
 
 ## Windows
+
 ### Building
+
 The project can only be compiled with the visual studio C++ compiler, where it has been
 instructed to install the Windows development kit, cmake, ninja and vcpkg. You will also need
 git in your PATH in order to fetch the version tag.
@@ -79,3 +81,13 @@ ninja
 You should then have an error at link step, for which you need to copy the dlls inside `.\build\\src\\SinkPlugin\\SinkPlugin_artefacts\\Debug\\VST3\\KholorsSink.vst3\\Contents\\x86-win\` to the `.\build\\src\\SinkPlugin` folder (Next to the `juce_vst3_helper.exe` binary).
 
 After performing this modification, the plugin and app should be ready to use.
+
+## Updating binary data
+
+```bash
+# from the build subdirectory
+cd ./../libs/JUCE/extras/BinaryBuilder/Builds/LinuxMakefile/
+make
+cd -
+./../libs/JUCE/extras/BinaryBuilder/Builds/LinuxMakefile/build/BinaryBuilder ../src/GUIData ../src/GUIToolkit GUIData
+```

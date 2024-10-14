@@ -8,6 +8,9 @@
 #define KHOLORS_BUTTON_BORDER_THICKNESS 2
 #define KHOLORS_BUTTON_DOWN_DISPLACEMENT 2
 #define BUTTON_TEXT_HEIGHT 19
+#define LINEAR_SLIDER_HEIGHT 8
+#define LINEAR_SLIDER_BAR_CORNER_RADIUS 4.0f
+#define LINEAR_SLIDER_HANDLE_RADIUS 20
 
 class KholorsLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -30,6 +33,9 @@ class KholorsLookAndFeel : public juce::LookAndFeel_V4
                               bool down) override;
     void drawButtonText(juce::Graphics &, juce::TextButton &, bool shouldDrawButtonAsHighlighted,
                         bool shouldDrawButtonAsDown) override;
+
+    void drawLinearSlider(juce::Graphics &, int x, int y, int width, int height, float sliderPos, float minSliderPos,
+                          float maxSliderPos, juce::Slider::SliderStyle, juce::Slider &) override;
 
   private:
     juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */

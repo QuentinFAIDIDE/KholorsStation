@@ -7,6 +7,7 @@
 #include "StationApp/GUI/ClearButton.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FreqTimeView.h"
+#include "StationApp/GUI/SensitivitySlider.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_events/juce_events.h"
 #include "juce_graphics/juce_graphics.h"
@@ -25,6 +26,7 @@ MainComponent::MainComponent()
 
     addAndMakeVisible(helpButton);
     addAndMakeVisible(clearButton);
+    addAndMakeVisible(volumeSensitivitySlider);
 
     taskManager.registerTaskListener(&trackInfoStore);
     taskManager.registerTaskListener(&freqTimeView);
@@ -92,6 +94,25 @@ void MainComponent::paint(juce::Graphics &g)
     auto artifaktLogoBounds = topspace.removeFromRight(TOPBAR_RIGHT_PADDING + TOP_LOGO_WIDTH);
     artifaktLogoBounds.removeFromRight(TOPBAR_RIGHT_PADDING);
     sharedSvgs->artifaktNdLogo->drawWithin(g, artifaktLogoBounds.toFloat(), juce::RectanglePlacement::centred, 1.0f);
+
+    topspace.removeFromRight(TOPBAR_BUTTONS_RIGHT_MARGIN + HELP_BUTTON_WIDTH + CLEAR_BUTTON_WIDTH +
+                             TOPBAR_BUTTONS_PADDING + TOPBAR_BUTTONS_PADDING);
+
+    auto sliderWithPictogramsArea = topspace.removeFromRight(
+        SENSITIVITY_SLIDER_PICTOGRAM_WIDTH + TOPBAR_BUTTONS_PADDING + SENSITIVITY_SLIDER_WIDTH +
+        TOPBAR_BUTTONS_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
+
+    if (sliderWithPictogramsArea.getWidth() >= SENSITIVITY_SLIDER_PICTOGRAM_WIDTH + TOPBAR_BUTTONS_PADDING +
+                                                   SENSITIVITY_SLIDER_WIDTH + TOPBAR_BUTTONS_PADDING +
+                                                   SENSITIVITY_SLIDER_PICTOGRAM_WIDTH)
+    {
+
+        auto leftSliderPicto = sliderWithPictogramsArea.removeFromLeft(SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
+        auto rightSliderPicto = sliderWithPictogramsArea.removeFromRight(SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
+
+        sharedSvgs->lowWaveIcon->drawWithin(g, leftSliderPicto.toFloat(), juce::RectanglePlacement::centred, 1.0f);
+        sharedSvgs->highWaveIcon->drawWithin(g, rightSliderPicto.toFloat(), juce::RectanglePlacement::centred, 1.0f);
+    }
 }
 
 void MainComponent::resized()
@@ -109,6 +130,32 @@ void MainComponent::resized()
 
     auto clearButtonArea = buttonsArea.removeFromRight(CLEAR_BUTTON_WIDTH);
     clearButton.setBounds(clearButtonArea);
+
+    int middlePadding = 6;
+    int versionPadding = 3;
+    int mainTitleWidth = sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("KHOLORS");
+    int subTitleWidth = sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("STATION");
+    int versionWidth = sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT).getStringWidth(GIT_DESCRIBE_VERSION);
+    int totalTextWidth =
+        TOPBAR_RIGHT_PADDING + mainTitleWidth + middlePadding + subTitleWidth + versionPadding + versionWidth;
+    buttonsArea.removeFromLeft(totalTextWidth);
+
+    if (buttonsArea.getWidth() <
+        (TOPBAR_BUTTONS_PADDING + TOPBAR_BUTTONS_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH + TOPBAR_BUTTONS_PADDING +
+         SENSITIVITY_SLIDER_WIDTH + TOPBAR_BUTTONS_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH))
+    {
+        volumeSensitivitySlider.setVisible(false);
+    }
+    else
+    {
+        volumeSensitivitySlider.setVisible(true);
+
+        buttonsArea.removeFromRight(TOPBAR_BUTTONS_PADDING * 2);
+        buttonsArea.removeFromRight(SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
+        buttonsArea.removeFromRight(TOPBAR_BUTTONS_PADDING);
+        auto sensitivitySliderArea = buttonsArea.removeFromRight(SENSITIVITY_SLIDER_WIDTH);
+        volumeSensitivitySlider.setBounds(sensitivitySliderArea);
+    }
 }
 
 bool MainComponent::taskHandler(std::shared_ptr<Task> task)

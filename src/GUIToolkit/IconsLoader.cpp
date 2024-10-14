@@ -2,6 +2,7 @@
 #include "GUIData.h"
 
 #include "Consts.h"
+#include "juce_graphics/juce_graphics.h"
 
 IconsLoader::IconsLoader()
 {
@@ -46,4 +47,10 @@ IconsLoader::IconsLoader()
         juce::Drawable::createFromImageData(GUIData::artifaktnd_logo_svg, GUIData::artifaktnd_logo_svgSize);
 
     kholorsLogo = juce::Drawable::createFromImageData(GUIData::kholors_logo_svg, GUIData::kholors_logo_svgSize);
+
+    lowWaveIcon = juce::Drawable::createFromImageData(GUIData::low_waves_svg, GUIData::low_waves_svgSize);
+    lowWaveIcon->replaceColour(juce::Colours::black, KHOLORS_COLOR_TEXT_DARKER);
+
+    highWaveIcon = juce::Drawable::createFromImageData(GUIData::high_waves_svg, GUIData::high_waves_svgSize);
+    highWaveIcon->replaceColour(juce::Colours::black, KHOLORS_COLOR_TEXT_DARKER);
 }
