@@ -9,7 +9,7 @@ stages:
 .linux-cmake-template: &linux-cmake-config
   image: ${CI_REGISTRY_IMAGE}/builder:latest
   cache:
-    - key: "linux-${CI_PROJECT_NAME}-build-0" #increment the number when you wanna clear the cmake cache out of a bug
+    - key: "linux-${CI_PROJECT_NAME}-build-1" #increment the number when you wanna clear the cmake cache out of a bug
       paths:
         - build
         - libs
@@ -31,6 +31,8 @@ build-image:
   except:
     refs:
       - tags
+  tags:
+    - linux-local
 
 build-linux:
   stage: build
@@ -72,6 +74,8 @@ versionning:
   only:
     refs:
       - master
+  tags:
+    - linux-local
 
 linux-package:
   stage: package

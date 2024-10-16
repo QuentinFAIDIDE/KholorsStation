@@ -3,5 +3,5 @@ Version: VERSION_TO_REPLACE
 Maintainer: Quentin Faidide <quentin.faidide@gmail.com>
 Section: sound
 Architecture: amd64
-Depends: libspdlog1 | libspdlog1.12, libx11-6, libxrandr2, libxinerama1, libxcursor1, libfreetype6, libglx0, libgl1, libasound2t64
+Depends: libx11-6, libxrandr2, libxinerama1, libxcursor1, libfreetype6, libglx0, libgl1, libasound2t64
 Description: Kholors is a SFFT visualization software made of a desktop software, Kholors Station, and Kholors Sink, a VST3 plugin responsible for sending signals from DAWs to the Station.
