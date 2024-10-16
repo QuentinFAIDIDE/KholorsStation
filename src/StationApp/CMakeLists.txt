@@ -75,6 +75,8 @@ target_compile_definitions(
 # automatically. If we'd generated a binary data target above, we would need to
 # link to it here too. This is a standard CMake command.
 
+target_link_options(StationApp PUBLIC LINKER:-Map=foo.map)
+
 target_link_libraries(
   StationApp
   PRIVATE GUIToolkit
@@ -86,6 +88,6 @@ target_link_libraries(
           Utils
           nlohmann_json::nlohmann_json
           spdlog::spdlog
-          ${PLATFORM_SPECIFIC_FFTW3_LIB}
+          muFFT
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)

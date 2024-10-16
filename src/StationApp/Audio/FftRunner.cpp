@@ -1,12 +1,13 @@
 #include "FftRunner.h"
+#include "fft.h"
+#include "fft_internal.h"
+#include <chrono>
 #include <cstring>
-#include <fftw3.h>
 #include <memory>
 #include <mutex>
-#include <thread>
-#include <chrono>
-#include <vector>
 #include <spdlog/spdlog.h>
+#include <thread>
+#include <vector>
 
 using namespace std::chrono_literals;
 
@@ -29,7 +30,8 @@ FftRunner::FftRunner() : exiting(false)
     hannWindowTable.resize(FFT_INPUT_NO_INTENSITIES);
     for (size_t i = 0; i < hannWindowTable.size(); i++)
     {
-        hannWindowTable[i] = 0.5 * (1 - std::cos(2.0f * juce::MathConstants<float>::pi * (float)i / float(hannWindowTable.size() - 1)));
+        hannWindowTable[i] =
+            0.5 * (1 - std::cos(2.0f * juce::MathConstants<float>::pi * (float)i / float(hannWindowTable.size() - 1)));
     }
 
     // Pick the number of threads and start them.
@@ -257,21 +259,25 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
 
 void FftRunner::fftThreadsLoop()
 {
-    // instanciate fftw objects
+    // instanciate mufft objects
     float *fftInput;
-    fftwf_complex *fftOutput;
-    fftwf_plan fftwPlan;
+    cfloat *fftOutput;
+    mufft_plan_1d *mufftPlan;
     // allocate them and compute the plan
     {
-        std::scoped_lock<std::mutex> lock(fftwMutex);
-        fftInput = fftwf_alloc_real(FFTW_INPUT_SIZE);
-        fftOutput = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * FFT_OUTPUT_NO_FREQS);
-        fftwPlan = fftwf_plan_dft_r2c_1d(FFTW_INPUT_SIZE, fftInput, fftOutput, FFTW_PATIENT);
+        std::scoped_lock<std::mutex> lock(fftMutex);
+        fftInput = (float *)mufft_alloc(FFT_INPUT_SIZE * sizeof(float));
+        fftOutput = (cfloat *)mufft_alloc(FFT_OUTPUT_NO_FREQS * sizeof(cfloat));
+        mufftPlan = mufft_create_plan_1d_r2c(FFT_INPUT_SIZE, MUFFT_FLAG_CPU_ANY);
+        if (mufftPlan == nullptr)
+        {
+            throw std::runtime_error("Unable to initialize muFFT plan, is the FFT_INPUT_SIZE not a power of two ?");
+        }
     }
 
     // Write zeros in input as zero padded part can stay untouched all along.
     // The job processing will only write the first FFT_INPUT_NO_INTENSITIES floats.
-    for (size_t i = 0; i < FFTW_INPUT_SIZE; i++)
+    for (size_t i = 0; i < FFT_INPUT_SIZE; i++)
     {
         fftInput[i] = 0.0f;
     }
@@ -295,7 +301,7 @@ void FftRunner::fftThreadsLoop()
             // note that the processJob function will
             // call the WaitGroup pointer at by the job
             // to notify the job poster that is currently waiting.
-            processJob(nextJob, &fftwPlan, fftInput, fftOutput);
+            processJob(nextJob, mufftPlan, fftInput, fftOutput);
         }
         else
         // if no more job on the queue, wait for condition variable
@@ -304,12 +310,12 @@ void FftRunner::fftThreadsLoop()
             mutexCondition.wait(lock, [this] { return !todoJobQueue.empty() || exiting; });
             if (exiting)
             {
-                // free the FFTW resources
+                // free the muFFT resources
                 {
-                    std::scoped_lock<std::mutex> lockFftw(fftwMutex);
-                    fftwf_destroy_plan(fftwPlan);
-                    fftwf_free(fftInput);
-                    fftwf_free(fftOutput);
+                    std::scoped_lock<std::mutex> lockFft(fftMutex);
+                    mufft_free_plan_1d(mufftPlan);
+                    mufft_free(fftInput);
+                    mufft_free(fftOutput);
                 }
                 return;
             }
@@ -317,7 +323,7 @@ void FftRunner::fftThreadsLoop()
     }
 }
 
-void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, fftwf_plan *plan, float *in, fftwf_complex *out)
+void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, mufft_plan_1d *plan, float *in, cfloat *out)
 {
 
     // copy data into the input
@@ -343,8 +349,8 @@ void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, fftwf_plan *plan, 
         inPtr++;
         hannPtr++;
     }
-    // execute the FFTW plan (and the DFT)
-    fftwf_execute(*plan);
+    // execute the muFFT plan (and the DFT)
+    mufft_execute_plan_1d(plan, out, in);
     // copy back the output intensities normalized
     float re, im, dist; /**< real and imaginary parts buffers */
 
@@ -354,8 +360,8 @@ void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, fftwf_plan *plan, 
     {
         // Read and normalize output complex.
         // Note that zero padding is not accounted for.
-        re = out[i][0] / noItensityF;
-        im = out[i][1] / noItensityF;
+        re = out[i].real / noItensityF;
+        im = out[i].imag / noItensityF;
         // absolute value of the complex number
         dist = (re * re) + (im * im);
         if (dist <= lowIntensityBounds)

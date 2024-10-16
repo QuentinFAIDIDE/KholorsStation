@@ -1,13 +1,14 @@
 #pragma once
 
 #include <condition_variable>
-#include <fftw3.h>
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <memory>
 #include <mutex>
 #include <vector>
 
 #include "Utils/WaitGroup.h"
+#include "fft.h"
+#include "fft_internal.h"
 
 // a cool post about C++ thread pools: https://stackoverflow.com/a/32593825
 
@@ -27,7 +28,7 @@
 #define FFT_STORAGE_SCOPE_SIZE 4096
 
 /**< How much zeros we pad at the end of fft input intensities for each intensity sample */
-#define FFT_ZERO_PADDING_FACTOR 3
+#define FFT_ZERO_PADDING_FACTOR 2
 
 /**< Number of intensities we send as input (not accounting for zero padding after it). */
 #define FFT_INPUT_NO_INTENSITIES 2048 // always choose a power of two!
@@ -38,8 +39,8 @@
 /**< Size of the output, as the number of frequencies bins */
 #define FFT_OUTPUT_NO_FREQS (((FFT_INPUT_NO_INTENSITIES * FFT_ZERO_PADDING_FACTOR) >> 1) + 1)
 
-/**< Number of floats we send to forward fft in fftw as input */
-#define FFTW_INPUT_SIZE (FFT_INPUT_NO_INTENSITIES * FFT_ZERO_PADDING_FACTOR)
+/**< Number of floats we send to forward fft in muFTT as input */
+#define FFT_INPUT_SIZE (FFT_INPUT_NO_INTENSITIES * FFT_ZERO_PADDING_FACTOR)
 
 /**< Minimum DB intensity to consider possible */
 #define MIN_DB -64.0f
@@ -96,14 +97,14 @@ class FftRunner
     std::shared_ptr<std::vector<float>> performFft(std::shared_ptr<juce::AudioSampleBuffer> audioFile);
 
     /**
-     * @brief Processes a job using the provided fftw processing plan.
+     * @brief Processes a job using the provided muFFT processing plan.
      *
      * @param jobRef A reference to the job data object.
-     * @param plan A FFTW library optimized processing plan for floats.
-     * @param in The input FFTW data (to copy job input into)
-     * @param out The output FFTW data (to copy job output from)
+     * @param plan A muFFT library optimized processing plan for floats.
+     * @param in The input FFT data (to copy job input into)
+     * @param out The output FFT data (to copy job output from)
      */
-    void processJob(std::shared_ptr<FftRunnerJob> jobRef, fftwf_plan *plan, float *in, fftwf_complex *out);
+    void processJob(std::shared_ptr<FftRunnerJob> jobRef, mufft_plan_1d *plan, float *in, cfloat *out);
 
     /**
      * @brief Reuse the vector returned by processJob for another processJob call.
@@ -127,7 +128,7 @@ class FftRunner
     std::queue<std::shared_ptr<FftRunnerJob>>
         emptyJobPool;                   /**< Preallocated structures to carry job information. If empty, please wait. */
     std::mutex emptyJobsMutex;          /**< Prevent race condition if many threads want to run FFTs */
-    std::mutex fftwMutex;               /**< Mutex for non thread safe fftw init functions */
+    std::mutex fftMutex;                /**< Mutex for non thread safe muFFT init functions */
     std::vector<float> hannWindowTable; /**< factors of the hann windowing function for our desired input size */
 
     std::queue<std::shared_ptr<std::vector<float>>> freeResultsArrays; /**< array to hold responses to reuse */
