@@ -16,6 +16,18 @@ stages:
   tags:
     - linux-local
 
+.windows-cmake-template: &windows-cmake-config
+  cache:
+    - key: "windows-${CI_PROJECT_NAME}-build-1"
+      paths:
+        - build
+        - libs
+  before_script:
+    - Import-Module "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+    - Enter-VsDevShell -SkipAutomaticLocation -SetDefaultWindowTitle -InstallPath "C:\Program Files\Microsoft Visual Studio\2022\Community\"
+  tags:
+    - windows-local
+
 build-image:
   stage: build-image
   image:
@@ -42,6 +54,19 @@ build-linux:
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - make -j4
+  only:
+    refs:
+      - master
+  except:
+    refs:
+      - tags
+
+build-windows:
+  stage: build
+  <<: *windows-cmake-config
+  script:
+    - cmake --preset windows -DCMAKE_BUILD_TYPE=Release .
+    - cmake --build build
   only:
     refs:
       - master
