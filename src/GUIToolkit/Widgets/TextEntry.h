@@ -7,7 +7,7 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <nlohmann/json.hpp>
 
-class TextEntry : public juce::Component, juce::TextEditor::Listener, TaskListener
+class TextEntry : public juce::Component, public juce::TextEditor::Listener, public TaskListener
 {
   public:
     /**

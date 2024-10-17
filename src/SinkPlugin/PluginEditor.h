@@ -39,7 +39,8 @@ class AudioPluginAudioProcessorEditor : public juce::AudioProcessorEditor
     ColorPicker colorPicker;
     TextEntry textEntry;
 
-    int64_t taskListenerId; /** Used to remove the task listener when the GUI is destructed */
+    int64_t taskListenerIdColorPicker; /** Used to remove the task listener when the GUI is destructed */
+    int64_t taskListenerIdTextEntry;
 
     // destroy copy constructors
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessorEditor)

@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <memory>
 
-class ColorPicker : public juce::Component, TaskListener
+class ColorPicker : public juce::Component, public TaskListener
 {
   public:
     ColorPicker(std::string id, TaskingManager &tm);

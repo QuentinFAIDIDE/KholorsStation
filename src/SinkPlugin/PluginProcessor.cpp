@@ -5,6 +5,7 @@
 #include "GUIToolkit/Widgets/TextEntry.h"
 #include "PluginEditor.h"
 #include "SinkPlugin/BufferForwarder.h"
+#include "juce_audio_processors/juce_audio_processors.h"
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -268,6 +269,24 @@ void AudioPluginAudioProcessor::setStateInformation(const void *data, int sizeIn
         taskingManager.broadcastTask(textUpdateTask);
         taskingManager.broadcastTask(colorUpdateTask);
     }
+}
+
+void AudioPluginAudioProcessor::updateTrackProperties(const juce::AudioProcessor::TrackProperties &properties)
+{
+    std::string trackName = properties.name.toStdString();
+    juce::Colour newColour = properties.colour;
+
+    auto textUpdateTask = std::make_shared<TextEntryUpdateTask>("track-name", trackName);
+    auto colorUpdateTask = std::make_shared<ColorPickerUpdateTask>("track-color-picker", newColour.getRed(),
+                                                                   newColour.getGreen(), newColour.getBlue());
+
+    audioInfoForwarder.setCurrentColor(juce::Colour(newColour.getRed(), newColour.getGreen(), newColour.getBlue()));
+    audioInfoForwarder.setCurrentTrackName(trackName);
+
+    // this may not be neccessary in a lot of scenarios as the UI is likely down
+    // and the tasks may never get completed.
+    taskingManager.broadcastTask(textUpdateTask);
+    taskingManager.broadcastTask(colorUpdateTask);
 }
 
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()

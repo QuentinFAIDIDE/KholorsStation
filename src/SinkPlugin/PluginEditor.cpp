@@ -36,10 +36,15 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
 
     addAndMakeVisible(colorPicker);
     addAndMakeVisible(textEntry);
+
+    taskListenerIdColorPicker = taskManager.registerTaskListener(&colorPicker);
+    taskListenerIdTextEntry = taskManager.registerTaskListener(&textEntry);
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
 {
+    taskManager.purgeTaskListener(taskListenerIdTextEntry);
+    taskManager.purgeTaskListener(taskListenerIdColorPicker);
     setLookAndFeel(nullptr);
 }
 

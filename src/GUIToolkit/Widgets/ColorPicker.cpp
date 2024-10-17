@@ -21,12 +21,10 @@ ColorPicker::ColorPicker(std::string id, TaskingManager &tm) : identifier(id), t
     colors = getDefaultColours();
     colorSquaresPosition.resize(colors.size() + 1);
     pickedColorId = 0;
-    taskListenerId = taskManager.registerTaskListener(this);
 }
 
 ColorPicker::~ColorPicker()
 {
-    taskManager.purgeTaskListener(taskListenerId);
 }
 
 void ColorPicker::paint(juce::Graphics &g)

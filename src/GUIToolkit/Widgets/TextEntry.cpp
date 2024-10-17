@@ -62,6 +62,7 @@ void TextEntry::setText(std::string newText)
         }
         lastTextSendToTask = newText;
         textEditor.setText(newText);
+        textEditor.repaint();
     }
 }
 
@@ -97,6 +98,7 @@ bool TextEntry::taskHandler(std::shared_ptr<Task> task)
             }
             textUpdateTask->previousText = textEditor.getText().toStdString();
             setText(textUpdateTask->newText);
+            textEditor.repaint();
         }
         textUpdateTask->setCompleted(true);
         taskManager.broadcastNestedTaskNow(textUpdateTask);

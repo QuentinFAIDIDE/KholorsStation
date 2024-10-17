@@ -51,6 +51,13 @@ class AudioPluginAudioProcessor : public juce::AudioProcessor
     bool isBusesLayoutSupported(const BusesLayout &layouts) const override;
 
     /**
+     * @brief Callback when user rename or change track color.
+     *
+     * @param properties track name and colour.
+     */
+    void updateTrackProperties(const juce::AudioProcessor::TrackProperties &properties) override;
+
+    /**
      * @brief Process a block of audio and midi.
      *
      * @param audioBuffer Block of audio samples.
