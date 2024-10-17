@@ -4,6 +4,7 @@
   "configurePresets": [
     {
       "name": "windows",
+      "architecture": "x64",
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
