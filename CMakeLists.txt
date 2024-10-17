@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.22)
-
 set(CMAKE_CXX_STANDARD 20)
 
 # ensure that git is available (we need it for version retrieval)
@@ -30,7 +29,7 @@ enable_testing()
 
 set(CMAKE_FIND_STATIC_PREFER TRUE)
 
-find_package(nlohmann_json 3.11.3 REQUIRED)
+find_package(nlohmann_json 3.9.1 REQUIRED)
 
 include(FetchContent)
 

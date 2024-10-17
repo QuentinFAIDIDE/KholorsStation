@@ -146,7 +146,7 @@ class Log10Projection : public NormalizedBijectiveProjection
     float projectOut(float input) const override
     {
         float inputPreProcessed = juce::jlimit(0.0f, 1.0f, input);
-        return (std::powf(10.0f, inputPreProcessed / aCoef) * bCoefInv) - inputShift;
+        return (std::pow(10.0f, inputPreProcessed / aCoef) * bCoefInv) - inputShift;
     }
 
   private:
