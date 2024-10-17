@@ -18,7 +18,7 @@ stages:
 
 .windows-cmake-template: &windows-cmake-config
   cache:
-    - key: "windows-${CI_PROJECT_NAME}-build-2"
+    - key: "windows-${CI_PROJECT_NAME}-build-3"
       paths:
         - build
         - libs
