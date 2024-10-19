@@ -70,16 +70,7 @@ file(
 
 # add library testing target
 add_executable(AudioTransportTest ${all_test_cpp} ${all_test_headers})
-target_link_libraries(
-  AudioTransportTest
-  AudioTransport
-  TaskManagement
-  absl::flags
-  absl::flags_parse
-  spdlog::spdlog
-  ${_REFLECTION}
-  ${_GRPC_GRPCPP}
-  ${_PROTOBUF_LIBPROTOBUF})
+target_link_libraries(AudioTransportTest AudioTransport spdlog::spdlog)
 
 add_test(NAME AudioTransportTest
          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/AudioTransportTest)

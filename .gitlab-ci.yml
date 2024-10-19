@@ -9,7 +9,7 @@ stages:
 .linux-cmake-template: &linux-cmake-config
   image: ${CI_REGISTRY_IMAGE}/builder:latest
   cache:
-    - key: "linux-${CI_PROJECT_NAME}-build-1" #increment the number when you wanna clear the cmake cache out of a bug
+    - key: "linux-${CI_PROJECT_NAME}-build-4" #increment the number when you wanna clear the cmake cache
       paths:
         - build
         - libs
@@ -18,7 +18,7 @@ stages:
 
 .windows-cmake-template: &windows-cmake-config
   cache:
-    - key: "windows-${CI_PROJECT_NAME}-build-3"
+    - key: "windows-${CI_PROJECT_NAME}-build-4" #increment the number when you wanna clear the cmake cache
       paths:
         - build
         - libs
@@ -52,7 +52,7 @@ build-linux:
   script:
     - mkdir -p build
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
     - make -j4
   only:
     refs:
@@ -65,7 +65,7 @@ build-windows:
   stage: build
   <<: *windows-cmake-config
   script:
-    - cmake --preset windows -DCMAKE_BUILD_TYPE=Release .
+    - cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo .
     - cmake --build build
   only:
     refs:
