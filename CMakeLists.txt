@@ -70,13 +70,14 @@ FetchContent_MakeAvailable(juce)
 
 # gRPC lib download and setup
 set(ABSL_ENABLE_INSTALL ON)
-set(protobuf_MSVC_STATIC_RUNTIME ON)
 FetchContent_Declare(
   gRPC
   GIT_REPOSITORY https://github.com/grpc/grpc
   GIT_TAG v1.50.2
   EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(gRPC)
+set(protobuf_MSVC_STATIC_RUNTIME ON)
+set(gRPC_MSVC_STATIC_RUNTIME ON)
 
 # Configure the FetchContent for spdlog
 FetchContent_Declare(
@@ -121,5 +122,37 @@ if(UNIX AND NOT APPLE)
     install(DIRECTORY ${TARGET_OUTPUT_DIR}/VST3/KholorsSink.vst3
             DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/vst3)
   endif()
+
+endif()
+
+if (WIN32)
+  # install VST3
+  get_target_property(SINK_OUTPUT_DIR SinkPlugin ARCHIVE_OUTPUT_DIRECTORY)
+  if(NOT SINK_OUTPUT_DIR)
+    get_target_property(SINK_OUTPUT_DIR SinkPlugin RUNTIME_OUTPUT_DIRECTORY)
+  endif()
+  if(NOT SINK_OUTPUT_DIR)
+    get_target_property(SINK_OUTPUT_DIR SinkPlugin LIBRARY_OUTPUT_DIRECTORY)
+  endif()
+  if(SINK_OUTPUT_DIR)
+    install(DIRECTORY ${SINK_OUTPUT_DIR}/VST3/KholorsSink.vst3
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/vst3)
+  endif()
+
+  # install binary
+  get_target_property(STATION_OUTPUT_DIR StationApp ARCHIVE_OUTPUT_DIRECTORY)
+  if(NOT STATION_OUTPUT_DIR)
+    get_target_property(STATION_OUTPUT_DIR StationApp RUNTIME_OUTPUT_DIRECTORY)
+  endif()
+  if(NOT STATION_OUTPUT_DIR)
+    get_target_property(STATION_OUTPUT_DIR StationApp LIBRARY_OUTPUT_DIRECTORY)
+  endif()
+  if(STATION_OUTPUT_DIR)
+    install(DIRECTORY ${STATION_OUTPUT_DIR}/KholorsStation.exe
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/KholorsStation.exe)
+    install(DIRECTORY ${STATION_OUTPUT_DIR}/KholorsStation.pdb
+            DESTINATION ${CMAKE_INSTALL_PREFIX}/KholorsStation.pdb)
+  endif()
+
 
 endif()
