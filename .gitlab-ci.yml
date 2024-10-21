@@ -196,14 +196,14 @@ linux-deb:
   only:
     refs:
       - tags
-  
+
 windows-installer:
   stage: release-package
   dependencies: []
   <<: *windows-cmake-config
   script:
     - cd res
-    - (Get-Content installer.nsi).Replace('1.0.0', '${CI_COMMIT_TAG}') | Set-Content installer.nsi
+    - (Get-Content installer.nsi).Replace('1.0.0', ${env:CI_COMMIT_TAG}) | Set-Content installer.nsi
     - makensis .\installer.nsi
   artifacts:
     paths:
@@ -211,5 +211,4 @@ windows-installer:
   only:
     refs:
       - tags
-
 # all jobs after this stage (release) must use dependencies: [] to prevent download all artifacts
