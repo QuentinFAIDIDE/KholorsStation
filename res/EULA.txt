@@ -1,0 +1,7 @@
+This license agreement applies to both the KholorsStation software and its KholorsSink VST3 plugin (The VST 3 Software Development Kit is the property of Steinberg Media Technologies GmbH).
+
+A copy of the KholorsSink and KholorsStation software is provided "as is" without any warranty. You cannot hold the developer (Quentin Faidide) or its authorized distributors responsible for any damage or malfunction.
+You are permitted to use these two software for their intended purpose, making music and analyzing audio signals for personnal or commercial use.
+You are not permitted to sell, modify, reverse-engineer or redistribute the sofware copy you received, or to allow anyone to do it.
+You are not permitted to share your license key with anyone.
+By using this software and agreeing to these terms, you confirm that you have purchased a copy, own a license key and are the rightfull owner of this copy.

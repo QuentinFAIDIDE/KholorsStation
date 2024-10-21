@@ -4,7 +4,9 @@ stages:
   - test
   - versionning
   - package
-  - release
+  - release-debug
+  - release-archive
+  - release-package
 
 .linux-cmake-template: &linux-cmake-config
   image: ${CI_REGISTRY_IMAGE}/builder:latest
@@ -119,8 +121,61 @@ linux-package:
     refs:
       - tags
 
+linux-release-debug-archive:
+  stage: release-debug
+  dependencies: []
+  <<: *linux-cmake-config
+  script:
+    - cd build
+    - rm -rf package-debug
+    - cp -r pkg-debug package-debug
+    - cp ../res/linux_install.sh package-debug/install.sh
+    - cp ../res/linux_uninstall.sh package-debug/uninstall.sh
+    - cd package-debug
+    - tar -czvf kholors_debug_${CI_COMMIT_TAG}.tar.gz *
+  artifacts:
+    paths:
+      - build/package-debug/kholors_debug_*.tar.gz
+  only:
+    refs:
+      - tags
+
+windows-release-debug-artefacts:
+  stage: release-debug
+  dependencies: []
+  <<: *windows-cmake-config
+  script:
+    - cp build\src\StationApp\StationApp_artefacts\Debug\KholorsStation.pdb .\KholorsStation_${CI_COMMIT_TAG}.pdb
+    - cp build\src\SinkPlugin\SinkPlugin_artefacts\Debug\KholorsSink_SharedCode.pdb .\KholorsSink_SharedCode_${CI_COMMIT_TAG}.pdb
+  artifacts:
+    paths:
+      - Kholors*.pdb
+  only:
+    refs:
+      - tags
+
+linux-release-archive:
+  stage: release-archive
+  dependencies: []
+  <<: *linux-cmake-config
+  script:
+    - cd build
+    - rm -rf package
+    - cp -r pkg package
+    - cp ../res/linux_install.sh package/install.sh
+    - cp ../res/linux_uninstall.sh package/uninstall.sh
+    - cd package
+    - tar -czvf kholors_${CI_COMMIT_TAG}.tar.gz *
+  artifacts:
+    paths:
+      - build/package/kholors_*.tar.gz
+  only:
+    refs:
+      - tags
+
 linux-deb:
-  stage: release
+  stage: release-package
+  dependencies: []
   <<: *linux-cmake-config
   script:
     - cd build
@@ -141,40 +196,20 @@ linux-deb:
   only:
     refs:
       - tags
-
-linux-release-archive:
-  stage: release
-  <<: *linux-cmake-config
+  
+windows-installer:
+  stage: release-package
+  dependencies: []
+  <<: *windows-cmake-config
   script:
-    - cd build
-    - rm -rf package
-    - cp -r pkg package
-    - cp ../res/linux_install.sh package/install.sh
-    - cp ../res/linux_uninstall.sh package/uninstall.sh
-    - cd package
-    - tar -czvf kholors_${CI_COMMIT_TAG}.tar.gz *
+    - cd res
+    - (Get-Content installer.nsi).Replace('1.0.0', '${CI_COMMIT_TAG}') | Set-Content installer.nsi
+    - makensis .\installer.nsi
   artifacts:
     paths:
-      - build/package/kholors_*.tar.gz
+      - res/KholorsStation*.exe
   only:
     refs:
       - tags
 
-linux-release-debug-archive:
-  stage: release
-  <<: *linux-cmake-config
-  script:
-    - cd build
-    - rm -rf package-debug
-    - cp -r pkg-debug package-debug
-    - cp ../res/linux_install.sh package-debug/install.sh
-    - cp ../res/linux_uninstall.sh package-debug/uninstall.sh
-    - cd package-debug
-    - tar -czvf kholors_debug_${CI_COMMIT_TAG}.tar.gz *
-  artifacts:
-    paths:
-      - build/package-debug/kholors_debug_*.tar.gz
-  only:
-    refs:
-      - tags
 # all jobs after this stage (release) must use dependencies: [] to prevent download all artifacts
