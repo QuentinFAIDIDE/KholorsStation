@@ -7,6 +7,7 @@ stages:
   - release-debug
   - release-archive
   - release-package
+  - release-upload
 
 .linux-cmake-template: &linux-cmake-config
   image: ${CI_REGISTRY_IMAGE}/builder:latest
@@ -208,6 +209,43 @@ windows-installer:
   artifacts:
     paths:
       - res/KholorsStation*.exe
+  only:
+    refs:
+      - tags
+
+release-upload:
+  stage: release-upload
+  image: docker.io/ubuntu:oracular-20241009
+  script:
+    # install required packages
+    - apt-get -y update
+    - apt-get -y install zip wget
+    # create the release archive (to be distributed to users)
+    - mkdir kholors-${CI_COMMIT_TAG}
+    - mkdir kholors-${CI_COMMIT_TAG}/Windows
+    - mkdir kholors-${CI_COMMIT_TAG}/Linux
+    - mkdir kholors-${CI_COMMIT_TAG}/Linux/Deb
+    - mkdir kholors-${CI_COMMIT_TAG}/Linux/Archive
+    - cp res/KholorsStation*.exe kholors-${CI_COMMIT_TAG}/Windows/
+    - cp build/debian-pkg/kholors-*.deb kholors-${CI_COMMIT_TAG}/Linux/Deb/
+    - cp build/package/kholors_*.tar.gz kholors-${CI_COMMIT_TAG}/Linux/Archive/
+    - zip -r kholors-${CI_COMMIT_TAG}.zip kholors-${CI_COMMIT_TAG}
+    # create the debug archive (for support use)
+    - mkdir kholors-debug-${CI_COMMIT_TAG}
+    - cp Kholors*.pdb kholors-debug-${CI_COMMIT_TAG}/
+    - cp build/package-debug/kholors_debug_*.tar.gz kholors-debug-${CI_COMMIT_TAG}/
+    - zip -r kholors-debug-${CI_COMMIT_TAG}.zip kholors-debug-${CI_COMMIT_TAG}
+    # configure minio cli client
+    - wget https://dl.min.io/client/mc/release/linux-amd64/mc
+    - chmod +x mc
+    - mv mc /usr/local/bin
+    - mc alias set myminio http://minio.gitlab-runner:9000 minio ${MINIO_S3_SECRET}
+    # upload archives
+    - mc cp kholors-${CI_COMMIT_TAG}.zip myminio/releases/kholors/
+    - mc cp kholors-debug-${CI_COMMIT_TAG}.zip myminio/releases/kholors/
+    # TODO: call the api to insert the minor release into the database
+  tags:
+    - artifaktnd-cloud-runner
   only:
     refs:
       - tags
