@@ -8,7 +8,9 @@
 #include "StationApp/GUI/BottomInfoLine.h"
 #include "StationApp/GUI/ClearButton.h"
 #include "StationApp/GUI/FreqTimeView.h"
+#include "StationApp/GUI/LicenseDialog.h"
 #include "StationApp/GUI/SensitivitySlider.h"
+#include "StationApp/Licensing/DummyLicenseManager.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_core/juce_core.h"
@@ -42,13 +44,13 @@ class MainComponent final : public juce::Component, public TaskListener
 
   private:
     juce::Path getShadowPath();
-
-    TaskingManager taskManager;                           /**< Object that manages task for actions */
-    juce::MenuBarComponent menuBar;                       /**< App menu at the top of the app */
-    juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */
-    TrackInfoStore trackInfoStore;                        /**< storing all track info (name, color) */
-    FreqTimeView freqTimeView;                            /**< Viewer that display frequencies over time received */
-    AudioTransport::SyncServer audioDataServer;           /**< Server that receives audio data */
+    TaskingManager taskManager;                                      /**< Object that manages task for actions */
+    juce::SharedResourcePointer<DummyLicenseManager> licenseManager; /**< Singleton responsible for managing licenses */
+    juce::MenuBarComponent menuBar;                                  /**< App menu at the top of the app */
+    juce::SharedResourcePointer<FontsLoader> sharedFonts;            /**< Singleton that loads all fonts */
+    TrackInfoStore trackInfoStore;                                   /**< storing all track info (name, color) */
+    FreqTimeView freqTimeView;                  /**< Viewer that display frequencies over time received */
+    AudioTransport::SyncServer audioDataServer; /**< Server that receives audio data */
     AudioDataWorker audioDataWorker; /**< Worker threads to parse audio data from server and emit Tasks accordingly */
     BottomInfoLine infoBar;          /**< bottom tip bar */
     HelpButton helpButton;

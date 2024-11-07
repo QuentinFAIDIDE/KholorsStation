@@ -7,10 +7,14 @@
 #include "StationApp/GUI/ClearButton.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FreqTimeView.h"
+#include "StationApp/GUI/LicenseDialog.h"
 #include "StationApp/GUI/SensitivitySlider.h"
+#include "StationApp/Licensing/DummyLicenseManager.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_events/juce_events.h"
 #include "juce_graphics/juce_graphics.h"
+#include "juce_gui_basics/juce_gui_basics.h"
+#include <optional>
 #include <spdlog/spdlog.h>
 
 #define DEFAULT_SERVER_PORT 7849

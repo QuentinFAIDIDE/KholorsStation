@@ -33,6 +33,7 @@ file(
   GLOB_RECURSE all_sources
   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
   "*.cpp")
+list(FILTER all_sources EXCLUDE REGEX ".*Test\\.cpp$")
 target_sources(StationApp PRIVATE ${all_sources})
 
 # `target_compile_definitions` adds some preprocessor definitions to our target.
@@ -81,6 +82,7 @@ target_link_libraries(
           juce::juce_gui_extra
           juce::juce_audio_basics
           juce::juce_opengl
+          juce::juce_cryptography
           AudioTransport
           TaskManagement
           Utils
@@ -89,3 +91,22 @@ target_link_libraries(
           muFFT
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
+
+# CryptoTest target for testing the license key stuff
+juce_add_console_app(CryptoTest PRODUCT_NAME "CryptoTest")
+target_sources(
+  CryptoTest PRIVATE Licensing/CryptoTest.cpp Licensing/Base58.cpp
+                     Licensing/DummyLicenseManager.cpp Licensing/ExecCmd.cpp)
+target_compile_definitions(CryptoTest PRIVATE JUCE_WEB_BROWSER=0
+                                              JUCE_USE_CURL=0)
+target_link_libraries(
+  CryptoTest
+  PRIVATE juce::juce_cryptography spdlog::spdlog
+  PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
+         juce::juce_recommended_warning_flags)
+
+add_test(
+  NAME CryptoTest
+  COMMAND
+    ${CMAKE_CURRENT_BINARY_DIR}/CryptoTest_artefacts/${CMAKE_BUILD_TYPE}/CryptoTest
+)
