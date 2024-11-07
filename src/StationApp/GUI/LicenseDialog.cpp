@@ -28,12 +28,12 @@ LicenseDialog::LicenseDialog(juce::Component *parentComponent)
     closeButton.setColour(juce::TextButton::ColourIds::textColourOnId, KHOLORS_COLOR_TEXT);
     closeButton.addListener(this);
     closeButton.setButtonText("Quit");
-    addAndMakeVisible(closeButton);
+    addAndMakeVisible(&closeButton);
 
     confirmButton.setColour(juce::TextButton::ColourIds::textColourOnId, KHOLORS_COLOR_TEXT);
     confirmButton.addListener(this);
     confirmButton.setButtonText("Ok");
-    addAndMakeVisible(confirmButton);
+    addAndMakeVisible(&confirmButton);
 
     mailEntry.setFont(juce::Font(18));
     mailEntry.setColour(juce::TextEditor::ColourIds::textColourId, KHOLORS_COLOR_BLACK);
@@ -53,9 +53,9 @@ LicenseDialog::LicenseDialog(juce::Component *parentComponent)
     LicenseKeyEntry.setJustification(juce::Justification::centredLeft);
     LicenseKeyEntry.setTextToShowWhenEmpty("License key...", KHOLORS_COLOR_BLACK.brighter(0.5f));
 
-    addAndMakeVisible(mailEntry);
-    addAndMakeVisible(nameEntry);
-    addAndMakeVisible(LicenseKeyEntry);
+    addAndMakeVisible(&mailEntry);
+    addAndMakeVisible(&nameEntry);
+    addAndMakeVisible(&LicenseKeyEntry);
     setSize(DIALOG_WIDTH, DIALOG_HEIGHT);
     setResizable(false, false);
     if (parentComponent != nullptr)
