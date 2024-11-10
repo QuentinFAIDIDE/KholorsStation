@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GUIToolkit/IconsLoader.h"
-#include "StationApp/Licensing/DummyLicenseManager.h"
 #include "juce_core/juce_core.h"
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"

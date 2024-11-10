@@ -95,8 +95,8 @@ target_link_libraries(
 # CryptoTest target for testing the license key stuff
 juce_add_console_app(CryptoTest PRODUCT_NAME "CryptoTest")
 target_sources(
-  CryptoTest PRIVATE Licensing/CryptoTest.cpp Licensing/Base58.cpp
-                     Licensing/DummyLicenseManager.cpp Licensing/ExecCmd.cpp)
+  CryptoTest PRIVATE Licensing/CryptoTest.cpp Licensing/Base58.h
+                     Licensing/DummyLicenseManager.h Licensing/ExecCmd.h)
 target_compile_definitions(CryptoTest PRIVATE JUCE_WEB_BROWSER=0
                                               JUCE_USE_CURL=0)
 target_link_libraries(
