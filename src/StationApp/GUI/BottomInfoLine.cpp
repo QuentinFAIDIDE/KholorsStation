@@ -1,5 +1,6 @@
 #include "BottomInfoLine.h"
 #include "GUIToolkit/Consts.h"
+#include "StationApp/Audio/BrokenLicenseCheckTask.h"
 #include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/Audio/SimpleLicenseCheckTask.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
@@ -32,7 +33,7 @@ void BottomInfoLine::paint(juce::Graphics &g)
 
     {
         std::lock_guard lock(licenseOwnerMutex);
-        leftText = licensedWordTxt + " to " + licenseOwnerInfo + " | Average Audio Processing Delay (milliseconds): " +
+        leftText = licensedWordTxt + " to: " + licenseOwnerInfo + " | Average Audio Processing Delay (milliseconds): " +
                    std::to_string((int)averageSegmentProcessingTimeMs);
     }
 
@@ -122,6 +123,32 @@ bool BottomInfoLine::taskHandler(std::shared_ptr<Task> task)
             throw std::runtime_error("nice try, R2R!");
         }
         simpleLicenseCheckTask->setCompleted(true);
+        return true;
+    }
+
+    auto brokenLicenseCheckTask = std::dynamic_pointer_cast<BrokenLicenseCheckTask>(task);
+    if (brokenLicenseCheckTask != nullptr && !brokenLicenseCheckTask->isCompleted() &&
+        brokenLicenseCheckTask->stage == 0)
+    {
+        auto licenseData = DummyLicenseManager::getUserDataAndKeyFromDisk();
+        std::string licenseTextPart;
+        {
+            std::lock_guard lock(licenseOwnerMutex);
+            licenseTextPart = licenseOwnerInfo;
+        }
+        auto lineDataPair = DummyLicenseManager::parseOwnerFromBottomLineOrFail(licenseTextPart);
+        licenseData->email = lineDataPair.second;
+        licenseData->username = lineDataPair.first;
+
+        brokenLicenseCheckTask->username = licenseData->username;
+        brokenLicenseCheckTask->email = licenseData->email;
+        brokenLicenseCheckTask->key = licenseData->licenseKey;
+
+        brokenLicenseCheckTask->stage = 1;
+
+        taskingManager.broadcastNestedTaskNow(brokenLicenseCheckTask);
+
+        return true;
     }
 
     return false;

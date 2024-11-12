@@ -11,6 +11,7 @@
 #define SOFTWARE_ID 1
 #define SOFTWARE_MAJOR_VERSION 1
 #define SOFTWARE_SALT "1987d7b148e2415a"
+#define LICENSEE_BOTTOM_LINE_FIRST_CHAR 13
 
 struct UserDataAndKey
 {
@@ -215,13 +216,15 @@ class DummyLicenseManager
         // try to find the first and second parenthesis
         auto parenthesisOpen = licenseTextPart.find_first_of("(", 0);
         auto parenthesisClose = licenseTextPart.find_first_of(")", 0);
-        if (parenthesisOpen == string::npos || parenthesisClose == string::npos || parenthesisClose <= parenthesisOpen)
+        if (parenthesisOpen == string::npos || parenthesisClose == string::npos ||
+            parenthesisClose <= parenthesisOpen || parenthesisOpen <= LICENSEE_BOTTOM_LINE_FIRST_CHAR)
         {
             DummyLicenseManager::writeUserDataAndKeyToDisk(std::nullopt);
             throw std::runtime_error("Bottom bar text formatting error");
         }
-        auto username = licenseTextPart.substr(0, parenthesisOpen - 1);
-        auto mail = licenseTextPart.substr(parenthesisOpen, parenthesisClose - parenthesisOpen);
+        auto username = licenseTextPart.substr(LICENSEE_BOTTOM_LINE_FIRST_CHAR,
+                                               (parenthesisOpen - LICENSEE_BOTTOM_LINE_FIRST_CHAR) - 1);
+        auto mail = licenseTextPart.substr(parenthesisOpen + 1, parenthesisClose - parenthesisOpen - 1);
         return std::pair<std::string, std::string>(username, mail);
     }
 };

@@ -78,11 +78,11 @@ void testAlternativeFileReading()
 
 void testBottomLineLicenseeParsing()
 {
-    std::string bottomLine = "Jean Valjean (jean@valjean.fr) | bino bie,d^()";
+    std::string bottomLine = "Licensed to: Jean Valjean (jean@valjean.fr) | bino bie,d^()";
     auto ret = DummyLicenseManager::parseOwnerFromBottomLineOrFail(bottomLine);
     if (ret.first != "Jean Valjean" || ret.second != "jean@valjean.fr")
     {
-        throw std::runtime_error("test for licensee parsing failed");
+        throw std::runtime_error("test for licensee parsing failed: " + ret.first + " - " + ret.second);
     }
 }
 
