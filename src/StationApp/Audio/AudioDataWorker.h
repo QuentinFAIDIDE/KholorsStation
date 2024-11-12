@@ -9,6 +9,8 @@
 
 #define MAX_AUDIO_SEGMENT_PROCESSING_DELAY_MS 500.0f
 
+#define SIMPLE_PAYLOAD_CHECK_INTERVAL_MS 600000
+
 class AudioDataWorker : public TaskListener
 {
   public:
@@ -33,8 +35,10 @@ class AudioDataWorker : public TaskListener
     bool shouldStop;            /**< This will switch to true if we are waiting to stop the task processing */
     std::mutex shouldStopMutex; /**< Mutex to protect concurrent access of shouldStop variable */
     std::vector<std::thread> dataProcessingThreads; /**< threads that read data from server and emit tasks from it */
+    std::mutex audioWorkerThreadMutex;              /**< protectd variables shared between audio processing threads */
     TaskingManager &taskingManager;                 /**< Tasking manager to emit new tasks */
     AudioTransport::SyncServer &audioDataServer;    /**< Audio server to read audio data from */
     FftRunner fftProcessor;                         /**< Multi threaded FFT processor */
-    float processingTimerDelayMs;                   /**< last average audio segment processing delay */
+    std::atomic<float> processingTimerDelayMs;      /**< last average audio segment processing delay */
+    int64_t lastSimpleLicenseCheck;                 /**< last time a simple license check was emmited */
 };

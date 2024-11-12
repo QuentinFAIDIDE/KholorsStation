@@ -7,6 +7,7 @@
 #include "StationApp/Audio/FftResultVectorReuseTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/ProcessingTimer.h"
+#include "StationApp/Audio/SimpleLicenseCheckTask.h"
 #include "StationApp/Audio/TimeSignatureUpdateTask.h"
 #include "StationApp/Audio/TrackInfoUpdateTask.h"
 #include "TaskManagement/TaskingManager.h"
@@ -20,6 +21,7 @@
 AudioDataWorker::AudioDataWorker(AudioTransport::SyncServer &server, TaskingManager &tm)
     : shouldStop(false), taskingManager(tm), audioDataServer(server), processingTimerDelayMs(0)
 {
+    lastSimpleLicenseCheck = 0;
     // create the worker threads
     for (size_t i = 0; i < NUM_AUDIO_WORKER_THREADS; i++)
     {
@@ -90,6 +92,24 @@ void AudioDataWorker::workerThreadLoop()
                 }
 
                 taskingManager.broadcastTask(newDataTask);
+
+                // this part safely ensures that the simple license check tasks are emmited.
+                {
+                    std::lock_guard lock(audioWorkerThreadMutex);
+
+                    if (lastSimpleLicenseCheck == 0)
+                    {
+                        lastSimpleLicenseCheck = audioSegment->payloadSentTimeMs;
+                    }
+
+                    // every X minutes, trigger a license check
+                    if ((audioSegment->payloadSentTimeMs - lastSimpleLicenseCheck) > SIMPLE_PAYLOAD_CHECK_INTERVAL_MS)
+                    {
+                        lastSimpleLicenseCheck = audioSegment->payloadSentTimeMs;
+                        auto newSimpleLicenseCheckTask = std::make_shared<SimpleLicenseCheckTask>();
+                        taskingManager.broadcastTask(newSimpleLicenseCheckTask);
+                    }
+                }
             }
             // if it's a TrackInfo, copy it and emit a task
             auto trackInfo = std::dynamic_pointer_cast<AudioTransport::TrackInfo>(audioDataUpdate->datum);

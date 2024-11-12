@@ -209,4 +209,19 @@ class DummyLicenseManager
         }
         return str.str();
     }
+
+    static inline std::pair<std::string, std::string> parseOwnerFromBottomLineOrFail(std::string licenseTextPart)
+    {
+        // try to find the first and second parenthesis
+        auto parenthesisOpen = licenseTextPart.find_first_of("(", 0);
+        auto parenthesisClose = licenseTextPart.find_first_of(")", 0);
+        if (parenthesisOpen == string::npos || parenthesisClose == string::npos || parenthesisClose <= parenthesisOpen)
+        {
+            DummyLicenseManager::writeUserDataAndKeyToDisk(std::nullopt);
+            throw std::runtime_error("Bottom bar text formatting error");
+        }
+        auto username = licenseTextPart.substr(0, parenthesisOpen - 1);
+        auto mail = licenseTextPart.substr(parenthesisOpen, parenthesisClose - parenthesisOpen);
+        return std::pair<std::string, std::string>(username, mail);
+    }
 };
