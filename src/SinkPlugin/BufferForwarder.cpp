@@ -4,7 +4,6 @@
 #include "GUIToolkit/Consts.h"
 #include "GUIToolkit/Widgets/ColorPickerUpdateTask.h"
 #include "GUIToolkit/Widgets/TextEntry.h"
-#include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
 #include <chrono>
 #include <cstdint>
@@ -16,9 +15,8 @@
 
 #define BUFFERS_CONTINUATION_SAMPLE_TOLERANCE 60
 
-BufferForwarder::BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps, TaskingManager &tm)
-    : taskManager(tm), payloadSender(ps), freeBlockInfos(NUM_PREALLOCATED_BLOCKINFO),
-      blockInfosToCoalesce(NUM_PREALLOCATED_BLOCKINFO)
+BufferForwarder::BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps)
+    : payloadSender(ps), freeBlockInfos(NUM_PREALLOCATED_BLOCKINFO), blockInfosToCoalesce(NUM_PREALLOCATED_BLOCKINFO)
 {
     shouldStop = false;
     dawIsCompatible = true;
@@ -452,27 +450,6 @@ void BufferForwarder::queueCurrentlyFilledPayloadForSend()
         currentlyFilledPayload = nullptr;
     }
     payloadsCV.notify_one();
-}
-
-bool BufferForwarder::taskHandler(std::shared_ptr<Task> task)
-{
-    auto colorUpdateTask = std::dynamic_pointer_cast<ColorPickerUpdateTask>(task);
-    if (colorUpdateTask != nullptr && colorUpdateTask->isCompleted() &&
-        colorUpdateTask->colorPickerIdentifier == "track-color-picker")
-    {
-        trackColorRed = colorUpdateTask->red;
-        trackColorGreen = colorUpdateTask->green;
-        trackColorBlue = colorUpdateTask->blue;
-    }
-
-    auto textUpdateTask = std::dynamic_pointer_cast<TextEntryUpdateTask>(task);
-    if (textUpdateTask != nullptr && textUpdateTask->isCompleted() &&
-        textUpdateTask->textEntryIdentifier == "track-name")
-    {
-        std::lock_guard lock(trackNameMutex);
-        trackName = textUpdateTask->newText;
-    }
-    return false;
 }
 
 juce::Colour BufferForwarder::getCurrentColor()

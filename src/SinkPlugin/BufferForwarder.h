@@ -10,8 +10,6 @@
 #include <vector>
 
 #include "AudioBlockInfo.h"
-#include "TaskManagement/TaskListener.h"
-#include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
 
 #define FORWARDER_THREAD_MAX_WAIT_MS 80
@@ -28,10 +26,10 @@
  * queue them for a coalescing thread to aggregate them into AudioSegmentPayloads,
  * which are queued for a sender thread to send these to the Kholors Station gRPC api.
  */
-class BufferForwarder : public TaskListener
+class BufferForwarder
 {
   public:
-    BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps, TaskingManager &tm);
+    BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps);
     ~BufferForwarder();
 
     /**
@@ -66,17 +64,6 @@ class BufferForwarder : public TaskListener
      * @param isCompatible true if the daw is compatible, false otherwise.
      */
     void setDawIsCompatible(bool isCompatible);
-
-    /**
-     * @brief Handler for the tasks that goes through task manager.
-     * Mostly here to receive tasks about UI changes related to color
-     * and track name update.
-     *
-     * @param task
-     * @return true
-     * @return false
-     */
-    bool taskHandler(std::shared_ptr<Task> task) override;
 
     juce::Colour getCurrentColor();
     std::string getCurrentTrackName();
@@ -197,8 +184,6 @@ class BufferForwarder : public TaskListener
     void queueCurrentlyFilledPayloadForSend();
 
     /////////////////////////////////////
-
-    TaskingManager &taskManager;
 
     std::shared_ptr<std::thread> coalescerThread;
     std::shared_ptr<std::thread> senderThread;

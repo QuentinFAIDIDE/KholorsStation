@@ -1,9 +1,6 @@
 #include "PluginProcessor.h"
 #include "AudioTransport/Client.h"
 #include "AudioTransport/ColorBytes.h"
-#include "GUIToolkit/Widgets/ColorPickerUpdateTask.h"
-#include "GUIToolkit/Widgets/TextEntry.h"
-#include "PluginEditor.h"
 #include "SinkPlugin/BufferForwarder.h"
 #include "juce_audio_processors/juce_audio_processors.h"
 #include <cstddef>
@@ -15,7 +12,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     : AudioProcessor(BusesProperties()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      audioTransportGrpcClient(DEFAULT_SERVER_PORT), audioInfoForwarder(audioTransportGrpcClient, taskingManager)
+      audioTransportGrpcClient(DEFAULT_SERVER_PORT), audioInfoForwarder(audioTransportGrpcClient)
 {
     auto uuid = juce::Uuid();
     audioInfoForwarder.initializeTrackInfo(uuid.hash());
@@ -29,10 +26,6 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
             spdlog::debug("KHOLORS_LOG_LEVEL was set so the Kholors Sink plugin will show debug info");
         }
     }
-
-    taskingManager.registerTaskListener(&audioInfoForwarder);
-
-    taskingManager.startTaskBroadcast();
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -220,14 +213,12 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
 
 bool AudioPluginAudioProcessor::hasEditor() const
 {
-    return true;
+    return false;
 }
 
 juce::AudioProcessorEditor *AudioPluginAudioProcessor::createEditor()
 {
-    auto gui = new AudioPluginAudioProcessorEditor(*this, taskingManager, audioInfoForwarder.getCurrentColor(),
-                                                   audioInfoForwarder.getCurrentTrackName());
-    return gui;
+    return nullptr;
 }
 
 void AudioPluginAudioProcessor::getStateInformation(juce::MemoryBlock &destData)
@@ -255,19 +246,10 @@ void AudioPluginAudioProcessor::setStateInformation(const void *data, int sizeIn
         uint32_t colorBytesCopy = *colorBytes;
         AudioTransport::ColorContainer newColor(colorBytesCopy);
 
-        auto textUpdateTask = std::make_shared<TextEntryUpdateTask>("track-name", trackName);
-        auto colorUpdateTask =
-            std::make_shared<ColorPickerUpdateTask>("track-color-picker", newColor.red, newColor.green, newColor.blue);
-
         // whathever happens we forcefully set the values
         // as the UI may not currently be created.
         audioInfoForwarder.setCurrentColor(juce::Colour(newColor.red, newColor.green, newColor.blue));
         audioInfoForwarder.setCurrentTrackName(trackName);
-
-        // this may not be neccessary in a lot of scenarios as the UI is likely down
-        // and the tasks may never get completed.
-        taskingManager.broadcastTask(textUpdateTask);
-        taskingManager.broadcastTask(colorUpdateTask);
     }
 }
 
@@ -276,17 +258,8 @@ void AudioPluginAudioProcessor::updateTrackProperties(const juce::AudioProcessor
     std::string trackName = properties.name.toStdString();
     juce::Colour newColour = properties.colour;
 
-    auto textUpdateTask = std::make_shared<TextEntryUpdateTask>("track-name", trackName);
-    auto colorUpdateTask = std::make_shared<ColorPickerUpdateTask>("track-color-picker", newColour.getRed(),
-                                                                   newColour.getGreen(), newColour.getBlue());
-
     audioInfoForwarder.setCurrentColor(juce::Colour(newColour.getRed(), newColour.getGreen(), newColour.getBlue()));
     audioInfoForwarder.setCurrentTrackName(trackName);
-
-    // this may not be neccessary in a lot of scenarios as the UI is likely down
-    // and the tasks may never get completed.
-    taskingManager.broadcastTask(textUpdateTask);
-    taskingManager.broadcastTask(colorUpdateTask);
 }
 
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()

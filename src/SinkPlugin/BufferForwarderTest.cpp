@@ -1,6 +1,5 @@
 #include "SinkPlugin/BufferForwarder.h"
 #include "AudioTransport/MockedAudioSegmentPayloadSender.h"
-#include "TaskManagement/TaskingManager.h"
 #include <limits>
 #include <spdlog/common.h>
 #include <spdlog/spdlog.h>
@@ -9,10 +8,8 @@
 
 void testBufferForwarder01()
 {
-    TaskingManager tm;
-
     AudioTransport::MockedAudioSegmentPayloadSender fakePayloadSender;
-    BufferForwarder audioInfoForwarder(fakePayloadSender, tm);
+    BufferForwarder audioInfoForwarder(fakePayloadSender);
 
     spdlog::set_level(spdlog::level::debug);
 
@@ -240,10 +237,9 @@ void testBufferForwarder01()
 
 void testBufferForwarder02()
 {
-    TaskingManager tm;
 
     AudioTransport::MockedAudioSegmentPayloadSender fakePayloadSender;
-    BufferForwarder audioInfoForwarder(fakePayloadSender, tm);
+    BufferForwarder audioInfoForwarder(fakePayloadSender);
 
     spdlog::set_level(spdlog::level::debug);
 

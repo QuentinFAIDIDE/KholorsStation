@@ -98,8 +98,7 @@ target_compile_definitions(
 
 target_link_libraries(
   SinkPlugin
-  PRIVATE GUIToolkit juce::juce_audio_utils AudioTransport spdlog::spdlog Utils
-          TaskManagement
+  PRIVATE juce::juce_audio_utils AudioTransport spdlog::spdlog Utils
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
 
@@ -117,7 +116,6 @@ target_compile_definitions(BufferForwarderTest PRIVATE JUCE_WEB_BROWSER=0
 target_link_libraries(
   BufferForwarderTest
   PRIVATE juce::juce_audio_utils AudioTransport spdlog::spdlog Utils
-          TaskManagement
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
 
