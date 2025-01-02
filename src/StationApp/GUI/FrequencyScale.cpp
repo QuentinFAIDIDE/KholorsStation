@@ -114,6 +114,7 @@ void FrequencyScale::drawRotatedChannelNames(juce::Graphics &g)
 std::vector<FrequencyScale::LabelBox> FrequencyScale::generateLabelBox(float frequencyHz, std::string text,
                                                                        std::string unit)
 {
+
     // convert the frequency to a ratio of position from center
     float positionRatioLinearRange = float(frequencyHz) / maxDrawableFreq;
     float positionRatioOnScreenRange = positionRatioLinearRange;

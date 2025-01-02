@@ -93,6 +93,7 @@ void AudioDataWorker::workerThreadLoop()
 
                 taskingManager.broadcastTask(newDataTask);
 
+                /*
                 // this part safely ensures that the simple license check tasks are emmited.
                 {
                     std::lock_guard lock(audioWorkerThreadMutex);
@@ -110,6 +111,7 @@ void AudioDataWorker::workerThreadLoop()
                         taskingManager.broadcastTask(newSimpleLicenseCheckTask);
                     }
                 }
+                */
             }
             // if it's a TrackInfo, copy it and emit a task
             auto trackInfo = std::dynamic_pointer_cast<AudioTransport::TrackInfo>(audioDataUpdate->datum);

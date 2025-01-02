@@ -71,6 +71,8 @@ class TrackInfoStore : public TaskListener
             trackinfoUpdate->setCompleted(true);
         }
 
+        /*
+
         // spy on new fft data tasks (that have a timestamp) to initiate license
         // checks
         auto newFftDataTask = std::dynamic_pointer_cast<NewFftDataTask>(task);
@@ -99,6 +101,8 @@ class TrackInfoStore : public TaskListener
                 }
             }
         }
+
+        */
 
         return false;
     }
