@@ -1,6 +1,7 @@
 #pragma once
 
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
+#include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
 #define TITLE_PIXELS_FROM_LEFT 14
@@ -48,6 +49,8 @@ class FrequencyScale : public juce::Component
      * @param g juce graphic context from paint.
      */
     void drawRotatedTitle(juce::Graphics &g);
+
+    void drawRotatedChannelNames(juce::Graphics &g);
 
     /**
      * @brief Generate label boxes with position, text and unit.

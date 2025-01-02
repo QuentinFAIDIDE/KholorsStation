@@ -24,6 +24,9 @@ void FrequencyScale::paint(juce::Graphics &g)
     g.setColour(KHOLORS_COLOR_WHITE);
     drawRotatedTitle(g);
 
+    g.setColour(KHOLORS_COLOR_UNITS);
+    drawRotatedChannelNames(g);
+
     // generate necessary labels
     std::vector<LabelBox> labelsToDraw;
     auto labs0Hz = generateLabelBox(0, "0", "Hz");
@@ -78,6 +81,33 @@ void FrequencyScale::drawRotatedTitle(juce::Graphics &g)
 
     p.applyTransform(juce::AffineTransform().translated(TITLE_PIXELS_FROM_LEFT - p.getBounds().getX(), 0));
 
+    g.fillPath(p);
+}
+
+void FrequencyScale::drawRotatedChannelNames(juce::Graphics &g)
+{
+    juce::GlyphArrangement ga;
+    ga.addLineOfText(juce::Font(TITLE_PIXELS_HEIGHT), TRANS("Left Channel").toUpperCase(), 0, 0);
+    juce::Path p;
+    ga.createPath(p);
+    auto pathBounds = p.getBounds();
+    p.applyTransform(
+        juce::AffineTransform()
+            .rotated(3.0f * juce::MathConstants<float>::halfPi, pathBounds.getCentreX(), pathBounds.getCentreY())
+            .translated(0, getHeight() * 0.25f));
+    p.applyTransform(juce::AffineTransform().translated(TITLE_PIXELS_FROM_LEFT - p.getBounds().getX(), 0));
+    g.fillPath(p);
+
+    ga.clear();
+    ga.addLineOfText(juce::Font(TITLE_PIXELS_HEIGHT), TRANS("Right Channel").toUpperCase(), 0, 0);
+    p.clear();
+    ga.createPath(p);
+    pathBounds = p.getBounds();
+    p.applyTransform(
+        juce::AffineTransform()
+            .rotated(3.0f * juce::MathConstants<float>::halfPi, pathBounds.getCentreX(), pathBounds.getCentreY())
+            .translated(0, getHeight() * 0.75f));
+    p.applyTransform(juce::AffineTransform().translated(TITLE_PIXELS_FROM_LEFT - p.getBounds().getX(), 0));
     g.fillPath(p);
 }
 
