@@ -56,7 +56,7 @@ build-linux:
     - mkdir -p build
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
-    - make -j6
+    - make -j4
   only:
     refs:
       - master
@@ -69,7 +69,7 @@ build-windows:
   <<: *windows-cmake-config
   script:
     - cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo .
-    - cmake --build build --parallel 6
+    - cmake --build build --parallel 4
   only:
     refs:
       - master
@@ -114,7 +114,7 @@ linux-package:
     - cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RelWithDebInfo
     - rm -rf pkg
     - mkdir pkg
-    - make DESTDIR=./pkg/tree install -j6
+    - make DESTDIR=./pkg/tree install -j4
     - cp -r pkg pkg-debug
     - strip -s pkg/tree/usr/lib/vst3/KholorsSink.vst3/Contents/x86_64-linux/KholorsSink.so
     - strip -s pkg/tree/usr/bin/KholorsStation
@@ -209,8 +209,8 @@ windows-installer:
     - $ACS_DLIB = "C:\Users\tester\Microsoft.Trusted.Signing.Client.1.0.60\bin\x64\Azure.CodeSigning.Dlib.dll"
     - $ACS_JSON = "C:\Users\tester\Microsoft.Trusted.Signing.Client.1.0.60\metadata.json"
     - cd "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64"
-    - .\signtool.exe sign /debug /v /fd SHA256 /tr "http://timestamp.acs.microsoft.com" /td SHA256 /dlib $ACS_DLIB /dmdf $ACS_JSON $KHOLORS_BINARY_PATH
-    - .\signtool.exe sign /debug /v /fd SHA256 /tr "http://timestamp.acs.microsoft.com" /td SHA256 /dlib $ACS_DLIB /dmdf $ACS_JSON $KHOLORS_VSTLIB_PATH
+    - .\signtool.exe sign /debug /v /fd SHA256 /tr "http://timestamp.acs.microsoft.com" /td SHA256 /dlib $ACS_DLIB /dmdf $ACS_JSON "${BASE_BUILD_PATH}\${KHOLORS_BINARY_PATH}"
+    - .\signtool.exe sign /debug /v /fd SHA256 /tr "http://timestamp.acs.microsoft.com" /td SHA256 /dlib $ACS_DLIB /dmdf $ACS_JSON "${BASE_BUILD_PATH}\${KHOLORS_VSTLIB_PATH}"
     - cd $BASE_BUILD_PATH
     - cd res
     - (Get-Content installer.nsi).Replace('1.0.0', ${env:CI_COMMIT_TAG}) | Set-Content installer.nsi
