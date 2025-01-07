@@ -1,3 +1,5 @@
+Unicode True
+
 !include "MUI2.nsh"
 
 Name "KholorsStation"
