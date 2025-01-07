@@ -7,7 +7,6 @@
 #include "StationApp/Audio/FftResultVectorReuseTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/ProcessingTimer.h"
-#include "StationApp/Audio/SimpleLicenseCheckTask.h"
 #include "StationApp/Audio/TimeSignatureUpdateTask.h"
 #include "StationApp/Audio/TrackInfoUpdateTask.h"
 #include "TaskManagement/TaskingManager.h"
