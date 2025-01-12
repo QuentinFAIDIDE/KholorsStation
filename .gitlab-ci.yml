@@ -69,7 +69,8 @@ build-windows:
   <<: *windows-cmake-config
   script:
     - cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo .
-    - cmake --build build --parallel 4
+    - cmake --build build --parallel 4 --target StationApp
+    - cmake --build build --parallel 4 --target SinkPlugin
   only:
     refs:
       - master
@@ -203,9 +204,14 @@ windows-installer:
   dependencies: []
   <<: *windows-cmake-config
   script:
+    - cd build
+    - cmake --preset windows -DCMAKE_BUILD_TYPE=Release .
+    - cmake --build build --parallel 4 --target SinkPlugin
+    - cmake --build build --parallel 4 --target StationApp
+    - cd ..
     - $BASE_BUILD_PATH = $PWD.Path
-    - $KHOLORS_BINARY_PATH = "build\src\StationApp\StationApp_artefacts\Debug\KholorsStation.exe"
-    - $KHOLORS_VSTLIB_PATH = "build\src\SinkPlugin\SinkPlugin_artefacts\Debug\VST3\KholorsSink.vst3\Contents\x86_64-win\KholorsSink.vst3"
+    - $KHOLORS_BINARY_PATH = "build\src\StationApp\StationApp_artefacts\Release\KholorsStation.exe"
+    - $KHOLORS_VSTLIB_PATH = "build\src\SinkPlugin\SinkPlugin_artefacts\Release\VST3\KholorsSink.vst3\Contents\x86_64-win\KholorsSink.vst3"
     - $ACS_DLIB = "C:\Users\tester\Microsoft.Trusted.Signing.Client.1.0.60\bin\x64\Azure.CodeSigning.Dlib.dll"
     - $ACS_JSON = "C:\Users\tester\Microsoft.Trusted.Signing.Client.1.0.60\metadata.json"
     - cd "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64"
@@ -241,6 +247,11 @@ release-upload:
     - cp build/debian-pkg/kholors-*.deb kholors-${CI_COMMIT_TAG}/Linux/Deb/
     - cp build/package/kholors_*.tar.gz kholors-${CI_COMMIT_TAG}/Linux/Archive/
     - zip -r kholors-${CI_COMMIT_TAG}.zip kholors-${CI_COMMIT_TAG}
+    - cd kholors-${CI_COMMIT_TAG}
+    - WINDOWS_PATH=$(ls Windows/KholorsStation*.exe)
+    - LINUX_ARCHIVE_PATH=$(ls Linux/Archive/kholors_*.tar.gz)
+    - LINUX_DEB_PATH=$(ls Linux/Deb/kholors-*.deb)
+    - cd ..
     # create the debug archive (for support use)
     - mkdir kholors-debug-${CI_COMMIT_TAG}
     - cp Kholors*.pdb kholors-debug-${CI_COMMIT_TAG}/
@@ -261,7 +272,7 @@ release-upload:
     - export MINOR_VERSION=$(echo "${CI_COMMIT_TAG}" | sed "s/v/ /" | cut -d '.' -f2)
     - export PATCH_VERSION=$(echo "${CI_COMMIT_TAG}" | sed "s/v/ /" | cut -d '.' -f3)
     - export MAJOR_RELEASE_ID=1
-    - 'curl -X "POST" "${CREATE_RELEASE_ENDPOINT}" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"major_release_id\": ${MAJOR_RELEASE_ID}, \"major_version\": ${MAJOR_VERSION}, \"minor_version\": ${MINOR_VERSION}, \"patch_version\": ${PATCH_VERSION}, \"release_bucket_url\": \"${MINIO_RELEASE_PATH}\"}"'
+    - 'curl -X "POST" "${CREATE_RELEASE_ENDPOINT}" -H "accept: application/json" -H "Content-Type: application/json" -d "{\"major_release_id\": ${MAJOR_RELEASE_ID}, \"major_version\": ${MAJOR_VERSION}, \"minor_version\": ${MINOR_VERSION}, \"patch_version\": ${PATCH_VERSION}, \"release_bucket_url\": \"${MINIO_RELEASE_PATH}\", \"archive_platforms\": { \"Windows (x64) .exe\": \"${WINDOWS_PATH}\", \"Linux (x64) .deb\": \"${LINUX_DEB_PATH}\", \"Linux (x64) .tar.gz\": \"${LINUX_ARCHIVE_PATH}\"} }"'
   tags:
     - artifaktnd-cloud-runner
   only:
