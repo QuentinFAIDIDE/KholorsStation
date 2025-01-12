@@ -204,11 +204,9 @@ windows-installer:
   dependencies: []
   <<: *windows-cmake-config
   script:
-    - cd build
-    - cmake --preset windows -DCMAKE_BUILD_TYPE=Release .
+    - cmake --preset windows -DCMAKE_BUILD_TYPE=Release build
     - cmake --build build --parallel 4 --target SinkPlugin
     - cmake --build build --parallel 4 --target StationApp
-    - cd ..
     - $BASE_BUILD_PATH = $PWD.Path
     - $KHOLORS_BINARY_PATH = "build\src\StationApp\StationApp_artefacts\Release\KholorsStation.exe"
     - $KHOLORS_VSTLIB_PATH = "build\src\SinkPlugin\SinkPlugin_artefacts\Release\VST3\KholorsSink.vst3\Contents\x86_64-win\KholorsSink.vst3"
