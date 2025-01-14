@@ -69,8 +69,8 @@ build-windows:
   <<: *windows-cmake-config
   script:
     - cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo .
-    - cmake --build build --parallel 4 --target StationApp
-    - cmake --build build --parallel 4 --target SinkPlugin
+    - cmake --build build --parallel 4 --config RelWithDebInfo --target StationApp
+    - cmake --build build --parallel 4 --config RelWithDebInfo --target SinkPlugin
   only:
     refs:
       - master
@@ -205,8 +205,8 @@ windows-installer:
   <<: *windows-cmake-config
   script:
     - cmake --preset windows -DCMAKE_BUILD_TYPE=Release build
-    - cmake --build build --parallel 4 --target SinkPlugin
-    - cmake --build build --parallel 4 --target StationApp
+    - cmake --build build --parallel 4 --config Release --target SinkPlugin
+    - cmake --build build --parallel 4 --config Release --target StationApp
     - $BASE_BUILD_PATH = $PWD.Path
     - $KHOLORS_BINARY_PATH = "build\src\StationApp\StationApp_artefacts\Release\KholorsStation.exe"
     - $KHOLORS_VSTLIB_PATH = "build\src\SinkPlugin\SinkPlugin_artefacts\Release\VST3\KholorsSink.vst3\Contents\x86_64-win\KholorsSink.vst3"

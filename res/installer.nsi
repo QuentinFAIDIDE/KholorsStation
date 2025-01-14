@@ -28,11 +28,11 @@ RequestExecutionLevel admin
 
 Section "MainSection" SEC01
    SetOutPath "$INSTDIR"
-   File "..\build\src\StationApp\StationApp_artefacts\Release\KholorsStation.exe"
+   File "..\build\src\StationApp\StationApp_artefacts\RelWithDebInfo\KholorsStation.exe"
    File "kholors.ico"
 
    SetOutPath "$VstInstDir\KholorsSink.vst3"
-   File /nonfatal /a /r "..\build\src\SinkPlugin\SinkPlugin_artefacts\Release\VST3\KholorsSink.vst3\" #note back slash at the end
+   File /nonfatal /a /r "..\build\src\SinkPlugin\SinkPlugin_artefacts\RelWithDebInfo\VST3\KholorsSink.vst3\" #note back slash at the end
 
    CreateShortCut "$SMSTARTUP\KholorsStation.lnk" "$INSTDIR\KholorsStation.exe" "" "$INSTDIR\KholorsStation.exe,0"
    CreateShortCut "$SMPROGRAMS\ArtifaktNd\KholorsStation.lnk" "$INSTDIR\KholorsStation.exe" "" "$INSTDIR\kholors.ico" 0
