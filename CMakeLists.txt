@@ -95,6 +95,10 @@ FetchContent_Declare(
   GIT_TAG master)
 FetchContent_MakeAvailable(muFFT)
 
+# force MSVC runtime to be statically linked
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# include the Kholors main and test targets
 add_subdirectory(src)
 
 if(UNIX AND NOT APPLE)

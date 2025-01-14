@@ -12,7 +12,7 @@ stages:
 .linux-cmake-template: &linux-cmake-config
   image: ${CI_REGISTRY_IMAGE}/builder:latest
   cache:
-    - key: "linux-${CI_PROJECT_NAME}-build-5" #increment the number when you wanna clear the cmake cache
+    - key: "linux-${CI_PROJECT_NAME}-build-6" #increment the number when you wanna clear the cmake cache
       paths:
         - build
         - libs
@@ -21,7 +21,7 @@ stages:
 
 .windows-cmake-template: &windows-cmake-config
   cache:
-    - key: "windows-${CI_PROJECT_NAME}-build-5" #increment the number when you wanna clear the cmake cache
+    - key: "windows-${CI_PROJECT_NAME}-build-6" #increment the number when you wanna clear the cmake cache
       paths:
         - build
         - libs
