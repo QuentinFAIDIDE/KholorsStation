@@ -147,8 +147,8 @@ windows-release-debug-artefacts:
   dependencies: []
   <<: *windows-cmake-config
   script:
-    - cp build\src\StationApp\StationApp_artefacts\Debug\KholorsStation.pdb .\KholorsStation_${CI_COMMIT_TAG}.pdb
-    - cp build\src\SinkPlugin\SinkPlugin_artefacts\Debug\KholorsSink_SharedCode.pdb .\KholorsSink_SharedCode_${CI_COMMIT_TAG}.pdb
+    - cp build\src\StationApp\StationApp_artefacts\RelWithDebInfo\KholorsStation.pdb .\KholorsStation_${CI_COMMIT_TAG}.pdb
+    - cp build\src\SinkPlugin\SinkPlugin_artefacts\RelWithDebInfo\KholorsSink_SharedCode.pdb .\KholorsSink_SharedCode_${CI_COMMIT_TAG}.pdb
   artifacts:
     paths:
       - Kholors*.pdb
@@ -204,12 +204,9 @@ windows-installer:
   dependencies: []
   <<: *windows-cmake-config
   script:
-    - cmake --preset windows -DCMAKE_BUILD_TYPE=Release build
-    - cmake --build build --parallel 4 --config Release --target SinkPlugin
-    - cmake --build build --parallel 4 --config Release --target StationApp
     - $BASE_BUILD_PATH = $PWD.Path
-    - $KHOLORS_BINARY_PATH = "build\src\StationApp\StationApp_artefacts\Release\KholorsStation.exe"
-    - $KHOLORS_VSTLIB_PATH = "build\src\SinkPlugin\SinkPlugin_artefacts\Release\VST3\KholorsSink.vst3\Contents\x86_64-win\KholorsSink.vst3"
+    - $KHOLORS_BINARY_PATH = "build\src\StationApp\StationApp_artefacts\RelWithDebInfo\KholorsStation.exe"
+    - $KHOLORS_VSTLIB_PATH = "build\src\SinkPlugin\SinkPlugin_artefacts\RelWithDebInfo\VST3\KholorsSink.vst3\Contents\x86_64-win\KholorsSink.vst3"
     - $ACS_DLIB = "C:\Users\tester\Microsoft.Trusted.Signing.Client.1.0.60\bin\x64\Azure.CodeSigning.Dlib.dll"
     - $ACS_JSON = "C:\Users\tester\Microsoft.Trusted.Signing.Client.1.0.60\metadata.json"
     - cd "C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64"
