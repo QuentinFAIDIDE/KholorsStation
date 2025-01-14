@@ -70,7 +70,7 @@ build-windows:
   script:
     - cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo .
     - cmake --build build --parallel 4 --config RelWithDebInfo --target StationApp
-    - cmake --build build --parallel 4 --config RelWithDebInfo --target SinkPlugin
+    - cmake --build build --parallel 4 --config RelWithDebInfo --target SinkPlugin_VST3
   only:
     refs:
       - master
@@ -148,7 +148,7 @@ windows-release-debug-artefacts:
   <<: *windows-cmake-config
   script:
     - cp build\src\StationApp\StationApp_artefacts\RelWithDebInfo\KholorsStation.pdb .\KholorsStation_${CI_COMMIT_TAG}.pdb
-    - cp build\src\SinkPlugin\SinkPlugin_artefacts\RelWithDebInfo\KholorsSink_SharedCode.pdb .\KholorsSink_SharedCode_${CI_COMMIT_TAG}.pdb
+    - cp build\src\SinkPlugin\SinkPlugin_artefacts\RelWithDebInfo\VST3\KholorsSink.pdb .\KholorsSink_${CI_COMMIT_TAG}.pdb
   artifacts:
     paths:
       - Kholors*.pdb
