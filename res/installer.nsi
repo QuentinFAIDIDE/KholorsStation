@@ -26,6 +26,13 @@ InstallDir "${APP_DIR}"
 
 RequestExecutionLevel admin
 
+Section "Visual Studio Runtime"
+  SetOutPath "$INSTDIR"
+  File "vcredist_x64.exe"
+  ExecWait "$INSTDIR\vcredist_x64.exe"
+  Delete "$INSTDIR\vcredist_x64.exe"
+SectionEnd
+
 Section "MainSection" SEC01
    SetOutPath "$INSTDIR"
    File "..\build\src\StationApp\StationApp_artefacts\RelWithDebInfo\KholorsStation.exe"
