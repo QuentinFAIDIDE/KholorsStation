@@ -45,8 +45,8 @@ class MainComponent final : public juce::Component, public TaskListener
   private:
     juce::Path getShadowPath();
     TaskingManager taskManager;                           /**< Object that manages task for actions */
-    juce::MenuBarComponent menuBar;                       /**< App menu at the top of the app */
     juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */
+    juce::SharedResourcePointer<IconsLoader> sharedSvgs;  /**< singleton that loads svg files */
     TrackInfoStore trackInfoStore;                        /**< storing all track info (name, color) */
     FreqTimeView freqTimeView;                            /**< Viewer that display frequencies over time received */
     AudioTransport::SyncServer audioDataServer;           /**< Server that receives audio data */
@@ -55,8 +55,6 @@ class MainComponent final : public juce::Component, public TaskListener
     HelpButton helpButton;
     ClearButton clearButton;
     SensitivitySlider volumeSensitivitySlider;
-
-    juce::SharedResourcePointer<IconsLoader> sharedSvgs; /**< singleton that loads svg files */
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

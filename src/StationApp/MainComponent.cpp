@@ -9,7 +9,6 @@
 #include "StationApp/GUI/FreqTimeView.h"
 #include "StationApp/GUI/SensitivitySlider.h"
 #include "StationApp/Licensing/DummyLicenseManager.h"
-#include "TaskManagement/TaskingManager.h"
 #include "juce_events/juce_events.h"
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
@@ -61,8 +60,6 @@ MainComponent::~MainComponent()
     {
         juce::MessageManager::getInstance()->runDispatchLoopUntil(100);
     }
-
-    menuBar.setModel(nullptr);
 }
 
 void MainComponent::paint(juce::Graphics &g)
