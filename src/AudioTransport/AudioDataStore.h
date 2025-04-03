@@ -63,7 +63,7 @@ class AudioDataStore
      * @brief Called by server when it received AudioSegmentPayload structs
      * and will copy the data to preallocated buffers, and split it into
      * different types of AudioTransportData. These types are as of now
-     * Daw information, track information, audio segments (data signal), and audio segments no-op.
+     * Daw information, track information, audio segments (data signal).
      *
      * @param payload the structure received by gRPC api as defined by protobuf containing audio information.
      *

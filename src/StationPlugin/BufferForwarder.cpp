@@ -1,9 +1,10 @@
 #include "BufferForwarder.h"
-#include "AudioTransport.pb.h"
-#include "AudioTransport/ColorBytes.h"
 #include "GUIToolkit/Consts.h"
 #include "GUIToolkit/Widgets/ColorPickerUpdateTask.h"
 #include "GUIToolkit/Widgets/TextEntry.h"
+#include "HeadlessAudioBroadcast.pb.h"
+#include "HeadlessAudioBroadcast/ColorBytes.h"
+#include "HeadlessAudioBroadcast/Constants.h"
 #include "juce_graphics/juce_graphics.h"
 #include <chrono>
 #include <cstdint>
@@ -260,7 +261,7 @@ bool BufferForwarder::payloadIsEmpty(std::shared_ptr<AudioTransport::AudioSegmen
 
 bool BufferForwarder::payloadIsFull(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
 {
-    return payload->segment_sample_duration() == DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE;
+    return payload->segment_sample_duration() == AUDIO_SEGMENTS_BLOCK_SIZE;
 }
 
 bool BufferForwarder::payloadIsOld(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
@@ -273,7 +274,7 @@ bool BufferForwarder::payloadIsOld(std::shared_ptr<AudioTransport::AudioSegmentP
 void BufferForwarder::clearPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
 {
     payload->mutable_segment_audio_samples()->Resize(0, 0.0f);
-    payload->mutable_segment_audio_samples()->Resize(DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE * 2, 0.0f);
+    payload->mutable_segment_audio_samples()->Resize(AUDIO_SEGMENTS_BLOCK_SIZE * 2, 0.0f);
     payload->set_segment_sample_duration(0);
     payloadsFillingStartTimesMs[payload] = juce::Time::currentTimeMillis();
 }
@@ -339,7 +340,7 @@ size_t BufferForwarder::appendAudioBlockToPayload(std::shared_ptr<AudioTransport
     }
 
     int remainingBlockInfoSamples = src->numTotalSamples - src->numUsedSamples;
-    int remainingPayloadSamples = DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE - dest->segment_sample_duration();
+    int remainingPayloadSamples = AUDIO_SEGMENTS_BLOCK_SIZE - dest->segment_sample_duration();
     int numMaxIter = std::min(remainingPayloadSamples, remainingBlockInfoSamples);
 
     if (remainingBlockInfoSamples < 0)
@@ -355,7 +356,7 @@ size_t BufferForwarder::appendAudioBlockToPayload(std::shared_ptr<AudioTransport
 
     for (int chan = 0; chan < 2; chan++)
     {
-        int channelShift = chan * DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE;
+        int channelShift = chan * AUDIO_SEGMENTS_BLOCK_SIZE;
         float *channelData;
         if (chan == 0 || src->numChannels < 2)
         {
@@ -397,20 +398,20 @@ bool BufferForwarder::audioBlockInfoFollowsPayloadContent(std::shared_ptr<AudioT
 
 void BufferForwarder::fillPayloadRemainingSpaceWithZeros(std::shared_ptr<AudioTransport::AudioSegmentPayload> payload)
 {
-    if (payload->segment_sample_duration() >= DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE)
+    if (payload->segment_sample_duration() >= AUDIO_SEGMENTS_BLOCK_SIZE)
     {
         return;
     }
     for (int chan = 0; chan < 2; chan++)
     {
-        int channelShift = chan * DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE;
+        int channelShift = chan * AUDIO_SEGMENTS_BLOCK_SIZE;
 
-        for (size_t i = payload->segment_sample_duration(); i < DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE; i++)
+        for (size_t i = payload->segment_sample_duration(); i < AUDIO_SEGMENTS_BLOCK_SIZE; i++)
         {
             payload->mutable_segment_audio_samples()->Set((uint64_t)channelShift + i, 0.0f);
         }
     }
-    payload->set_segment_sample_duration(DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE);
+    payload->set_segment_sample_duration(AUDIO_SEGMENTS_BLOCK_SIZE);
 }
 
 void BufferForwarder::allocateCurrentlyFilledPayloadIfNecessary()

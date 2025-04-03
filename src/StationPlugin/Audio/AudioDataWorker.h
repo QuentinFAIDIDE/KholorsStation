@@ -38,7 +38,7 @@ class AudioDataWorker : public TaskListener
     std::mutex audioWorkerThreadMutex;              /**< protectd variables shared between audio processing threads */
     TaskingManager &taskingManager;                 /**< Tasking manager to emit new tasks */
     AudioTransport::SyncServer &audioDataServer;    /**< Audio server to read audio data from */
-    FftRunner fftProcessor;                         /**< Multi threaded FFT processor */
+    FftProcessor fftProcessor;                      /**< Multi threaded FFT processor */
     std::atomic<float> processingTimerDelayMs;      /**< last average audio segment processing delay */
     int64_t lastSimpleLicenseCheck;                 /**< last time a simple license check was emmited */
 };

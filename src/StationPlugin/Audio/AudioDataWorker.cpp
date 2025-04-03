@@ -138,14 +138,6 @@ void AudioDataWorker::workerThreadLoop()
 
 bool AudioDataWorker::taskHandler(std::shared_ptr<Task> task)
 {
-    auto reuseVectorTask = std::dynamic_pointer_cast<FftResultVectorReuseTask>(task);
-    if (reuseVectorTask != nullptr && !reuseVectorTask->isCompleted())
-    {
-        fftProcessor.reuseResultArray(reuseVectorTask->resultArray);
-        reuseVectorTask->setCompleted(true);
-        return true;
-    }
-
     auto processingTimerDelayUpdate = std::dynamic_pointer_cast<ProcessingTimeUpdateTask>(task);
     if (processingTimerDelayUpdate != nullptr)
     {

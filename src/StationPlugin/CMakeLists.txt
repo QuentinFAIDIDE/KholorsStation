@@ -110,12 +110,9 @@ target_link_libraries(
           juce::juce_audio_basics
           juce::juce_opengl
           juce::juce_cryptography
-          AudioTransport
-          TaskManagement
-          Utils
+          HeadlessAudioBroadcast
           nlohmann_json::nlohmann_json
           spdlog::spdlog
-          muFFT
   PUBLIC juce::juce_recommended_config_flags
          juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
