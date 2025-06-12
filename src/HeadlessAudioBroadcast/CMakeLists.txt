@@ -63,20 +63,20 @@ target_link_libraries(HeadlessAudioBroadcast
 
 set_target_properties(HeadlessAudioBroadcast PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-# list all test source files and headers
-# file(
-#   GLOB_RECURSE all_test_cpp
-#   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-#   "*Test.cpp")
-# 
-# file(
-#   GLOB_RECURSE all_test_headers
-#   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-#   "*Test.h")
-# 
-# # add library testing target
-# add_executable(AudioTransportTest ${all_test_cpp} ${all_test_headers})
-# target_link_libraries(AudioTransportTest AudioTransport spdlog::spdlog)
-# 
-# add_test(NAME AudioTransportTest
-#          COMMAND ${CMAKE_CURRENT_BINARY_DIR}/AudioTransportTest)
+list all test source files and headers
+file(
+  GLOB_RECURSE all_test_cpp
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+  "*Test.cpp")
+
+file(
+  GLOB_RECURSE all_test_headers
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+  "*Test.h")
+
+# add library testing target
+add_executable(HeadlessAudioBroadcastTest ${all_test_cpp} ${all_test_headers})
+target_link_libraries(HeadlessAudioBroadcastTest HeadlessAudioBroadcast spdlog::spdlog)
+
+add_test(NAME HeadlessAudioBroadcastTest
+         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/HeadlessAudioBroadcastTest)

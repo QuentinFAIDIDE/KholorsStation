@@ -80,10 +80,13 @@ class ServerFftsRingBuffer
     void createAudioTasksResponseStruct();
 
     /**
-     * @brief get fftToDrawTask at the specified offset.
-     * Must be called under the lock.
+     * @brief Get the Ring buffer Index From Offset.
+     * It is assumed that offset is not lower than fftToDeliverLastOffset-fftsToDeliverUsedSize
+     *
+     * @param offset offset of the record to fetch
+     * @return size_t index in the ring buffer of the record that should have that index.
      */
-    FftToDrawTask *getFftAtOffset(uint64_t offset) const;
+    size_t getRingIndexFromOffset(uint64_t offset) const;
 
     std::vector<FftToDrawTask> fftsToDeliver; /**< the ring buffer containing fft data, copied to consumers */
     size_t fftsToDeliverUsedSize;             /**< size of the fftsToDeliver actually used */

@@ -118,7 +118,7 @@ std::shared_ptr<AudioTasks> ServerFftsRingBuffer::readItems(uint64_t requestServ
     std::lock_guard lock(mutex);
 
     uint64_t offsetToReadFrom = offset;
-    if (serverIdentifier != requestServerIdentifier)
+    if (serverIdentifier != requestServerIdentifier || offset > fftToDeliverLastOffset)
     {
         offsetToReadFrom = 1;
     }
@@ -158,23 +158,34 @@ std::shared_ptr<AudioTasks> ServerFftsRingBuffer::readItems(uint64_t requestServ
     }
 
     offsetToReadFrom = std::max(fftToDeliverLastOffset - (fftsToDeliverUsedSize - 1), offsetToReadFrom);
+    size_t fftRingBufIndex = getRingIndexFromOffset(offsetToReadFrom);
     while (offsetToReadFrom <= fftToDeliverLastOffset)
     {
+        if (fftRingBufIndex >= maxSize)
+        {
+            fftRingBufIndex = 0;
+        }
         auto newFftTask = taskListToPopulate->mutable_fft_to_draw_tasks()->Add();
-        auto taskToCopyFrom = getFftAtOffset(offsetToReadFrom);
-        newFftTask->CopyFrom(*taskToCopyFrom);
+        newFftTask->CopyFrom(fftsToDeliver[fftRingBufIndex]);
         // Can offsetToReadFrom overflow ?
         // Since we check that fftToDeliverLastOffset is at maximum max_uint64-1,
         // offsetToReadFrom will reach max_uint64 and loop will stop and not increment it more
         offsetToReadFrom++;
+        fftRingBufIndex++;
     }
 
     return taskListToPopulate;
 }
 
-FftToDrawTask *getFftAtOffset(uint64_t offset)
+size_t ServerFftsRingBuffer::getRingIndexFromOffset(uint64_t offset) const
 {
-    // TODO: replace with a conditional pointer increment rather than recomputing the index every time ?
+    int diff = fftToDeliverLastOffset - offset;
+    int start = fftToDeliverLastIndex - diff;
+    while (start < 0)
+    {
+        start += maxSize;
+    }
+    return start;
 }
 
 void ServerFftsRingBuffer::reuseAudioTasksStruct(std::shared_ptr<AudioTasks> structToReuse)

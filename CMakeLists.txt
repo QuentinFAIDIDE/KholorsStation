@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.11)
 set(CMAKE_CXX_STANDARD 20)
 
 # ensure that git is available (we need it for version retrieval)
