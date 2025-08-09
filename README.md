@@ -5,7 +5,7 @@ receives and display signals from a DAW, and Kholors Sink, a VST3 plugin
 that sends the signals from the DAW, and automatically colors and 
 names the track based on the track metadata. This project is building both.
 
-![Watch the video](https://artifaktnd.com/kholors_video_demo.webm)
+[![Watch the video](https://img.youtube.com/vi/9gL8FKBfXtc/maxresdefault.jpg)](https://youtu.be/9gL8FKBfXtc)
 
 The use case is to visualise conflicts between tracks, at specific time/frequencies
 where they overlap, and to know where to cut or where there is space in the mix
