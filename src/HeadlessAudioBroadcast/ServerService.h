@@ -8,9 +8,6 @@
 namespace HeadlessAudioBroadcast
 {
 
-/**
- * @brief ServerService implements the FFT server endpoints.
- */
 class ServerService final : public KholorsHeadlessAudioBroadcast::Service
 {
   public:

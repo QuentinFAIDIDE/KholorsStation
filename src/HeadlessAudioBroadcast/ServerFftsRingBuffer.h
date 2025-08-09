@@ -7,17 +7,6 @@
 namespace HeadlessAudioBroadcast
 {
 
-/**
- * @brief ServerFftsRingBuffer stores
- * fft events after they were processed by the ServerService
- * FftRunner, and assign an offset (starting at 1) to each. It is a ring buffer
- * so that the oldest fft are overwritten by the new ones
- * when the ring is full.
- * It by default does not allocate the ring buffer and
- * require user to call prepare and clear in order to prevent
- * holding onto memory if the server is not elected master amongst
- * the replicas.
- */
 class ServerFftsRingBuffer
 {
   public:
@@ -46,12 +35,12 @@ class ServerFftsRingBuffer
     /**
      * @brief Push a new processed FFT into the storage so that it can be delivered
      * to clients.
-     * @return the number of item added (if failure, the server needs to abort because max offset reached)
      */
-    int writeItem(double bpm, int32_t timeSignatureNumerator, int32_t timeSignatureDenominator, int64_t trackidentifier,
-                  std::string trackName, int32_t trackColor, uint32_t noChannels, uint32_t channelIndex,
-                  uint32_t sampleRate, uint32_t segmentStartSample, uint64_t segmentSampleLength,
-                  int64_t sentTimeUnixMs, uint32_t noFfts, std::shared_ptr<std::vector<float>> fftData);
+    void writeItem(double bpm, int32_t timeSignatureNumerator, int32_t timeSignatureDenominator,
+                   int64_t trackidentifier, std::string trackName, int32_t trackColor, uint32_t noChannels,
+                   uint32_t channelIndex, uint32_t sampleRate, uint32_t segmentStartSample,
+                   uint64_t segmentSampleLength, int64_t sentTimeUnixMs, uint32_t noFfts,
+                   std::shared_ptr<std::vector<float>> fftData);
 
     /**
      * @brief Get a pointer to an audioTasks list to return to readers, that summarize
@@ -88,15 +77,13 @@ class ServerFftsRingBuffer
      */
     size_t getRingIndexFromOffset(uint64_t offset) const;
 
-    std::vector<FftToDrawTask> fftsToDeliver; /**< the ring buffer containing fft data, copied to consumers */
+    std::vector<FftToDrawTask> fftsToDeliver; /**< the actual ring buffer */
     size_t fftsToDeliverUsedSize;             /**< size of the fftsToDeliver actually used */
     size_t fftToDeliverLastIndex;             /**< index of last value in fftsToDeliver ring buffer */
-    uint64_t fftToDeliverLastOffset; /**< last offset at the fftToDeliverLastIndex value (start at 0 because offsets
-                                        starts at 1) */
-    uint64_t serverIdentifier;       /**< random indentifier to prevent using offset from other server */
-    std::queue<std::shared_ptr<AudioTasks>>
-        freeAudioTasksStructs; /**< structs to be used as responses, where we copy fft and deliver to consumer */
-    size_t maxSize;            /**< max number of structs to store and deliver */
+    uint64_t fftToDeliverLastOffset;          /**< last offset at the fftToDeliverLastIndex value */
+    uint64_t serverIdentifier;                /**< random indentifier to prevent using offset from other server */
+    std::queue<std::shared_ptr<AudioTasks>> freeAudioTasksStructs; /**< structs to be used as responses */
+    size_t maxSize;                                                /**< max number of structs to store and deliver */
     std::mutex mutex;
     size_t fftArraysSize; /**< size to preallocate the fft arrays */
 };

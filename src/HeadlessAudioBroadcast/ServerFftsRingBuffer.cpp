@@ -1,8 +1,6 @@
 #include "ServerFftsRingBuffer.h"
 #include "HeadlessAudioBroadcast.pb.h"
-#include <cstdint>
 #include <cstring>
-#include <limits>
 #include <memory>
 #include <mutex>
 
@@ -61,28 +59,21 @@ void ServerFftsRingBuffer::createAudioTasksResponseStruct()
     freeAudioTasksStructs.push(newResponseAudioTasks);
 }
 
-int ServerFftsRingBuffer::writeItem(double bpm, int32_t timeSignatureNumerator, int32_t timeSignatureDenominator,
-                                    int64_t trackidentifier, std::string trackName, int32_t trackColor,
-                                    uint32_t noChannels, uint32_t channelIndex, uint32_t sampleRate,
-                                    uint32_t segmentStartSample, uint64_t segmentSampleLength, int64_t sentTimeUnixMs,
-                                    uint32_t noFfts, std::shared_ptr<std::vector<float>> fftData)
+void ServerFftsRingBuffer::writeItem(double bpm, int32_t timeSignatureNumerator, int32_t timeSignatureDenominator,
+                                     int64_t trackidentifier, std::string trackName, int32_t trackColor,
+                                     uint32_t noChannels, uint32_t channelIndex, uint32_t sampleRate,
+                                     uint32_t segmentStartSample, uint64_t segmentSampleLength, int64_t sentTimeUnixMs,
+                                     uint32_t noFfts, std::shared_ptr<std::vector<float>> fftData)
 {
     std::lock_guard lock(mutex);
 
-    // we abort writing nothing if the offset is about to overflow
-    if (fftToDeliverLastOffset >= (std::numeric_limits<uint64_t>::max() - 1))
-    {
-        return 0;
-    }
-    // if not overflowing we increase the last offset used (that we will use for this datum)
-    fftToDeliverLastOffset++;
-
-    // eventually update size of ring buffer if not full yet
+    // if the array is not full, resize it and increase offset and index of last element
     if (fftsToDeliverUsedSize != maxSize)
     {
         fftsToDeliverUsedSize++;
     }
-    // we either wrap to 0 if we are at the end of the ring, or increment to next datum
+    // shift the offset and index(modulo size) of last element
+    fftToDeliverLastOffset++; // TODO: handle max offset
     if (fftToDeliverLastIndex == maxSize - 1)
     {
         fftToDeliverLastIndex = 0;
@@ -110,7 +101,6 @@ int ServerFftsRingBuffer::writeItem(double bpm, int32_t timeSignatureNumerator, 
     float *dest = fftsToDeliver[fftToDeliverLastIndex].mutable_fft_data()->mutable_data();
     float *src = fftData->data();
     memcpy(dest, src, sizeof(float) * fftData->size());
-    return 1;
 }
 
 std::shared_ptr<AudioTasks> ServerFftsRingBuffer::readItems(uint64_t requestServerIdentifier, uint64_t offset)
@@ -131,27 +121,15 @@ std::shared_ptr<AudioTasks> ServerFftsRingBuffer::readItems(uint64_t requestServ
     auto taskListToPopulate = freeAudioTasksStructs.front();
     freeAudioTasksStructs.pop();
 
-    // BUG: on overflow, we re-read the last ones in a loop untill the server switch
-    // to the newly elected server takes over. Since the fft reads are done baxsed on
-    // time interval, we will redraw the same last fft untill the new server takes over.
-    uint64_t nextOffset;
-    if (fftToDeliverLastOffset >= (std::numeric_limits<uint64_t>::max() - 1))
-    {
-        nextOffset = fftToDeliverLastOffset;
-    }
-    else
-    {
-        nextOffset = fftToDeliverLastOffset + 1;
-    }
+    // TODO: handle max offset ?
 
-    // The challenge here is to find a way to modify the fft to draw tasks array
-    // members without reallocating shit unless if necessary. It should work, to verify
-    // at profiling time.
-    taskListToPopulate->set_new_offset(nextOffset);
+    // The mission here is to find a way to modify the fft to draw tasks array
+    // members without reallocating shit unless if necessary.
+    taskListToPopulate->set_new_offset(fftToDeliverLastOffset + 1);
     taskListToPopulate->set_server_identifier(serverIdentifier);
     taskListToPopulate->mutable_fft_to_draw_tasks()->Clear();
 
-    // handle the case where there is no FFT result to deliver yet
+    // handle the case where fftsToDeliverUsedSize == 0
     if (fftsToDeliverUsedSize == 0)
     {
         return taskListToPopulate;
@@ -166,10 +144,15 @@ std::shared_ptr<AudioTasks> ServerFftsRingBuffer::readItems(uint64_t requestServ
             fftRingBufIndex = 0;
         }
         auto newFftTask = taskListToPopulate->mutable_fft_to_draw_tasks()->Add();
+<<<<<<< HEAD
         newFftTask->CopyFrom(fftsToDeliver[fftRingBufIndex]);
         // Can offsetToReadFrom overflow ?
         // Since we check that fftToDeliverLastOffset is at maximum max_uint64-1,
         // offsetToReadFrom will reach max_uint64 and loop will stop and not increment it more
+=======
+        auto taskToCopyFrom = getFftAtOffset(offsetToReadFrom);
+        newFftTask->CopyFrom(*taskToCopyFrom);
+>>>>>>> parent of ec600b6 (feat: ServerFftsRingBuffer)
         offsetToReadFrom++;
         fftRingBufIndex++;
     }
@@ -179,6 +162,7 @@ std::shared_ptr<AudioTasks> ServerFftsRingBuffer::readItems(uint64_t requestServ
 
 size_t ServerFftsRingBuffer::getRingIndexFromOffset(uint64_t offset) const
 {
+<<<<<<< HEAD
     int diff = fftToDeliverLastOffset - offset;
     int start = fftToDeliverLastIndex - diff;
     while (start < 0)
@@ -186,6 +170,9 @@ size_t ServerFftsRingBuffer::getRingIndexFromOffset(uint64_t offset) const
         start += maxSize;
     }
     return start;
+=======
+    // TODO
+>>>>>>> parent of ec600b6 (feat: ServerFftsRingBuffer)
 }
 
 void ServerFftsRingBuffer::reuseAudioTasksStruct(std::shared_ptr<AudioTasks> structToReuse)
