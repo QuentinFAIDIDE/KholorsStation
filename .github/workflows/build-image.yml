@@ -26,10 +26,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - id: lowercase
+        name: Lowercase repository name
+        uses: ASzc/change-string-case-action@v1
+        with:
+          string: "ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}"
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./base-builder.Containerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/builder:latest
+          tags: ${{ steps.lowercase.outputs.lowercase }}/builder:latest
