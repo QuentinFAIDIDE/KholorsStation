@@ -5,12 +5,21 @@ receives and display signals from a DAW, and Kholors Sink, a VST3 plugin
 that sends the signals from the DAW, and automatically colors and 
 names the track based on the track metadata. This project is building both.
 
+The spectrum is drawing live as your daw project is playing, with the top half
+being the left track drawn, and the bottom half being the right track.
+The centered horizontal line is the 0Hz frequency, while the top is the maximum displayable
+(Nyquist) frequency of the left track, and the bottom the maximum displayable frequency
+of the right track. THe viewer horizontal axis is just time, similar to what your DAW is showing.
+
 [![Watch the video](https://img.youtube.com/vi/9gL8FKBfXtc/maxresdefault.jpg)](https://youtu.be/9gL8FKBfXtc)
 
 The use case is to visualise conflicts between tracks, at specific time/frequencies
 where they overlap, and to know where to cut or where there is space in the mix
 A [demo video](https://youtu.be/9gL8FKBfXtc) is available.
 
+To use it, open the Kholors Station app, and open your DAW, then for each track or group,
+add an instance of the Kholors Sink plugin, which will create a new coloured track live drawn
+on the Station app.
 
 The Station (viewer) being an independant app not integrated to the DAW,
 you might run into usability issues using it on a single small screen desktop,
