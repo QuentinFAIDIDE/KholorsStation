@@ -1,4 +1,4 @@
-name: Build and Push Builder Image
+name: build_linux_image
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
       - "base-builder.Containerfile"
 
 jobs:
-  build-and-push-image:
-    name: Build and Push to GHCR
+  build_linux_image:
+    name: Build Linux Build Container and Push to GHCR
     runs-on: ubuntu-latest
     permissions:
       contents: read

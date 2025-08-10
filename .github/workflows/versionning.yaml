@@ -1,0 +1,31 @@
+name: versioning
+
+on:
+  workflow_run:
+    workflows: ["build_linux"]
+    types: [completed]
+    branches:
+      - "master"
+
+jobs:
+  semantic-versioning:
+    name: Semantic Versioning
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for semantic-release
+
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v3
+        with:
+          semantic_version: 19
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

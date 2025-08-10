@@ -1,0 +1,61 @@
+name: build_linux
+
+on:
+  workflow_run:
+    workflows: ["build_linux_image"]
+    types: [completed]
+    branches:
+      - "master"
+
+jobs:
+  build-linux:
+    name: Build and Test on Linux
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/quentinfaidide/kholorsstation/builder:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.github_token }}
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache build and libs directory
+        id: cache-build-libs
+        uses: actions/cache@v2
+        with:
+          path: |
+            ./build
+            ./libs
+          key: ${{ runner.os }}-build-cache-${{ github.ref_name }}-1-${{ hashFiles('**/CmakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-${{ github.ref_name }}-1-${{ hashFiles('**/CmakeLists.txt') }}
+
+      - name: Cache hit or miss
+        run: |
+          if ${{ steps.cache-build-libs.outputs.cache-hit == 'true' }}; then
+            echo "Cache hit for build and libs"
+          else
+            echo "Cache miss for build and libs"
+          fi
+
+      - name: Configure
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+      - name: Build
+        run: |
+          mkdir -p build
+          cd build
+          make -j4
+
+      - name: Test
+        run: |
+          mkdir -p build
+          cd build
+          ctest -E "example"
