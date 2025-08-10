@@ -1,0 +1,97 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/quentinfaidide/kholorsstation/builder:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.github_token }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
+      - name: Cache build and libs directory
+        id: cache-build-libs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./build
+            ./libs
+          key: ${{ runner.os }}-build-cache-${{ github.ref_name }}-2-${{ hashFiles('**/CmakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-${{ github.ref_name }}-2-${{ hashFiles('**/CmakeLists.txt') }}
+      - name: Configure
+        run: |
+          mkdir -p build
+          git config --global --add safe.directory '*'
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - name: Build
+        run: |
+          mkdir -p build
+          cd build
+          make -j4
+      - name: Package
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          rm -rf pkg
+          mkdir pkg
+          make DESTDIR=./pkg/tree install -j4
+          cp -r pkg pkg-debug
+          strip -s pkg/tree/usr/lib/vst3/KholorsSink.vst3/Contents/x86_64-linux/KholorsSink.so
+          strip -s pkg/tree/usr/bin/KholorsStation
+      - name: Construct Debug Archive
+        run: |
+          cd build
+          rm -rf package-debug
+          cp -r pkg-debug package-debug
+          cp ../res/linux_install.sh package-debug/install.sh
+          cp ../res/linux_uninstall.sh package-debug/uninstall.sh
+          cd package-debug
+          tar -czvf kholors_debug_${{ github.ref_name }}.tar.gz *
+      - name: Construct Release Archive
+        run: |
+          cd build
+          rm -rf package
+          cp -r pkg package
+          cp ../res/linux_install.sh package/install.sh
+          cp ../res/linux_uninstall.sh package/uninstall.sh
+          cd package
+          tar -czvf kholors_${{ github.ref_name }}.tar.gz *
+      - name: Construct Deb Package
+        run: |
+          cd build
+          rm -rf debian-pkg
+          mkdir debian-pkg
+          cp -r pkg/tree debian-pkg/kholors-${{ github.ref_name }}
+          cd debian-pkg/kholors-${{ github.ref_name }}
+          mkdir DEBIAN
+          cp ../../../res/control DEBIAN/control
+          CI_COMMIT_TAG_SHORTENED=$(echo "${{ github.ref_name }}" | sed "s/v//g")
+          sed -i "s/VERSION_TO_REPLACE/${CI_COMMIT_TAG_SHORTENED}/g" DEBIAN/control
+          cd ..
+          dpkg-deb --build kholors-${{ github.ref_name }}
+          apt install ./kholors-${{ github.ref_name }}.deb
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          files: |
+            build/debian-pkg/kholors-*.deb
+            build/package/kholors_*.tar.gz
+            build/package-debug/kholors_debug_*.tar.gz
