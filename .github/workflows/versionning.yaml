@@ -18,8 +18,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Required for semantic-release
-
+          fetch-depth: 0
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v3
         with:

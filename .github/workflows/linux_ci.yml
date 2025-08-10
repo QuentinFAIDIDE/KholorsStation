@@ -51,6 +51,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Cache build and libs directory
         id: cache-build-libs
         uses: actions/cache@v4
