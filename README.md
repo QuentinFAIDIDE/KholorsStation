@@ -2,7 +2,7 @@
 
 Kholors is a project made of Kholors Station, a desktop software that
 receives and display signals from a DAW, and Kholors Sink, a VST3 plugin
-that sends the signals from the DAW, and automatically colors and 
+that sends the signals from the DAW, and automatically colors and
 names the track based on the track metadata. This project is building both.
 
 The spectrum is drawing live as your daw project is playing, with the top half
@@ -26,16 +26,9 @@ you might run into usability issues using it on a single small screen desktop,
 as it is designed to run on a separate screen from the DAW, as an always-open
 mixdown visualizer.
 
+## Downloads
 
-Note that the project is in early development, and while usable and perceived 
-as a vital tool with no equivalent by the developer, it
-was only tested on Linux and Windows with Bitwig. Feel free to open issues
-on Github if you run into issues.
-
-
-Moreover, a refactor is planned to make it function a bit like the Q-Pro eq,
-entirely within the DAW and where each track has a VST instance capable of showing
-all tracks spectrums, although it is not sure as to whem this will be ready.
+Check the github releases on the right side of the Github UI to download binaries for your operating system (deb, binary tag.gz, or windows .exe).
 
 ## Linux
 
