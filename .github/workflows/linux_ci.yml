@@ -70,6 +70,7 @@ jobs:
       - name: Configure
         run: |
           mkdir -p build
+          git config --global --add safe.directory '*'
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
       - name: Build
