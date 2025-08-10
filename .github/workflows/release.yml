@@ -90,6 +90,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
+          token: ${{ secrets.PAT }}
           files: |
             build/debian-pkg/kholors-*.deb
             build/package/kholors_*.tar.gz
