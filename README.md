@@ -28,7 +28,7 @@ mixdown visualizer.
 
 ## Downloads
 
-Check the github releases on the right side of the Github UI to download binaries for your operating system (deb, binary tag.gz, or windows .exe).
+Check the github releases on the right side of the Github UI to download binaries for your operating system (linux deb, linux tarball, or windows .exe).
 
 ## Linux
 
