@@ -29,4 +29,4 @@ jobs:
           extra_plugins: |
             @semantic-release/github@8
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
