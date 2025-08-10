@@ -2,7 +2,7 @@ name: versioning
 
 on:
   workflow_run:
-    workflows: ["build_linux"]
+    workflows: ["linux_ci"]
     types: [completed]
     branches:
       - "master"
