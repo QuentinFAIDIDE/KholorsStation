@@ -9,6 +9,7 @@ on:
 
 jobs:
   semantic-versioning:
+    if: github.event.workflow_run.conclusion == 'success'
     name: Semantic Versioning
     runs-on: ubuntu-latest
     permissions:
