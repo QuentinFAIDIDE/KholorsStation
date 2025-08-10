@@ -1,13 +1,10 @@
 #pragma once
 
 #include "AudioTransport/ColorBytes.h"
-#include "StationApp/Audio/BrokenLicenseCheckTask.h"
-#include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/TrackColorUpdateTask.h"
 #include "StationApp/Audio/TrackInfoUpdateTask.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
-#include <limits>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -16,14 +13,11 @@
 #include <tuple>
 #include <utility>
 
-#define MIN_LICENSE_CHECK_INTERVAL_MS (60000 * 15)
-
 class TrackInfoStore : public TaskListener
 {
   public:
     TrackInfoStore(TaskingManager &tm) : taskingManager(tm)
     {
-        lastLicenseCheck = 0;
     }
 
     bool taskHandler(std::shared_ptr<Task> task)
@@ -71,39 +65,6 @@ class TrackInfoStore : public TaskListener
             trackinfoUpdate->setCompleted(true);
         }
 
-        /*
-
-        // spy on new fft data tasks (that have a timestamp) to initiate license
-        // checks
-        auto newFftDataTask = std::dynamic_pointer_cast<NewFftDataTask>(task);
-        if (newFftDataTask != nullptr && !newFftDataTask->isCompleted() && !newFftDataTask->hasFailed())
-        {
-            // we only process on fftDataTask every 500 iterations
-            iterCheck++;
-            if (iterCheck % 500 != 0)
-            {
-                return false;
-            }
-            if (lastLicenseCheck == 0)
-            {
-                lastLicenseCheck = newFftDataTask->sentTimeUnixMs;
-                return false;
-            }
-            // this check can only happen if days since unix epoch start are == 0 [mod] 3
-            int64_t daysSinceUnixEpoch = newFftDataTask->sentTimeUnixMs / (60000 * 60 * 24);
-            if (daysSinceUnixEpoch % 3 == 0)
-            {
-                if ((newFftDataTask->sentTimeUnixMs - lastLicenseCheck) > MIN_LICENSE_CHECK_INTERVAL_MS)
-                {
-                    lastLicenseCheck = newFftDataTask->sentTimeUnixMs;
-                    auto newLicenseCheckTask = std::make_shared<BrokenLicenseCheckTask>();
-                    taskingManager.broadcastTask(newLicenseCheckTask);
-                }
-            }
-        }
-
-        */
-
         return false;
     }
 
@@ -136,6 +97,4 @@ class TrackInfoStore : public TaskListener
     std::map<uint64_t, std::string> namesPerTrack;
     std::mutex mutex;
     TaskingManager &taskingManager;
-    int64_t lastLicenseCheck;
-    int64_t iterCheck;
 };

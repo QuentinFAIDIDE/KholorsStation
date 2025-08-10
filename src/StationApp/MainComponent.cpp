@@ -8,7 +8,6 @@
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FreqTimeView.h"
 #include "StationApp/GUI/SensitivitySlider.h"
-#include "StationApp/Licensing/DummyLicenseManager.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_events/juce_events.h"
 #include "juce_graphics/juce_graphics.h"
@@ -41,14 +40,6 @@ MainComponent::MainComponent()
 
     taskManager.registerTaskListener(this);
     taskManager.registerTaskListener(&infoBar);
-
-    auto licenseData = DummyLicenseManager::getUserDataAndKeyFromDisk();
-    if (!licenseData.has_value())
-    {
-        throw std::runtime_error("No license key after license check");
-    }
-    infoBar.setLicenseInfo(licenseData->username, licenseData->email);
-
     taskManager.startTaskBroadcast();
 }
 

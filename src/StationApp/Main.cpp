@@ -59,28 +59,6 @@ class GuiAppApplication final : public juce::JUCEApplication
         appLookAndFeel.setDefaultSansSerifTypeface(typeface);
         juce::LookAndFeel::setDefaultLookAndFeel(&appLookAndFeel);
 
-        auto optId = DummyLicenseManager::getUserDataAndKeyFromDisk();
-        if (!optId.has_value())
-        {
-            auto licenseWindow = std::make_unique<LicenseDialog>(nullptr);
-            int ret = licenseWindow->runModalLoop();
-            if (ret == 1)
-            {
-                juce::JUCEApplicationBase::quit();
-            }
-        }
-        else if (!DummyLicenseManager::isKeyValid(*optId))
-        {
-            // Remove the key file and display license page
-            DummyLicenseManager::writeUserDataAndKeyToDisk(std::nullopt);
-            auto licenseWindow = std::make_unique<LicenseDialog>(nullptr);
-            int ret = licenseWindow->runModalLoop();
-            if (ret == 1)
-            {
-                juce::JUCEApplicationBase::quit();
-            }
-        }
-
         mainWindow.reset(new MainWindow(getApplicationName()));
         mainWindow->setLookAndFeel(&appLookAndFeel);
     }

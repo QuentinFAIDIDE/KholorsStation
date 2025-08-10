@@ -19,7 +19,6 @@ class BottomInfoLine : public juce::Component, public TaskListener
     BottomInfoLine(TaskingManager &tm);
     void paint(juce::Graphics &g) override;
     bool taskHandler(std::shared_ptr<Task> task) override;
-    void setLicenseInfo(std::string username, std::string email);
 
   private:
     std::string noteFromFreq(float freq);
@@ -29,9 +28,5 @@ class BottomInfoLine : public juce::Component, public TaskListener
     std::atomic<float> lastSampleTime;
     std::atomic<bool> mouseOverSfftView;
     std::atomic<float> averageSegmentProcessingTimeMs;
-    std::string licenseOwnerInfo;
-    std::mutex licenseOwnerMutex;
     std::string leftText; /**< left aligned bottom bar text */
-    std::string
-        licensedWordTxt; /**< useless tentative to avoid having the word "License" showing up in the drawing loop */
 };

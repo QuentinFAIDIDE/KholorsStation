@@ -1,6 +1,5 @@
 #include "FreqTimeView.h"
 #include "StationApp/Audio/BpmUpdateTask.h"
-#include "StationApp/Audio/BrokenLicenseCheckTask.h"
 #include "StationApp/Audio/FftResultVectorReuseTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/ProcessingTimer.h"
@@ -15,7 +14,6 @@
 #include "StationApp/GUI/MouseCursorInfoTask.h"
 #include "StationApp/GUI/TrackList.h"
 #include "StationApp/GUI/TrackSelectionTask.h"
-#include "StationApp/Licensing/DummyLicenseManager.h"
 #include "StationApp/Maths/NormalizedBijectiveProjection.h"
 #include "juce_core/juce_core.h"
 #include "juce_events/juce_events.h"
@@ -180,39 +178,6 @@ void FreqTimeView::timerCallback()
 
 bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
 {
-    auto brokenLicenseCheckTask = std::dynamic_pointer_cast<BrokenLicenseCheckTask>(task);
-    if (brokenLicenseCheckTask != nullptr && !brokenLicenseCheckTask->isCompleted() &&
-        brokenLicenseCheckTask->stage == 1)
-    {
-        // we first run a bogus test to assert that the functions were not tempered
-        UserDataAndKey licenseData;
-        licenseData.licenseKey = brokenLicenseCheckTask->key;
-        licenseData.username = "John Doe";
-        licenseData.email = "bingo@doe.com";
-        if (DummyLicenseManager::isKeyValid(licenseData))
-        {
-            DummyLicenseManager::writeUserDataAndKeyToDisk(std::nullopt);
-            juce::AlertWindow::showMessageBox(juce::MessageBoxIconType::WarningIcon, "Invalid License",
-                                              "An invalid license has been detected. Please buy our software or report "
-                                              "a bug to support@artifaktnd.com.");
-            juce::JUCEApplicationBase::quit();
-        }
-        // then we run a normal license check
-        licenseData.username = brokenLicenseCheckTask->username;
-        licenseData.email = brokenLicenseCheckTask->email;
-        if (!DummyLicenseManager::isKeyValid(licenseData))
-        {
-            DummyLicenseManager::writeUserDataAndKeyToDisk(std::nullopt);
-            juce::AlertWindow::showMessageBox(juce::MessageBoxIconType::WarningIcon, "Invalid License",
-                                              "An invalid license has been detected. Please buy our software or report "
-                                              "a bug to support@artifaktnd.com.");
-            juce::JUCEApplicationBase::quit();
-        }
-
-        brokenLicenseCheckTask->setCompleted(true);
-        return true;
-    }
-
     auto newFftDataTask = std::dynamic_pointer_cast<NewFftDataTask>(task);
     if (newFftDataTask != nullptr && !newFftDataTask->isCompleted() && !newFftDataTask->hasFailed())
     {

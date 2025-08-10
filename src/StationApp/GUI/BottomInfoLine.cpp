@@ -1,15 +1,11 @@
 #include "BottomInfoLine.h"
 #include "GUIToolkit/Consts.h"
-#include "StationApp/Audio/BrokenLicenseCheckTask.h"
 #include "StationApp/Audio/ProcessingTimer.h"
-#include "StationApp/Audio/SimpleLicenseCheckTask.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/MouseCursorInfoTask.h"
-#include "StationApp/Licensing/DummyLicenseManager.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_events/juce_events.h"
 #include "juce_graphics/juce_graphics.h"
-#include <cstddef>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -18,7 +14,7 @@
 #define BOTTOM_INFO_LINE_SIDE_PADDING 20
 
 BottomInfoLine::BottomInfoLine(TaskingManager &tm)
-    : taskingManager(tm), lastFrequency(0), lastSampleTime(0), mouseOverSfftView(false), licensedWordTxt("Licensed")
+    : taskingManager(tm), lastFrequency(0), lastSampleTime(0), mouseOverSfftView(false)
 {
     averageSegmentProcessingTimeMs = 0;
     setOpaque(true);
@@ -30,12 +26,6 @@ void BottomInfoLine::paint(juce::Graphics &g)
 
     g.setColour(KHOLORS_COLOR_UNITS);
     g.fillRect(getLocalBounds().withHeight(1));
-
-    {
-        std::lock_guard lock(licenseOwnerMutex);
-        leftText = licensedWordTxt + " to: " + licenseOwnerInfo + " | Average Audio Processing Delay (milliseconds): " +
-                   std::to_string((int)averageSegmentProcessingTimeMs);
-    }
 
     std::string rightText = TRANS("No tip to display because mouse is not on grid...").toStdString();
 
@@ -56,10 +46,7 @@ void BottomInfoLine::paint(juce::Graphics &g)
     bounds.reduce(BOTTOM_INFO_LINE_SIDE_PADDING, 0);
     g.setFont(juce::Font(KHOLORS_DEFAULT_FONT_SIZE));
     g.setColour(KHOLORS_COLOR_WHITE);
-    {
-        std::lock_guard lock(licenseOwnerMutex);
-        g.drawText(leftText, bounds, juce::Justification::centredLeft, true);
-    }
+    g.drawText(leftText, bounds, juce::Justification::centredLeft, true);
     g.drawText(rightText, bounds, juce::Justification::centredRight, true);
 }
 
@@ -103,52 +90,6 @@ bool BottomInfoLine::taskHandler(std::shared_ptr<Task> task)
             }
             repaint();
         }
-    }
-
-    auto simpleLicenseCheckTask = std::dynamic_pointer_cast<SimpleLicenseCheckTask>(task);
-    if (simpleLicenseCheckTask != nullptr && !simpleLicenseCheckTask->isCompleted())
-    {
-        auto licenseData = DummyLicenseManager::getUserDataAndKeyFromDisk();
-        std::string licenseTextPart;
-        {
-            std::lock_guard lock(licenseOwnerMutex);
-            licenseTextPart = licenseOwnerInfo;
-        }
-        auto lineDataPair = DummyLicenseManager::parseOwnerFromBottomLineOrFail(licenseTextPart);
-        licenseData->email = lineDataPair.second;
-        licenseData->username = lineDataPair.first;
-        if (!DummyLicenseManager::isKeyValid(licenseData.value()))
-        {
-            DummyLicenseManager::writeUserDataAndKeyToDisk(std::nullopt);
-            throw std::runtime_error("nice try, R2R!");
-        }
-        simpleLicenseCheckTask->setCompleted(true);
-        return true;
-    }
-
-    auto brokenLicenseCheckTask = std::dynamic_pointer_cast<BrokenLicenseCheckTask>(task);
-    if (brokenLicenseCheckTask != nullptr && !brokenLicenseCheckTask->isCompleted() &&
-        brokenLicenseCheckTask->stage == 0)
-    {
-        auto licenseData = DummyLicenseManager::getUserDataAndKeyFromDisk();
-        std::string licenseTextPart;
-        {
-            std::lock_guard lock(licenseOwnerMutex);
-            licenseTextPart = licenseOwnerInfo;
-        }
-        auto lineDataPair = DummyLicenseManager::parseOwnerFromBottomLineOrFail(licenseTextPart);
-        licenseData->email = lineDataPair.second;
-        licenseData->username = lineDataPair.first;
-
-        brokenLicenseCheckTask->username = licenseData->username;
-        brokenLicenseCheckTask->email = licenseData->email;
-        brokenLicenseCheckTask->key = licenseData->licenseKey;
-
-        brokenLicenseCheckTask->stage = 1;
-
-        taskingManager.broadcastNestedTaskNow(brokenLicenseCheckTask);
-
-        return true;
     }
 
     return false;
@@ -215,10 +156,4 @@ std::string BottomInfoLine::noteFromFreq(float freq)
     }
     noteTxt += std::to_string(centDistanceToNearestNote) + "c";
     return noteTxt;
-}
-
-void BottomInfoLine::setLicenseInfo(std::string username, std::string email)
-{
-    std::lock_guard lock(licenseOwnerMutex);
-    licenseOwnerInfo = username + " (" + email + ")";
 }

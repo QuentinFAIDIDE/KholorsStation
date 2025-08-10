@@ -91,22 +91,3 @@ target_link_libraries(
           muFFT
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
-
-# CryptoTest target for testing the license key stuff
-juce_add_console_app(CryptoTest PRODUCT_NAME "CryptoTest")
-target_sources(
-  CryptoTest PRIVATE Licensing/CryptoTest.cpp Licensing/Base58.h
-                     Licensing/DummyLicenseManager.h Licensing/ExecCmd.h)
-target_compile_definitions(CryptoTest PRIVATE JUCE_WEB_BROWSER=0
-                                              JUCE_USE_CURL=0)
-target_link_libraries(
-  CryptoTest
-  PRIVATE juce::juce_cryptography spdlog::spdlog
-  PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
-         juce::juce_recommended_warning_flags)
-
-add_test(
-  NAME CryptoTest
-  COMMAND
-    ${CMAKE_CURRENT_BINARY_DIR}/CryptoTest_artefacts/${CMAKE_BUILD_TYPE}/CryptoTest
-)
