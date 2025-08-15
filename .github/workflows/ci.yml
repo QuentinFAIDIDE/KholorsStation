@@ -91,6 +91,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: lukka/get-cmake@latest
+      - uses: lukka/run-vcpkg@v11
       - name: Cache build and libs directory
         id: cache-build-libs
         uses: actions/cache@v4
