@@ -5,7 +5,7 @@ on:
     types: [published]
 
 jobs:
-  release:
+  release-linux:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/quentinfaidide/kholorsstation/builder:latest
@@ -95,3 +95,80 @@ jobs:
             build/debian-pkg/kholors-*.deb
             build/package/kholors_*.tar.gz
             build/package-debug/kholors_debug_*.tar.gz
+  build-windows:
+    name: Build artifacts on Windows
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
+      - name: Cache build and libs directory
+        id: cache-build-libs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./build
+            ./libs
+          key: ${{ runner.os }}-build-cache-win-${{ github.ref_name }}-2-${{ hashFiles('**/CmakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-win-${{ github.ref_name }}-2-${{ hashFiles('**/CmakeLists.txt') }}
+      - name: Configure
+        run: cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo .
+      - name: Build
+        run: |
+          cmake --build build --parallel 4 --config RelWithDebInfo --target StationApp
+          cmake --build build --parallel 4 --config RelWithDebInfo --target SinkPlugin_VST3
+      - name: Copy debug artifacts
+        run: |
+          cp build\src\StationApp\StationApp_artefacts\RelWithDebInfo\KholorsStation.pdb .\KholorsStation_${{ github.ref_name }}.pdb
+          cp build\src\SinkPlugin\SinkPlugin_artefacts\RelWithDebInfo\VST3\KholorsSink.pdb .\KholorsSink_${{ github.ref_name }}.pdb
+      - name: Build installer
+        run: |
+          cd res
+          (Get-Content installer.nsi).Replace('1.0.0', ${{ github.ref_name }} | Set-Content installer.nsi
+          makensis .\installer.nsi
+      - name: Azure Exe Trusted Signing
+        uses: azure/trusted-signing-action@v0.3.16
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_ENDPOINT }}
+          code-signing-account-name: ${{ secrets.AZURE_CODE_SIGNING_NAME }}
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE_NAME }}
+          files-folder: build\src\StationApp\StationApp_artefacts\RelWithDebInfo\
+          files-folder-filter: exe
+      - name: Azure VST Trusted Signing
+        uses: azure/trusted-signing-action@v0.3.16
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_ENDPOINT }}
+          code-signing-account-name: ${{ secrets.AZURE_CODE_SIGNING_NAME }}
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE_NAME }}
+          files-folder: build\src\SinkPlugin\SinkPlugin_artefacts\RelWithDebInfo\VST3\KholorsSink.vst3\Contents\x86_64-win\
+          files-folder-filter: vst3
+      - name: Azure Installer Trusted Signing
+        uses: azure/trusted-signing-action@v0.3.16
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.AZURE_ENDPOINT }}
+          code-signing-account-name: ${{ secrets.AZURE_CODE_SIGNING_NAME }}
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE_NAME }}
+          files-folder: res\
+          files-folder-filter: vst3
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          token: ${{ secrets.PAT }}
+          files: |
+            res/KholorsStation*.exe
+            Kholors*.pdb

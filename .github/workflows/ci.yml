@@ -1,4 +1,4 @@
-name: linux_ci
+name: ci
 
 on:
   push:
@@ -82,3 +82,31 @@ jobs:
           mkdir -p build
           cd build
           ctest -E "example"
+
+  build-windows:
+    name: Build on Windows
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
+      - name: Cache build and libs directory
+        id: cache-build-libs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./build
+            ./libs
+          key: ${{ runner.os }}-build-cache-win-${{ github.ref_name }}-2-${{ hashFiles('**/CmakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-win-${{ github.ref_name }}-2-${{ hashFiles('**/CmakeLists.txt') }}
+      - name: Configure
+        run: cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo .
+      - name: Build
+        run: |
+          cmake --build build --parallel 4 --config RelWithDebInfo --target StationApp
+          cmake --build build --parallel 4 --config RelWithDebInfo --target SinkPlugin_VST3
