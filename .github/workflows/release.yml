@@ -116,7 +116,7 @@ jobs:
           key: ${{ runner.os }}-build-cache-win-${{ github.ref_name }}-2-${{ hashFiles('**/CmakeLists.txt') }}
           restore-keys: ${{ runner.os }}-build-cache-win-${{ github.ref_name }}-2-${{ hashFiles('**/CmakeLists.txt') }}
       - name: Configure
-        run: cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo .
+        run: cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_POLICY_VERSION_MINIMUM=3.5 .
       - name: Build
         run: |
           cmake --build build --parallel 4 --config RelWithDebInfo --target StationApp
