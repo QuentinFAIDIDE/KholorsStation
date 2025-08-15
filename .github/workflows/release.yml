@@ -131,7 +131,7 @@ jobs:
       - name: Build installer
         run: |
           cd res
-          (Get-Content installer.nsi).Replace('1.0.0', ${{ github.ref_name }}) | Set-Content installer.nsi
+          (Get-Content installer.nsi).Replace('1.0.0', '${{ github.ref_name }}') | Set-Content installer.nsi
           makensis .\installer.nsi
       - name: Azure Exe Trusted Signing
         uses: azure/trusted-signing-action@v0.3.16
