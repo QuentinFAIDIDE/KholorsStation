@@ -95,6 +95,7 @@ jobs:
             build/debian-pkg/kholors-*.deb
             build/package/kholors_*.tar.gz
             build/package-debug/kholors_debug_*.tar.gz
+
   build-windows:
     name: Build artifacts on Windows
     runs-on: windows-2022
@@ -103,10 +104,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          create-symlink: true
       - name: Cache build and libs directory
         id: cache-build-libs
         uses: actions/cache@v4
