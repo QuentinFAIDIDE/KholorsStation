@@ -144,6 +144,9 @@ jobs:
           certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE_NAME }}
           files-folder: build\src\StationApp\StationApp_artefacts\RelWithDebInfo\
           files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
       - name: Azure VST Trusted Signing
         uses: azure/trusted-signing-action@v0.3.16
         with:
@@ -155,6 +158,9 @@ jobs:
           certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE_NAME }}
           files-folder: build\src\SinkPlugin\SinkPlugin_artefacts\RelWithDebInfo\VST3\KholorsSink.vst3\Contents\x86_64-win\
           files-folder-filter: vst3
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
       - name: Azure Installer Trusted Signing
         uses: azure/trusted-signing-action@v0.3.16
         with:
@@ -165,7 +171,10 @@ jobs:
           code-signing-account-name: ${{ secrets.AZURE_CODE_SIGNING_NAME }}
           certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE_NAME }}
           files-folder: res\
-          files-folder-filter: vst3
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
       - name: Release
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
