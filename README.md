@@ -25,7 +25,7 @@ Check the github releases on the right side of the Github UI to download binarie
 | ------------- | ------- | ----- | ----- |
 | Bitwig Studio | ✅      | ✅    | ❓    |
 | Ardour        | ❓      | ✅    | ❓    |
-| Reaper        | ❓      | ❓    | ❓    |
+| Reaper        | ❓      | ✅    | ❓    |
 | Zrythm        | ❓      | ❓    | ❓    |
 | Waveform      | ❓      | ❓    | ❓    |
 | Ableton Live  | ❓      |       | ❓    |
