@@ -29,7 +29,7 @@ RequestExecutionLevel admin
 Section "Visual Studio Runtime"
   SetOutPath "$INSTDIR"
   File "vcredist_x64.exe"
-  ExecWait "$INSTDIR\vcredist_x64.exe" /passive /norestart
+  ExecWait '"$INSTDIR\vcredist_x64.exe" /passive /norestart'
   Delete "$INSTDIR\vcredist_x64.exe"
 SectionEnd
 
