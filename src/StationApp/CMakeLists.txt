@@ -54,6 +54,7 @@ target_compile_definitions(
                        # `juce_add_gui_app` call
     JUCE_USE_CURL=0 # If you remove this, add `NEEDS_CURL TRUE` to the
                     # `juce_add_gui_app` call
+    JUCE_DISPLAY_SPLASH_SCREEN=0
     JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:StationApp,JUCE_PRODUCT_NAME>"
     JUCE_APPLICATION_VERSION_STRING="$<TARGET_PROPERTY:StationApp,JUCE_VERSION>"
     JUCE_MODAL_LOOPS_PERMITTED=1)
