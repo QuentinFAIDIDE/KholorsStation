@@ -2,11 +2,11 @@
 #include "GUIToolkit/Consts.h"
 
 #define TIP_LINE_HEIGHT 40
-#define TIP_LEFT_PADDING 16
+#define TIP_LEFT_PADDING 22
 #define TOP_PADDING 22
 
 #define HELP_TIP "Click the help button to view this list of tips."
-#define ADD_VST_TIP "Add the 'KholorsSink' VST plugin to your DAW tracks to visualize them here."
+#define ADD_VST_TIP "Add the 'KholorsSink' VST plugin to your DAW tracks to draw their spectrum here."
 #define MOUSE_MOVE_TIP "Middle-click and drag up/down to zoom, or left/right to pan the view."
 #define AUTOMATION_TIP "The view automatically follows your DAW's playhead, beat signature and BPM."
 #define FOCUS_TRACK_TIP "Hover over a track in the list on the right to highlight its spectrum."
@@ -17,18 +17,19 @@
 
 HelpDialogContent::HelpDialogContent()
 {
-    tipsAndText.push_back(std::make_pair(&helpTipPos, juce::String(HELP_TIP).toUpperCase().toStdString()));
-    tipsAndText.push_back(std::make_pair(&addVstTipPos, juce::String(ADD_VST_TIP).toUpperCase().toStdString()));
-    tipsAndText.push_back(std::make_pair(&mouseMoveTipPos, juce::String(MOUSE_MOVE_TIP).toUpperCase().toStdString()));
-    tipsAndText.push_back(std::make_pair(&automationTipPos, juce::String(AUTOMATION_TIP).toUpperCase().toStdString()));
-    tipsAndText.push_back(std::make_pair(&focusTrackTipPos, juce::String(FOCUS_TRACK_TIP).toUpperCase().toStdString()));
-    tipsAndText.push_back(std::make_pair(&precisionTipPos, juce::String(PRECISION_TIP).toUpperCase().toStdString()));
-    tipsAndText.push_back(std::make_pair(&freqTipPos, juce::String(FREQ_TIP).toUpperCase().toStdString()));
-    tipsAndText.push_back(std::make_pair(&volumeTipPos, juce::String(VOLUME_TIP).toUpperCase().toStdString()));
-    font = sharedFonts->robotoBold.withHeight(KHOLORS_DEFAULT_FONT_SIZE);
+    tipsAndText.push_back(std::make_pair(&helpTipPos, juce::String(HELP_TIP).toStdString()));
+    tipsAndText.push_back(std::make_pair(&addVstTipPos, juce::String(ADD_VST_TIP).toStdString()));
+    tipsAndText.push_back(std::make_pair(&mouseMoveTipPos, juce::String(MOUSE_MOVE_TIP).toStdString()));
+    tipsAndText.push_back(std::make_pair(&automationTipPos, juce::String(AUTOMATION_TIP).toStdString()));
+    tipsAndText.push_back(std::make_pair(&focusTrackTipPos, juce::String(FOCUS_TRACK_TIP).toStdString()));
+    tipsAndText.push_back(std::make_pair(&precisionTipPos, juce::String(PRECISION_TIP).toStdString()));
+    tipsAndText.push_back(std::make_pair(&freqTipPos, juce::String(FREQ_TIP).toStdString()));
+    tipsAndText.push_back(std::make_pair(&volumeTipPos, juce::String(VOLUME_TIP).toStdString()));
+    font = sharedFonts->roboto.withHeight(KHOLORS_DEFAULT_FONT_SIZE + 1);
     int maxWidth = getMaxWidthFromTexts();
     int maxHeight = (2 * TOP_PADDING) + (tipsAndText.size() * TIP_LINE_HEIGHT);
-    setSize(maxWidth, maxHeight);
+    // another line height is added here to compensate for the width of the numbers boxes
+    setSize(maxWidth + TIP_LINE_HEIGHT, maxHeight);
 }
 
 HelpDialogContent::~HelpDialogContent()
@@ -54,13 +55,14 @@ int HelpDialogContent::getMaxWidthFromTexts()
 void HelpDialogContent::paint(juce::Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
-    g.setColour(KHOLORS_COLOR_TEXT_DARKER);
     g.setFont(font);
     for (size_t i = 0; i < tipsAndText.size(); i++)
     {
+        g.setColour(KHOLORS_COLOR_TEXT_DARKER);
         auto lineArea = *tipsAndText[i].first;
         auto numberArea = lineArea.removeFromLeft(TIP_LINE_HEIGHT);
         g.drawText(std::to_string(i + 1), numberArea, juce::Justification::centred);
+        g.setColour(KHOLORS_COLOR_TEXT);
         g.drawText(tipsAndText[i].second, lineArea, juce::Justification::centredLeft);
     }
 }
