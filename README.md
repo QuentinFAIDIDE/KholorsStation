@@ -32,6 +32,21 @@ mixdown visualizer.
 
 Check the github releases on the right side of the Github UI to download binaries for your operating system (linux deb, linux tarball, or windows .exe).
 
+## Compatibility
+
+| DAW / OS      | Windows | Linux | macOS |
+| ------------- | ------- | ----- | ----- |
+| Bitwig Studio | ✅      | ✅    | ❓    |
+| Ardour        | ❓      | ✅    | ❓    |
+| Reaper        | ❓      | ❓    | ❓    |
+| Zrythm        | ❓      | ❓    | ❓    |
+| Waveform      | ❓      | ❓    | ❓    |
+| Ableton Live  | ❓      |       | ❓    |
+| FL Studio     | ❓      |       | ❓    |
+| Studio One    | ❓      |       | ❓    |
+
+✅ = Compatible, ❌ = Not Compatible, ❓ = Untested
+
 ## Linux
 
 ### Configure, build and export IDE commands
