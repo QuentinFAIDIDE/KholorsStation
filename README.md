@@ -1,5 +1,7 @@
 # Kholors Station and Sink
 
+**THIS PROJECT IS IN EARLY ALPHA AND WAS NOT TESTED, IT MAY BE UNSTABLE OR RUN INTO ISSUES, OPEN ISSUES ON GITHUB FOR THEM TO BE FIXED OR COME BACK LATER.**
+
 Kholors is a project made of Kholors Station, a desktop software that
 receives and display signals from a DAW, and Kholors Sink, a VST3 plugin
 that sends the signals from the DAW, and automatically colors and
