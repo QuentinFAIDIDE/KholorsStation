@@ -6,6 +6,7 @@ juce_add_gui_app(
   # DOCUMENT_EXTENSIONS ...           # Specify file extensions that should be
   # associated with this app COMPANY_NAME ...                  # Specify the
   # name of the app's author
+  NEEDS_CURL TRUE
   COMPANY_NAME
   "ArtifaktNd"
   PRODUCT_NAME
@@ -52,7 +53,7 @@ target_compile_definitions(
     # not need them.
     JUCE_WEB_BROWSER=0 # If you remove this, add `NEEDS_WEB_BROWSER TRUE` to the
                        # `juce_add_gui_app` call
-    JUCE_USE_CURL=0 # If you remove this, add `NEEDS_CURL TRUE` to the
+    JUCE_USE_CURL=1 # If you remove this, add `NEEDS_CURL TRUE` to the
                     # `juce_add_gui_app` call
     JUCE_DISPLAY_SPLASH_SCREEN=0
     JUCE_APPLICATION_NAME_STRING="$<TARGET_PROPERTY:StationApp,JUCE_PRODUCT_NAME>"

@@ -3,6 +3,7 @@
 #include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/AudioDataWorker.h"
 #include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/CheckUpdates.h"
 #include "StationApp/GUI/BottomInfoLine.h"
 #include "StationApp/GUI/ClearButton.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
@@ -14,7 +15,6 @@
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <spdlog/spdlog.h>
-#include <stdexcept>
 
 #define DEFAULT_SERVER_PORT 7849
 
@@ -42,6 +42,8 @@ MainComponent::MainComponent()
     taskManager.registerTaskListener(this);
     taskManager.registerTaskListener(&infoBar);
     taskManager.startTaskBroadcast();
+
+    needsUpdate = checkIfUpdateAvailable();
 
     if (showTipsAtStartup)
     {
@@ -105,6 +107,14 @@ void MainComponent::paint(juce::Graphics &g)
 
     g.setFont(sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT));
     g.drawText(GIT_DESCRIBE_VERSION, versionArea, juce::Justification::topRight, false);
+
+    if (needsUpdate)
+    {
+        g.setFont(sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT - 4));
+        g.setColour(KHOLORS_COLOR_NOTIF_ERROR.withAlpha(0.75f));
+        auto updateTipArea = versionArea.translated(0, -VERSION_FONT_HEIGHT + 6);
+        g.drawText("NEW VERSION AVAILABLE", updateTipArea, juce::Justification::topLeft, false);
+    }
 
     auto artifaktLogoBounds = topspace.removeFromRight(TOPBAR_RIGHT_PADDING + TOP_LOGO_WIDTH);
     artifaktLogoBounds.removeFromRight(TOPBAR_RIGHT_PADDING);
