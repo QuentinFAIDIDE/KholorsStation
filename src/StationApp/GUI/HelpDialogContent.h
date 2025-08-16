@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GUIToolkit/FontsLoader.h"
+#include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
 class HelpDialogContent : public juce::Component
@@ -26,6 +27,7 @@ class HelpDialogContent : public juce::Component
     juce::Rectangle<int> precisionTipPos;
     juce::Rectangle<int> freqTipPos;
     juce::Rectangle<int> volumeTipPos;
+    juce::Rectangle<int> issuesTipPos;
 
     juce::Font font;
 

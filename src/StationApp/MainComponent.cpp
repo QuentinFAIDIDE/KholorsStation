@@ -7,6 +7,7 @@
 #include "StationApp/GUI/ClearButton.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FreqTimeView.h"
+#include "StationApp/GUI/HelpDialogContent.h"
 #include "StationApp/GUI/SensitivitySlider.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_events/juce_events.h"
@@ -20,7 +21,7 @@
 MainComponent::MainComponent()
     : trackInfoStore(taskManager), freqTimeView(trackInfoStore, taskManager),
       audioDataWorker(audioDataServer, taskManager), infoBar(taskManager), clearButton(taskManager),
-      volumeSensitivitySlider(taskManager)
+      volumeSensitivitySlider(taskManager), showTipsAtStartup(true)
 {
     addAndMakeVisible(freqTimeView);
     addAndMakeVisible(infoBar);
@@ -41,6 +42,17 @@ MainComponent::MainComponent()
     taskManager.registerTaskListener(this);
     taskManager.registerTaskListener(&infoBar);
     taskManager.startTaskBroadcast();
+
+    if (showTipsAtStartup)
+    {
+        juce::DialogWindow::LaunchOptions options;
+        options.dialogTitle = "Usage Tips";
+        juce::OptionalScopedPointer<HelpDialogContent> contentContainer;
+        options.resizable = false;
+        options.useNativeTitleBar = false;
+        options.content.set(new HelpDialogContent(), true);
+        options.launchAsync();
+    }
 }
 
 MainComponent::~MainComponent()

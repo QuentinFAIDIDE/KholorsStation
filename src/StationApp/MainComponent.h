@@ -53,6 +53,7 @@ class MainComponent final : public juce::Component, public TaskListener
     HelpButton helpButton;
     ClearButton clearButton;
     SensitivitySlider volumeSensitivitySlider;
+    bool showTipsAtStartup;
 
     juce::SharedResourcePointer<IconsLoader> sharedSvgs; /**< singleton that loads svg files */
 

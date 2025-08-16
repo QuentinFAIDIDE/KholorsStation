@@ -7,24 +7,26 @@
 
 #define HELP_TIP "Click the help button to view this list of tips."
 #define ADD_VST_TIP "Add the 'KholorsSink' VST plugin to your DAW tracks to draw their spectrum here."
-#define MOUSE_MOVE_TIP "Middle-click and drag up/down to zoom, or left/right to pan the view."
+#define MOUSE_MOVE_TIP "Middle-click and drag to zoom and pan the view."
 #define AUTOMATION_TIP "The view automatically follows your DAW's playhead, beat signature and BPM."
 #define FOCUS_TRACK_TIP "Hover over a track in the list on the right to highlight its spectrum."
 #define PRECISION_TIP                                                                                                  \
     "Use the top slider to adjust spectrum detail. Note that lower frequencies are inherently less precise."
 #define FREQ_TIP "Hover over the spectrum to see frequency and time info in the bottom-right corner."
 #define VOLUME_TIP "For consistent color intensity, adjust track gain before the KholorsSink VST plugin."
+#define ISSUES_TIP "This software is untested, please report issues on GitHub."
 
 HelpDialogContent::HelpDialogContent()
 {
-    tipsAndText.push_back(std::make_pair(&helpTipPos, juce::String(HELP_TIP).toStdString()));
-    tipsAndText.push_back(std::make_pair(&addVstTipPos, juce::String(ADD_VST_TIP).toStdString()));
-    tipsAndText.push_back(std::make_pair(&mouseMoveTipPos, juce::String(MOUSE_MOVE_TIP).toStdString()));
-    tipsAndText.push_back(std::make_pair(&automationTipPos, juce::String(AUTOMATION_TIP).toStdString()));
-    tipsAndText.push_back(std::make_pair(&focusTrackTipPos, juce::String(FOCUS_TRACK_TIP).toStdString()));
-    tipsAndText.push_back(std::make_pair(&precisionTipPos, juce::String(PRECISION_TIP).toStdString()));
-    tipsAndText.push_back(std::make_pair(&freqTipPos, juce::String(FREQ_TIP).toStdString()));
-    tipsAndText.push_back(std::make_pair(&volumeTipPos, juce::String(VOLUME_TIP).toStdString()));
+    tipsAndText.push_back(std::make_pair(&helpTipPos, HELP_TIP));
+    tipsAndText.push_back(std::make_pair(&addVstTipPos, ADD_VST_TIP));
+    tipsAndText.push_back(std::make_pair(&mouseMoveTipPos, MOUSE_MOVE_TIP));
+    tipsAndText.push_back(std::make_pair(&automationTipPos, AUTOMATION_TIP));
+    tipsAndText.push_back(std::make_pair(&focusTrackTipPos, FOCUS_TRACK_TIP));
+    tipsAndText.push_back(std::make_pair(&precisionTipPos, PRECISION_TIP));
+    tipsAndText.push_back(std::make_pair(&freqTipPos, FREQ_TIP));
+    tipsAndText.push_back(std::make_pair(&volumeTipPos, VOLUME_TIP));
+    tipsAndText.push_back(std::make_pair(&issuesTipPos, ISSUES_TIP));
     font = sharedFonts->roboto.withHeight(KHOLORS_DEFAULT_FONT_SIZE + 1);
     int maxWidth = getMaxWidthFromTexts();
     int maxHeight = (2 * TOP_PADDING) + (tipsAndText.size() * TIP_LINE_HEIGHT);
