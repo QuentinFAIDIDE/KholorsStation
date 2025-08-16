@@ -11,15 +11,15 @@ Var VstInstDir
 !define APP_DIR "$PROGRAMFILES64\ArtifaktNd\${APP_NAME}"
 !define APP_ICON "kholors.ico"
 
-!define MUI_FINISHPAGE_TEXT "Thank you for installing KholorsStation and KholorsSink. You will be asked for the License key when starting the KholorsStation app (available in the startup menu). You can open the app and click the Help button to get access to the online documentation and tutorials. Have fun using Kholors!"
+!define MUI_FINISHPAGE_TEXT "Thank you for installing KholorsStation and KholorsSink. Have fun!"
 
 !define MUI_ICON "kholors.ico"
 !define MUI_UNICON "kholors.ico"
 
-!define MUI_LICENSE_PAGE_TITLE "End User License Agreement"
+!define MUI_LICENSE_PAGE_TITLE "GNU General Public License"
 !define MUI_LICENSE_PAGE_TEXT "Please read the following license agreement carefully."
 !define MUI_LICENSE_PAGE_CUSTOMTEXT "This license applies to both the KholorsStation and the KholorsSink VST3 plugin software."
-!define MUI_TEXT_LICENSE_TITLE "End User License Agreement"
+!define MUI_TEXT_LICENSE_TITLE "GNU General Public License v3"
 
 Outfile "${APP_NAME}-${APP_VERSION}-Install.exe"
 InstallDir "${APP_DIR}"
@@ -69,7 +69,7 @@ Function un.onInit
 FunctionEnd
 
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_LICENSE "EULA.txt"
+!insertmacro MUI_PAGE_LICENSE "..\LICENSE.md"
 !insertmacro MUI_PAGE_DIRECTORY
 !define MUI_PAGE_HEADER_TEXT "Steinberg VST3 plugin location"
 !define MUI_PAGE_HEADER_SUBTEXT "Choose the folder in which to install the KholorsSink VST3 plugin."
