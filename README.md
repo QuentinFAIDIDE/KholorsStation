@@ -2,31 +2,18 @@
 
 **THIS PROJECT IS IN EARLY ALPHA AND WAS NOT TESTED, IT MAY BE UNSTABLE OR INCOMPATIBLE WITH YOUR DAW, PLEASE REPORT ISSUES.**
 
-Kholors is a project made of Kholors Station, a desktop software that
-receives and display signals from a DAW, and Kholors Sink, a VST3 plugin
-that sends the signals from the DAW, and automatically colors and
-names the track based on the track metadata. This project is building both.
+Kholors is a live spectrum analyzer for your DAW, consisting of the `Kholors Station` desktop app and the `Kholors Sink` VST3 plugin. The plugin sends audio, track names, and colors from your DAW to the Station for visualization.
 
-The spectrum is drawing live as your daw project is playing, with the top half
-being the left track drawn, and the bottom half being the right track.
-The centered horizontal line is the 0Hz frequency, while the top is the maximum displayable
-(Nyquist) frequency of the left track, and the bottom the maximum displayable frequency
-of the right track. THe viewer horizontal axis is just time, similar to what your DAW is showing.
+The Station displays a live spectrogram (left channel on top, right channel on bottom), helping you visualize frequency conflicts between tracks to aid your mixing decisions.
 
 [![Watch the video](https://img.youtube.com/vi/9gL8FKBfXtc/maxresdefault.jpg)](https://youtu.be/9gL8FKBfXtc)
 
-The use case is to visualise conflicts between tracks, at specific time/frequencies
-where they overlap, and to know where to cut or where there is space in the mix
-A [demo video](https://youtu.be/9gL8FKBfXtc) is available.
+## How to Use
 
-To use it, open the Kholors Station app, and open your DAW, then for each track or group,
-add an instance of the Kholors Sink plugin, which will create a new coloured track live drawn
-on the Station app.
+1.  Run the **Kholors Station** application.
+2.  In your DAW, add the **Kholors Sink** VST3 plugin to each track you want to analyze (ideally all tracks or all busses).
 
-The Station (viewer) being an independant app not integrated to the DAW,
-you might run into usability issues using it on a single small screen desktop,
-as it is designed to run on a separate screen from the DAW, as an always-open
-mixdown visualizer.
+The Station is a standalone application, so it's best used on a second monitor as a dedicated mixing visualizer.
 
 ## Downloads
 
