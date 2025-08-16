@@ -64,8 +64,8 @@ jobs:
           path: |
             ./build
             ./libs
-          key: ${{ runner.os }}-build-cache-${{ github.ref_name }}-2-${{ hashFiles('**/CmakeLists.txt') }}
-          restore-keys: ${{ runner.os }}-build-cache-${{ github.ref_name }}-2-${{ hashFiles('**/CmakeLists.txt') }}
+          key: ${{ runner.os }}-build-cache-2-${{ hashFiles('**/CmakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-2-${{ hashFiles('**/CmakeLists.txt') }}
       - name: Configure
         run: |
           mkdir -p build
@@ -103,8 +103,8 @@ jobs:
           path: |
             ./build
             ./libs
-          key: ${{ runner.os }}-build-cache-win-${{ github.ref_name }}-2-${{ hashFiles('**/CmakeLists.txt') }}
-          restore-keys: ${{ runner.os }}-build-cache-win-${{ github.ref_name }}-2-${{ hashFiles('**/CmakeLists.txt') }}
+          key: ${{ runner.os }}-build-cache-win-2-${{ hashFiles('**/CmakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-win-2-${{ hashFiles('**/CmakeLists.txt') }}
       - name: Configure
         run: cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo .
       - name: Build
