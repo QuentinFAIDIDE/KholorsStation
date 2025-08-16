@@ -11,7 +11,7 @@ Var VstInstDir
 !define APP_DIR "$PROGRAMFILES64\ArtifaktNd\${APP_NAME}"
 !define APP_ICON "kholors.ico"
 
-!define MUI_FINISHPAGE_TEXT "Thank you for installing KholorsStation and KholorsSink. Have fun!"
+!define MUI_FINISHPAGE_TEXT "Thank you for installing KholorsStation and KholorsSink. If you run into issues, restart, as Windows Visual C++ redistribuables installed sometimes requires it. Have fun!"
 
 !define MUI_ICON "kholors.ico"
 !define MUI_UNICON "kholors.ico"
@@ -29,7 +29,7 @@ RequestExecutionLevel admin
 Section "Visual Studio Runtime"
   SetOutPath "$INSTDIR"
   File "vcredist_x64.exe"
-  ExecWait "$INSTDIR\vcredist_x64.exe"
+  ExecWait "$INSTDIR\vcredist_x64.exe" /passive /norestart
   Delete "$INSTDIR\vcredist_x64.exe"
 SectionEnd
 
