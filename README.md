@@ -27,7 +27,7 @@ Check the github releases on the right side of the Github UI to download binarie
 | Ardour        | ❓      | ✅    | ❓    |
 | Reaper        | ❓      | ✅    | ❓    |
 | Zrythm        | ❓      | ❓    | ❓    |
-| Waveform      | ❓      | ❓    | ❓    |
+| Waveform      | ❓      | ✅    | ❓    |
 | Ableton Live  | ❓      |       | ❓    |
 | FL Studio     | ❓      |       | ❓    |
 | Studio One    | ❓      |       | ❓    |
