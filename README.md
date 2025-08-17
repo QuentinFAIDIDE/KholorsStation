@@ -17,7 +17,7 @@ The Station is a standalone application, so it's best used on a second monitor a
 
 ## Downloads
 
-Check the github releases on the right side of the Github UI to download binaries for your operating system (linux deb, linux tarball, or windows .exe).
+Go to the [github releases](https://github.com/QuentinFAIDIDE/KholorsStation/releases) page to download the installer or package for your operating system (Linux deb, Linux tarball, or Windows .exe).
 
 ## Compatibility
 
