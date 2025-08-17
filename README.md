@@ -28,13 +28,11 @@ Check the github releases on the right side of the Github UI to download binarie
 | Reaper        | ❓      | ✅    | ❓    |
 | Zrythm        | ❓      | ❓    | ❓    |
 | Waveform      | ❓      | ✅    | ❓    |
-| Ableton Live  | 🐞      |       | ❓    |
+| Ableton Live  | ✅      |       | ❓    |
 | FL Studio     | ❓      |       | ❓    |
 | Studio One    | ❓      |       | ❓    |
 
 ✅ = Compatible, ❌ = Not Compatible, 🐞 = Buggy, ❓ = Untested
-
-- **Ableton**: Track names are missing [#1](https://github.com/QuentinFAIDIDE/KholorsStation/issues/1).
 
 ## Linux
 
