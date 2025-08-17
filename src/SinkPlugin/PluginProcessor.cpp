@@ -3,6 +3,7 @@
 #include "AudioTransport/ColorBytes.h"
 #include "SinkPlugin/BufferForwarder.h"
 #include "juce_audio_processors/juce_audio_processors.h"
+#include "juce_graphics/juce_graphics.h"
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -255,11 +256,16 @@ void AudioPluginAudioProcessor::setStateInformation(const void *data, int sizeIn
 
 void AudioPluginAudioProcessor::updateTrackProperties(const juce::AudioProcessor::TrackProperties &properties)
 {
-    std::string trackName = properties.name.toStdString();
-    juce::Colour newColour = properties.colour;
+    if (!properties.name.isEmpty())
+    {
+        audioInfoForwarder.setCurrentTrackName(properties.name.toStdString());
+    }
 
-    audioInfoForwarder.setCurrentColor(juce::Colour(newColour.getRed(), newColour.getGreen(), newColour.getBlue()));
-    audioInfoForwarder.setCurrentTrackName(trackName);
+    if (properties.colour != juce::Colours::transparentBlack)
+    {
+        audioInfoForwarder.setCurrentColor(
+            juce::Colour(properties.colour.getRed(), properties.colour.getGreen(), properties.colour.getBlue()));
+    }
 }
 
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter()
