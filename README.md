@@ -11,6 +11,8 @@ It's composed of two parts:
 
 The `Sink` plugin sends audio, track names, and even your DAW's track colors to the `Station`. The result is a color-coded spectrogram where you can see exactly what's happening in your mix, track by track.
 
+[![Watch the video](https://img.youtube.com/vi/9gL8FKBfXtc/maxresdefault.jpg)](https://youtu.be/9gL8FKBfXtc)
+
 [!Watch the video](https://youtu.be/9gL8FKBfXtc)
 
 > **⚠️ EARLY ALPHA WARNING:** This project is in its early stages and has not been widely tested. It may be unstable or incompatible with your DAW. Please report any issues you encounter.
