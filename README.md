@@ -19,7 +19,7 @@ The `Sink` plugin sends audio, track names, and even your DAW's track colors to 
 
 ### 1. Download
 
-Head over to the **Releases Page** to grab the latest version for your operating system.
+Head over to the [Releases Page](https://github.com/QuentinFAIDIDE/KholorsStation/releases) to grab the latest version for your operating system.
 
 ### 2. Install
 
