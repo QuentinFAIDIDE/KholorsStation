@@ -13,8 +13,6 @@ The `Sink` plugin sends audio, track names, and even your DAW's track colors to 
 
 [![Watch the video](https://img.youtube.com/vi/9gL8FKBfXtc/maxresdefault.jpg)](https://youtu.be/9gL8FKBfXtc)
 
-[!Watch the video](https://youtu.be/9gL8FKBfXtc)
-
 > **⚠️ EARLY ALPHA WARNING:** This project is in its early stages and has not been widely tested. It may be unstable or incompatible with your DAW. Please report any issues you encounter.
 
 ## Getting Started
