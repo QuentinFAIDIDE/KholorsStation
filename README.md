@@ -29,7 +29,9 @@ Run the downloaded `.exe` installer and follow the on-screen instructions.
 
 #### Linux
 
-You have two options:
+- **Archlinux:**
+  The package is available on [AUR](https://aur.archlinux.org/packages/kholors-station-git).
+  If you have issues building it, or that it is too long, you can use the archive from the [Releases Page](https://github.com/QuentinFAIDIDE/KholorsStation/releases) and install the dependencies listed on AUR (or that you list with ldd).
 
 - **DEB Package (Recommended for Debian/Ubuntu-based systems):**
 
@@ -40,13 +42,14 @@ You have two options:
   Or simply double-click the file to install it through your graphical package manager.
 
 - **Tarball Archive:**
-  Extract the downloaded `.tar.gz` file and run the installer script as root.
+  Extract the downloaded `.tar.gz` file and copy the files in the install tree.
   ```bash
   tar -xzvf kholors_*.tar.gz
   cd kholors_*
   sudo ./install.sh
   ```
   To uninstall, run `sudo ./uninstall.sh` from the same directory.
+  Note that I didnt test this installation script much.
 
 ### 3. How to Use
 
