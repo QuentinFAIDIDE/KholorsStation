@@ -1,9 +1,11 @@
 #pragma once
 
 #include "GUIToolkit/Consts.h"
+#include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/ProcessingTimerWaitgroup.h"
 #include "StationApp/Audio/TrackInfoStore.h"
-#include "StationApp/GUI/FftDrawingBackend.h"
+#include "StationApp/GUI/ClearTrackInfoRange.h"
+#include "StationApp/GUI/FrequencyLinesDrawer.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "StationApp/OpenGL/BeatGridMesh.h"
 #include "StationApp/OpenGL/TexturedRectangle.h"
@@ -13,9 +15,26 @@
 #include <cstdint>
 #include <memory>
 
+#define MIN_SAMPLE_PLAY_CURSOR_BACKWARD_MOVEMENT 24000
+#define IMAGES_RING_BUFFER_SIZE 128
+
+#define PLAY_CURSOR_WIDTH 2
+
+// Dimensions of a one-second tile.
+// Warning! It is hardcoded as well in the openGL shaders
+// for now, but I should soon rely on textureSize instead
+// and remove this comment. If I forget well, do it!
+#define SECOND_TILE_WIDTH 64
+#define SECOND_TILE_HEIGHT 512
+
+#define FREQVIEW_ROUNDED_CORNERS_WIDTH 7
+#define FREQVIEW_BORDER_WIDTH 3
+
+#define FFT_POSITION_FORWARD_SAMPLE_SHIFT 1920
+
 #define MAX_TIME_SIGNATURE_GRID_VIEW_SCALE 250
 
-class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRenderer
+class GpuTextureDrawingBackend : public juce::Component, public juce::OpenGLRenderer
 {
   public:
     GpuTextureDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft, NormalizedUnitTransformer &it);
@@ -115,33 +134,33 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      *
      * @param samplePosition audio sample position (audio sample offset of the song) to match
      */
-    void updateViewPosition(uint32_t samplePosition) override;
+    void updateViewPosition(uint32_t samplePosition);
 
     /**
      * @brief Scale the view
      * @param samplesPerPixel number of audio samples per pixel to display in the viewer
      */
-    void updateViewScale(uint32_t samplesPerPixel) override;
+    void updateViewScale(uint32_t samplesPerPixel);
 
     /**
      * @brief Update the bpm.
      *
      * @param newBpm new bpm value to use to draw the grid
      */
-    void updateBpm(float newBpm, TaskingManager *tm) override;
+    void updateBpm(float newBpm, TaskingManager *tm);
 
     /**
      * @brief Update the time signature of the beat grid.
      *
      * @param timeSignatureNumerator number at numerator of the time signature fraction.
      */
-    void timeSignatureNumeratorUpdate(int timeSignatureNumerator) override;
+    void timeSignatureNumeratorUpdate(int timeSignatureNumerator);
 
     /**
      * @brief clears on screen data.
      * In this openGL version, queue clearing to be done by openGL Thread.
      */
-    void clearDisplayedFFTs() override;
+    void clearDisplayedFFTs();
 
     /**
      * @brief      Called when opengl context is created.
@@ -163,7 +182,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      * cleared from.
      * @return std::vector<ClearTrackInfoRange> vector of ranges to clear with trackIdentifiers.
      */
-    std::vector<ClearTrackInfoRange> getClearedTrackRanges() override;
+    std::vector<ClearTrackInfoRange> getClearedTrackRanges();
 
     /**
      * @brief Set the mouse cursor position on component, as it is intercepted
@@ -174,14 +193,43 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      * @param x mouse x
      * @param y mouse y
      */
-    void setMouseCursor(bool onComponent, int x, int y) override;
+    void setMouseCursor(bool onComponent, int x, int y);
 
     /**
      * @brief Setting the currently selected track highlighted on screen.
      *
      * @param selectedTrack Optional, being if something is selected the identifier of the track.
      */
-    void setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm) override;
+    void setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm);
+
+    int64_t getPlayCursorPosition();
+
+    /**
+     * @brief Submit a new play cursor position to the drawing backend, which
+     * may or may not accept it. It will first be converted to a position in
+     * with a sample rate of VISUAL_SAMPLE_RATE.
+     *
+     * @param samplePosition sample position of the play cursor
+     * @param sampleRate sample rate in which the cursor position is given
+     */
+    void submitNewPlayCursorPosition(int64_t samplePosition, uint32_t sampleRate);
+
+    /**
+     * @brief Add the fft data inside the task struct to the currently displayed data.
+     *
+     * @param fftData struct containing the FFt data position, length, channel info and data
+     */
+    void displayNewFftData(std::shared_ptr<NewFftDataTask> fftData,
+                           std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg);
+
+    /**
+     * @brief Set the color of a track. Or rather push a color update to the queue
+     * so that the openGL Renderer thread can pick it.
+     *
+     * @param trackIdentifier identifier of the track to change color of
+     * @param col color to apply to the track
+     */
+    void setTrackColor(uint64_t trackIdentifier, juce::Colour col);
 
   private:
     /**
@@ -271,7 +319,7 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      */
     void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
                        float *data, int channel, uint32_t sampleRate, TaskingManager *tm,
-                       std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg) override;
+                       std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg);
 
     /**
      * @brief Called by the openGL thread to draw an fft isnide a GPU texture tile.
@@ -279,15 +327,6 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      * @param fftData Struct with the FFt and position data.
      */
     void drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> fftData);
-
-    /**
-     * @brief Set the color of a track. Or rather push a color update to the queue
-     * so that the openGL Renderer thread can pick it.
-     *
-     * @param trackIdentifier identifier of the track to change color of
-     * @param col color to apply to the track
-     */
-    void setTrackColor(uint64_t trackIdentifier, juce::Colour col) override;
 
     /**
      * @brief Add this tile to the track drawing order.
@@ -310,6 +349,18 @@ class GpuTextureDrawingBackend : public FftDrawingBackend, public juce::OpenGLRe
      * up to date.
      */
     void ensureTrackTilesDrawOrderIsUpToDate();
+
+    TrackInfoStore &trackInfoStore;
+    NormalizedUnitTransformer &freqTransformer;
+    NormalizedUnitTransformer &intensityTransformer;
+
+    int64_t playCursorPosition; /**< position of the play cursor to draw */
+    std::mutex playCursorMutex; /**< Mutex to protect access to play cursor */
+
+    int64_t tilesNonce;          /**< A nonce that is incremented when the tiles are updated */
+    std::mutex imageAccessMutex; /**< Mutex to protect image access */
+
+    FrequencyLinesDrawer freqLines; /**< A frequency line drawer object */
 
     juce::Colour backgroundColor;
 

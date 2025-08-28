@@ -7,8 +7,8 @@
 #include "StationApp/Audio/TrackColorUpdateTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/Audio/VolumeSensitivityTask.h"
+#include "StationApp/GUI/AudioConstants.h"
 #include "StationApp/GUI/ClearTask.h"
-#include "StationApp/GUI/FftDrawingBackend.h"
 #include "StationApp/GUI/FrequencyScale.h"
 #include "StationApp/GUI/GpuTextureDrawingBackend.h"
 #include "StationApp/GUI/MouseCursorInfoTask.h"
@@ -16,7 +16,6 @@
 #include "StationApp/GUI/TrackSelectionTask.h"
 #include "StationApp/Maths/NormalizedBijectiveProjection.h"
 #include "juce_core/juce_core.h"
-#include "juce_events/juce_events.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <cstddef>
 #include <ctime>
@@ -38,7 +37,6 @@ DashboardView::DashboardView(TrackInfoStore &tis, TaskingManager &tm)
 
     fftDrawBackend =
         std::make_shared<GpuTextureDrawingBackend>(trackInfoStore, frequencyTransformer, intensityTransformer);
-    // fftDrawBackend = std::make_shared<CpuImageDrawingBackend>(trackInfoStore);
     addAndMakeVisible(fftDrawBackend.get());
 
     auto freqProjection = std::make_shared<Log10Projection>(0.005);

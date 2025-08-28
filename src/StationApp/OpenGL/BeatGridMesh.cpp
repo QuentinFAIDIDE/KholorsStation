@@ -1,5 +1,5 @@
 #include "BeatGridMesh.h"
-#include "StationApp/GUI/FftDrawingBackend.h"
+#include "StationApp/GUI/AudioConstants.h"
 #include "StationApp/OpenGL/GLInfoLogger.h"
 #include <limits>
 #include <stdexcept>

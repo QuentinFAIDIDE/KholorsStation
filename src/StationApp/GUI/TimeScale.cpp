@@ -1,6 +1,6 @@
 #include "TimeScale.h"
 #include "GUIToolkit/Consts.h"
-#include "StationApp/GUI/FftDrawingBackend.h"
+#include "StationApp/GUI/AudioConstants.h"
 #include <mutex>
 #include <string>
 

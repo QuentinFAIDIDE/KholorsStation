@@ -2,7 +2,7 @@
 #include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
-#include "StationApp/GUI/FftDrawingBackend.h"
+#include "StationApp/GUI/AudioConstants.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "StationApp/GUI/TrackSelectionTask.h"
 #include "TaskManagement/TaskingManager.h"
