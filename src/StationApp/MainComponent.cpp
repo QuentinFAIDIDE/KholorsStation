@@ -7,6 +7,7 @@
 #include "StationApp/GUI/BottomInfoLine.h"
 #include "StationApp/GUI/ClearButton.h"
 #include "StationApp/GUI/DashboardView.h"
+#include "StationApp/GUI/GraphBorders.h"
 #include "StationApp/GUI/HelpDialogContent.h"
 #include "StationApp/GUI/SensitivitySlider.h"
 #include "TaskManagement/TaskingManager.h"

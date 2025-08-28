@@ -27,9 +27,6 @@
 #define SECOND_TILE_WIDTH 64
 #define SECOND_TILE_HEIGHT 512
 
-#define FREQVIEW_ROUNDED_CORNERS_WIDTH 7
-#define FREQVIEW_BORDER_WIDTH 3
-
 #define FFT_POSITION_FORWARD_SAMPLE_SHIFT 1920
 
 #define MAX_TIME_SIGNATURE_GRID_VIEW_SCALE 250
@@ -232,13 +229,6 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
     void setTrackColor(uint64_t trackIdentifier, juce::Colour col);
 
   private:
-    /**
-     * @brief Will draw rounded borders around the view.
-     *
-     * @param g juce graphics context
-     */
-    void drawBorders(juce::Graphics &g);
-
     /**
      * @brief Get index of the tile in the tile ring buffer if it exists.
      * Called only from the OpenGL thread.
