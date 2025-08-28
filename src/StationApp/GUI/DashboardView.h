@@ -2,10 +2,10 @@
 
 #include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/Audio/TrackInfoStore.h"
-#include "StationApp/GUI/FreqOverTimeGraph.h"
-#include "StationApp/GUI/FrequencyScale.h"
+#include "StationApp/GUI/Graphs/FreqOverTimeGraph.h"
+#include "StationApp/GUI/Graphs/FrequencyScale.h"
+#include "StationApp/GUI/Graphs/TimeScale.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
-#include "StationApp/GUI/TimeScale.h"
 #include "StationApp/GUI/TrackList.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
