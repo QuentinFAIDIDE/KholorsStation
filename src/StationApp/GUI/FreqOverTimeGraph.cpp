@@ -1,8 +1,9 @@
-#include "../OpenGL/OpenGlShaders.h"
 #include "FreqOverTimeGraph.h"
+#include "../OpenGL/OpenGlShaders.h"
 #include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/ProcessingTimerWaitgroup.h"
 #include "StationApp/GUI/AudioConstants.h"
+#include "StationApp/GUI/GraphBorders.h"
 #include "StationApp/OpenGL/BeatGridMesh.h"
 #include "StationApp/OpenGL/GLInfoLogger.h"
 #include "TaskManagement/TaskingManager.h"
@@ -79,69 +80,7 @@ void FreqOverTimeGraph::paint(juce::Graphics &g)
 
 void FreqOverTimeGraph::paintOverChildren(juce::Graphics &g)
 {
-    drawBorders(g);
-}
-
-void FreqOverTimeGraph::drawBorders(juce::Graphics &g)
-{
-    auto bounds = getLocalBounds();
-    int borderWidth = FREQVIEW_BORDER_WIDTH;
-    int roundedCornersWidth = FREQVIEW_ROUNDED_CORNERS_WIDTH;
-    // we fill two sub path, one for the borders that are to the left
-    // of the middle vertical line, and one for the borders that are to the right
-    // of it.
-    auto fillPath = juce::Path();
-    // we start first subpath to the pixel at the bottom center
-    fillPath.startNewSubPath(bounds.getCentreX(), bounds.getBottom());
-    fillPath.lineTo(bounds.getBottomLeft().toFloat());
-    fillPath.lineTo(bounds.getTopLeft().toFloat());
-    fillPath.lineTo(bounds.getCentreX(), bounds.getTopLeft().getY());
-    fillPath.lineTo(bounds.getCentreX(), bounds.getTopLeft().getY() + borderWidth);
-
-    fillPath.lineTo(bounds.getTopLeft().getX() + borderWidth + roundedCornersWidth,
-                    bounds.getTopLeft().getY() + borderWidth);
-
-    fillPath.quadraticTo(bounds.getTopLeft().getX() + borderWidth, bounds.getTopLeft().getY() + borderWidth,
-                         bounds.getTopLeft().getX() + borderWidth,
-                         bounds.getTopLeft().getY() + borderWidth + roundedCornersWidth);
-
-    fillPath.lineTo(bounds.getBottomLeft().getX() + borderWidth,
-                    bounds.getBottomLeft().getY() - borderWidth - roundedCornersWidth);
-
-    fillPath.quadraticTo(bounds.getBottomLeft().translated(borderWidth, -borderWidth).toFloat(),
-                         bounds.getBottomLeft().translated(borderWidth + roundedCornersWidth, -borderWidth).toFloat());
-
-    fillPath.lineTo(bounds.getCentreX(), bounds.getBottom() - borderWidth);
-    fillPath.closeSubPath();
-
-    // subpath to the right of the screen
-    fillPath.startNewSubPath(bounds.getCentreX(), bounds.getBottom());
-    fillPath.lineTo(bounds.getBottomRight().toFloat());
-    fillPath.lineTo(bounds.getTopRight().toFloat());
-    fillPath.lineTo(bounds.getCentreX(), bounds.getTopRight().getY());
-    fillPath.lineTo(bounds.getCentreX(), bounds.getTopRight().getY() + borderWidth);
-    fillPath.lineTo(bounds.getTopRight().translated(-(borderWidth + roundedCornersWidth), borderWidth).toFloat());
-
-    fillPath.quadraticTo(bounds.getTopRight().translated(-borderWidth, borderWidth).toFloat(),
-                         bounds.getTopRight().translated(-borderWidth, borderWidth + roundedCornersWidth).toFloat());
-
-    fillPath.lineTo(bounds.getBottomRight().translated(-(borderWidth), -(borderWidth + roundedCornersWidth)).toFloat());
-    fillPath.quadraticTo(
-        bounds.getBottomRight().translated(-borderWidth, -borderWidth).toFloat(),
-        bounds.getBottomRight().translated(-(borderWidth + roundedCornersWidth), -(borderWidth)).toFloat());
-    fillPath.lineTo(bounds.getCentreX(), bounds.getBottomRight().getY() - borderWidth);
-    fillPath.closeSubPath();
-
-    g.setColour(KHOLORS_COLOR_FREQVIEW_GRADIENT_BORDERS);
-    g.fillPath(fillPath);
-
-    g.setColour(KHOLORS_COLOR_GRIDS_LEVEL_0);
-    int borders2Width = 2;
-    g.drawRoundedRectangle(bounds.toFloat(), roundedCornersWidth, borders2Width);
-
-    auto middleLine = bounds.withY(bounds.getHeight() / 2).withHeight(1);
-    g.setColour(KHOLORS_COLOR_GRIDS_LEVEL_0);
-    g.fillRect(middleLine);
+    drawGraphBorders(g, getLocalBounds(), true);
 }
 
 void FreqOverTimeGraph::resized()
