@@ -1,9 +1,8 @@
 #include "GpuTextureDrawingBackend.h"
+#include "../OpenGL/OpenGlShaders.h"
 #include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/ProcessingTimerWaitgroup.h"
-#include "StationApp/GUI/FftDrawingBackend.h"
-
-#include "../OpenGL/OpenGlShaders.h"
+#include "StationApp/GUI/AudioConstants.h"
 #include "StationApp/OpenGL/BeatGridMesh.h"
 #include "StationApp/OpenGL/GLInfoLogger.h"
 #include "TaskManagement/TaskingManager.h"
@@ -19,10 +18,14 @@
 
 GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft,
                                                    NormalizedUnitTransformer &it)
-    : FftDrawingBackend(tis, ft, it), tmpFreqTransformer(ft), tmpIntensityTransformer(it), timeSignatureGrid(false),
-      topBeatGrid(true), ignoreNewData(true), viewPosition(0), viewScale(150), convolutionId(GpuConvolutionId::Emboss),
-      bpm(120), needToResetTiles(false)
+    : trackInfoStore(tis), freqTransformer(ft), intensityTransformer(it), playCursorPosition(0),
+      freqLines(ft, VISUAL_SAMPLE_RATE >> 1), tmpFreqTransformer(ft), tmpIntensityTransformer(it),
+      timeSignatureGrid(false), topBeatGrid(true), ignoreNewData(true), viewPosition(0), viewScale(150),
+      convolutionId(GpuConvolutionId::Emboss), bpm(120), needToResetTiles(false)
 {
+    setInterceptsMouseClicks(false, false);
+    addAndMakeVisible(freqLines);
+
     timeSignature = 4;
     lastAppliedTimeSignature = 4;
     backgroundColor = KHOLORS_COLOR_BACKGROUND;
@@ -743,7 +746,7 @@ void GpuTextureDrawingBackend::setTilePixelIntensity(size_t tileRingBufferIndex,
     secondTilesRingBuffer[tileRingBufferIndex].mesh->setPixelAt(x, y, intensity);
 }
 
-std::vector<FftDrawingBackend::ClearTrackInfoRange> GpuTextureDrawingBackend::getClearedTrackRanges()
+std::vector<ClearTrackInfoRange> GpuTextureDrawingBackend::getClearedTrackRanges()
 {
     std::lock_guard lock(clearedRangesMutex);
     std::vector<ClearTrackInfoRange> response;
@@ -768,5 +771,109 @@ void GpuTextureDrawingBackend::setSelectedTrack(std::optional<uint64_t> selected
     {
         std::lock_guard lock(selectedTrackMutex);
         currentlySelectedTrack = selectedTrack;
+    }
+}
+
+int64_t GpuTextureDrawingBackend::getPlayCursorPosition()
+{
+    std::lock_guard lock(playCursorMutex);
+    return playCursorPosition;
+}
+
+/**
+ * @brief Submit a new play cursor position to the drawing backend, which
+ * may or may not accept it. It will first be converted to a position in
+ * with a sample rate of VISUAL_SAMPLE_RATE.
+ *
+ * @param samplePosition sample position of the play cursor
+ * @param sampleRate sample rate in which the cursor position is given
+ */
+void GpuTextureDrawingBackend::submitNewPlayCursorPosition(int64_t samplePosition, uint32_t sampleRate)
+{
+    std::lock_guard lock(playCursorMutex);
+    int64_t newPlayCursorPos = samplePosition;
+    if (sampleRate != VISUAL_SAMPLE_RATE)
+    {
+        newPlayCursorPos = (int64_t)(float(samplePosition) * ((float)VISUAL_SAMPLE_RATE / (float)sampleRate));
+    }
+
+    // only update the play cursor pos if it's bigger than previous one,
+    // or if it's smaller and beyond a certain distance
+    if (newPlayCursorPos > playCursorPosition ||
+        std::abs(playCursorPosition - newPlayCursorPos) > MIN_SAMPLE_PLAY_CURSOR_BACKWARD_MOVEMENT)
+    {
+        playCursorPosition = newPlayCursorPos;
+    }
+}
+
+/**
+ * @brief Add the fft data inside the task struct to the currently displayed data.
+ *
+ * @param fftData struct containing the FFt data position, length, channel info and data
+ */
+void GpuTextureDrawingBackend::displayNewFftData(std::shared_ptr<NewFftDataTask> fftData,
+                                                 std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
+{
+    int fftSize = fftData->fftData->size() / fftData->noFFTs;
+    int64_t fftSampleWidth = (int64_t)fftData->segmentSampleLength / (int64_t)fftData->noFFTs;
+    // for each fft in the received set
+    for (size_t i = 0; i < fftData->noFFTs; i++)
+    {
+        // pointer to the raw data for this fft
+        float *fftDataPointer = fftData->fftData->data() + ((size_t)fftSize * i);
+        // compute its position and tile index
+        int64_t startSample = fftData->segmentStartSample + ((int64_t)i * fftSampleWidth);
+        int64_t endSample = startSample + fftSampleWidth;
+        if (fftData->sampleRate != VISUAL_SAMPLE_RATE)
+        {
+            float sampleRateRatio = float(VISUAL_SAMPLE_RATE) / float(fftData->sampleRate);
+            startSample = float(startSample) * sampleRateRatio;
+            endSample = float(endSample) * sampleRateRatio;
+        }
+        // in order to align the FFTs to the grid we shift forward by a predefined number of samples
+        startSample += FFT_POSITION_FORWARD_SAMPLE_SHIFT;
+        endSample += FFT_POSITION_FORWARD_SAMPLE_SHIFT;
+
+        int64_t secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
+        int64_t secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
+        // NOTE: we suppose that single FFT will never be larger than one second (tile width)
+
+        // fill the tile (one or two if overlaps) with the fft data
+        for (int64_t j = secondTileIndexStartSample; j <= secondTileIndexEndSample; j++)
+        {
+            if (j < 0)
+            {
+                continue;
+            }
+            // if it's the first tile, the start sample is the modulo of the startSample
+            // otherwise it's the tile start
+            int64_t tileStartSample = 0;
+            if (j == secondTileIndexStartSample)
+            {
+                tileStartSample = startSample % VISUAL_SAMPLE_RATE;
+            }
+            // same reasoning for the end sample within the tile
+            int64_t tileEndSample = VISUAL_SAMPLE_RATE - 1;
+            if (j == secondTileIndexEndSample)
+            {
+                tileEndSample = endSample % VISUAL_SAMPLE_RATE;
+            }
+            // we can now write the fft into the tile (and eventually create it)
+            int channelIndex = 2;              // 0 for left, 1 for right, 2 for both
+            if (fftData->totalNoChannels == 2) // if there are two channel (not mono), this is for one specific
+            {
+                if (fftData->channelIndex == 0)
+                {
+                    channelIndex = 0;
+                }
+                else
+                {
+                    channelIndex = 1;
+                }
+            }
+            procTimeWg->add();
+            drawFftOnTile(fftData->trackIdentifier, j, tileStartSample, tileEndSample, fftSize, fftDataPointer,
+                          channelIndex, fftData->sampleRate, fftData->getTaskingManager(), procTimeWg);
+        }
     }
 }

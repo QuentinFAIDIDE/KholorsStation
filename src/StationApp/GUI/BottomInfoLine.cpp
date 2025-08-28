@@ -1,14 +1,12 @@
 #include "BottomInfoLine.h"
 #include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/ProcessingTimer.h"
-#include "StationApp/GUI/FftDrawingBackend.h"
+#include "StationApp/GUI/AudioConstants.h"
 #include "StationApp/GUI/MouseCursorInfoTask.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_events/juce_events.h"
 #include "juce_graphics/juce_graphics.h"
 #include <memory>
-#include <mutex>
-#include <stdexcept>
 #include <string>
 
 #define BOTTOM_INFO_LINE_SIDE_PADDING 20
