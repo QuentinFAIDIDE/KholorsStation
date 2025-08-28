@@ -6,8 +6,8 @@
 #include "StationApp/CheckUpdates.h"
 #include "StationApp/GUI/BottomInfoLine.h"
 #include "StationApp/GUI/ClearButton.h"
+#include "StationApp/GUI/DashboardView.h"
 #include "StationApp/GUI/FftDrawingBackend.h"
-#include "StationApp/GUI/FreqTimeView.h"
 #include "StationApp/GUI/HelpDialogContent.h"
 #include "StationApp/GUI/SensitivitySlider.h"
 #include "TaskManagement/TaskingManager.h"
@@ -19,11 +19,11 @@
 #define DEFAULT_SERVER_PORT 7849
 
 MainComponent::MainComponent()
-    : trackInfoStore(taskManager), freqTimeView(trackInfoStore, taskManager),
+    : trackInfoStore(taskManager), dashboardView(trackInfoStore, taskManager),
       audioDataWorker(audioDataServer, taskManager), infoBar(taskManager), clearButton(taskManager),
       volumeSensitivitySlider(taskManager), showTipsAtStartup(true)
 {
-    addAndMakeVisible(freqTimeView);
+    addAndMakeVisible(dashboardView);
     addAndMakeVisible(infoBar);
 
     setSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
@@ -33,7 +33,7 @@ MainComponent::MainComponent()
     addAndMakeVisible(volumeSensitivitySlider);
 
     taskManager.registerTaskListener(&trackInfoStore);
-    taskManager.registerTaskListener(&freqTimeView);
+    taskManager.registerTaskListener(&dashboardView);
 
     audioDataServer.setTaskManager(&taskManager);
 
@@ -145,7 +145,7 @@ void MainComponent::resized()
     juce::Rectangle<int> localBounds = getLocalBounds();
     auto topBar = localBounds.removeFromTop(MENU_BAR_HEIGHT);
     infoBar.setBounds(localBounds.removeFromBottom(BOTTOM_INFO_LINE_HEIGHT));
-    freqTimeView.setBounds(localBounds);
+    dashboardView.setBounds(localBounds);
 
     auto buttonsArea = topBar.withTrimmedRight(TOPBAR_RIGHT_PADDING + TOP_LOGO_WIDTH + TOPBAR_BUTTONS_RIGHT_MARGIN);
     buttonsArea.reduce(0, (buttonsArea.getHeight() - TOPBAR_BUTTON_HEIGHT) / 2);

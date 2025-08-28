@@ -6,7 +6,7 @@
 
 /**
  * @brief Bpm Update task emitted upon DawInfo receivable by server AudioDataWorker.
- * Will be completed by FreqTimeView.
+ * Will be completed by DashboardView.
  */
 class BpmUpdateTask : public SilentTask
 {

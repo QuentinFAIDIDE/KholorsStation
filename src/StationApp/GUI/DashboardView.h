@@ -27,11 +27,11 @@
  * which own a drawing backend that will draw FFT of signal
  * received. It will draw labels and eventually more info over drawing widgets.
  */
-class FreqTimeView : public juce::Component, public TaskListener, public juce::Timer
+class DashboardView : public juce::Component, public TaskListener, public juce::Timer
 {
   public:
-    FreqTimeView(TrackInfoStore &, TaskingManager &);
-    ~FreqTimeView();
+    DashboardView(TrackInfoStore &, TaskingManager &);
+    ~DashboardView();
 
     void paint(juce::Graphics &g) override;
     void paintOverChildren(juce::Graphics &g) override;
