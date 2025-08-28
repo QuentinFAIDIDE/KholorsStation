@@ -1,4 +1,4 @@
-#include "FreqTimeView.h"
+#include "DashboardView.h"
 #include "StationApp/Audio/BpmUpdateTask.h"
 #include "StationApp/Audio/FftResultVectorReuseTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
@@ -25,7 +25,7 @@
 #include <mutex>
 #include <spdlog/spdlog.h>
 
-FreqTimeView::FreqTimeView(TrackInfoStore &tis, TaskingManager &tm)
+DashboardView::DashboardView(TrackInfoStore &tis, TaskingManager &tm)
     : taskingManager(tm), processingTimer(tm), trackInfoStore(tis), viewPosition(0), viewScale(150),
       frequencyScale(frequencyTransformer, VISUAL_SAMPLE_RATE >> 1), trackList(trackInfoStore, frequencyTransformer, tm)
 {
@@ -63,22 +63,22 @@ FreqTimeView::FreqTimeView(TrackInfoStore &tis, TaskingManager &tm)
     startTimer(VIEW_MOVE_TIME_INTERVAL_MS);
 }
 
-FreqTimeView::~FreqTimeView()
+DashboardView::~DashboardView()
 {
 }
 
-void FreqTimeView::paint(juce::Graphics &g)
+void DashboardView::paint(juce::Graphics &g)
 {
     g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
     g.fillRect(unpaintedArea1);
     g.fillRect(unpaintedArea2);
 }
 
-void FreqTimeView::paintOverChildren(juce::Graphics &g)
+void DashboardView::paintOverChildren(juce::Graphics &g)
 {
 }
 
-void FreqTimeView::resized()
+void DashboardView::resized()
 {
     auto fftBounds = getLocalBounds();
     auto trackListBounds = fftBounds.removeFromRight(TRACK_LIST_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
@@ -101,7 +101,7 @@ void FreqTimeView::resized()
     unpaintedArea2.setHeight(getLocalBounds().getHeight() - trackListBounds.getHeight());
 }
 
-void FreqTimeView::timerCallback()
+void DashboardView::timerCallback()
 {
     int64_t currentTime = juce::Time().getCurrentTime().toMilliseconds();
     int64_t elapsedSinceLastCallMs = currentTime - lastTimerCallMs;
@@ -176,7 +176,7 @@ void FreqTimeView::timerCallback()
     timeScale.repaint();
 }
 
-bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
+bool DashboardView::taskHandler(std::shared_ptr<Task> task)
 {
     auto newFftDataTask = std::dynamic_pointer_cast<NewFftDataTask>(task);
     if (newFftDataTask != nullptr && !newFftDataTask->isCompleted() && !newFftDataTask->hasFailed())
@@ -307,7 +307,7 @@ bool FreqTimeView::taskHandler(std::shared_ptr<Task> task)
     return false;
 }
 
-void FreqTimeView::mouseDown(const juce::MouseEvent &e)
+void DashboardView::mouseDown(const juce::MouseEvent &e)
 {
     if (e.mods.isAnyMouseButtonDown())
     {
@@ -320,7 +320,7 @@ void FreqTimeView::mouseDown(const juce::MouseEvent &e)
     }
 }
 
-void FreqTimeView::mouseUp(const juce::MouseEvent &e)
+void DashboardView::mouseUp(const juce::MouseEvent &e)
 {
     if (e.mods.isMiddleButtonDown())
     {
@@ -328,7 +328,7 @@ void FreqTimeView::mouseUp(const juce::MouseEvent &e)
     }
 }
 
-void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
+void DashboardView::mouseDrag(const juce::MouseEvent &e)
 {
     broadcastMouseEventInfo(e);
 
@@ -393,24 +393,24 @@ void FreqTimeView::mouseDrag(const juce::MouseEvent &e)
     }
 }
 
-void FreqTimeView::mouseMove(const juce::MouseEvent &me)
+void DashboardView::mouseMove(const juce::MouseEvent &me)
 {
     broadcastMouseEventInfo(me);
 }
 
-void FreqTimeView::broadcastMouseEventInfo(const juce::MouseEvent &me)
+void DashboardView::broadcastMouseEventInfo(const juce::MouseEvent &me)
 {
-    auto positionRelativeToFreqTimeView = me.getEventRelativeTo(fftDrawBackend.get());
+    auto positionRelativeToDashboardView = me.getEventRelativeTo(fftDrawBackend.get());
     bool showCursor = fftDrawBackend->getBounds().contains(me.getPosition());
-    fftDrawBackend->setMouseCursor(showCursor, positionRelativeToFreqTimeView.position.x,
-                                   positionRelativeToFreqTimeView.position.y);
+    fftDrawBackend->setMouseCursor(showCursor, positionRelativeToDashboardView.position.x,
+                                   positionRelativeToDashboardView.position.y);
 
-    emitMousePositionInfoTask(showCursor, positionRelativeToFreqTimeView.x, positionRelativeToFreqTimeView.y);
+    emitMousePositionInfoTask(showCursor, positionRelativeToDashboardView.x, positionRelativeToDashboardView.y);
 
     fftDrawBackend->repaint();
 }
 
-void FreqTimeView::emitMousePositionInfoTask(bool shouldShow, int x, int y)
+void DashboardView::emitMousePositionInfoTask(bool shouldShow, int x, int y)
 {
     lastFftMousePosX = x;
     lastFftMousePosY = y;
@@ -443,7 +443,7 @@ void FreqTimeView::emitMousePositionInfoTask(bool shouldShow, int x, int y)
     taskingManager.broadcastTask(cursorUpdateTask);
 }
 
-void FreqTimeView::mouseExit(const juce::MouseEvent &)
+void DashboardView::mouseExit(const juce::MouseEvent &)
 {
     fftDrawBackend->setMouseCursor(false, -1, -1);
     auto cursorUpdateTask = std::make_shared<MouseCursorInfoTask>(false, 0, 0);

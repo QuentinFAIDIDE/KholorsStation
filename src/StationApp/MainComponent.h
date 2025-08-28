@@ -7,7 +7,7 @@
 #include "StationApp/Audio/AudioDataWorker.h"
 #include "StationApp/GUI/BottomInfoLine.h"
 #include "StationApp/GUI/ClearButton.h"
-#include "StationApp/GUI/FreqTimeView.h"
+#include "StationApp/GUI/DashboardView.h"
 #include "StationApp/GUI/SensitivitySlider.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
@@ -46,7 +46,7 @@ class MainComponent final : public juce::Component, public TaskListener
     juce::MenuBarComponent menuBar;                       /**< App menu at the top of the app */
     juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */
     TrackInfoStore trackInfoStore;                        /**< storing all track info (name, color) */
-    FreqTimeView freqTimeView;                            /**< Viewer that display frequencies over time received */
+    DashboardView dashboardView;                          /**< Viewer that display frequencies over time received */
     AudioTransport::SyncServer audioDataServer;           /**< Server that receives audio data */
     AudioDataWorker audioDataWorker; /**< Worker threads to parse audio data from server and emit Tasks accordingly */
     BottomInfoLine infoBar;          /**< bottom tip bar */
