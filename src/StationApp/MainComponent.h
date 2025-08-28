@@ -1,14 +1,14 @@
 #pragma once
 
 #include "AudioTransport/SyncServer.h"
-#include "GUI/HelpButton.h"
+#include "GUI/Widgets/HelpButton.h"
 #include "GUIToolkit/FontsLoader.h"
 #include "GUIToolkit/IconsLoader.h"
 #include "StationApp/Audio/AudioDataWorker.h"
 #include "StationApp/GUI/BottomInfoLine.h"
-#include "StationApp/GUI/ClearButton.h"
 #include "StationApp/GUI/DashboardView.h"
-#include "StationApp/GUI/SensitivitySlider.h"
+#include "StationApp/GUI/Widgets/ClearButton.h"
+#include "StationApp/GUI/Widgets/SensitivitySlider.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_core/juce_core.h"

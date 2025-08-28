@@ -1,6 +1,6 @@
 #pragma once
 
-#include "StationApp/GUI/GraphBorders.h"
+#include "StationApp/GUI/Graphs/GraphBorders.h"
 #include "GUIToolkit/Consts.h"
 #include "juce_graphics/juce_graphics.h"
 

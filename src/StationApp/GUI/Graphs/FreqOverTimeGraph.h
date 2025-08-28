@@ -5,7 +5,7 @@
 #include "StationApp/Audio/ProcessingTimerWaitgroup.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/ClearTrackInfoRange.h"
-#include "StationApp/GUI/FrequencyLinesDrawer.h"
+#include "StationApp/GUI/Graphs/FrequencyLinesDrawer.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "StationApp/OpenGL/BeatGridMesh.h"
 #include "StationApp/OpenGL/TexturedRectangle.h"
