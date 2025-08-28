@@ -1,5 +1,5 @@
-#include "GpuTextureDrawingBackend.h"
 #include "../OpenGL/OpenGlShaders.h"
+#include "FreqOverTimeGraph.h"
 #include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/ProcessingTimerWaitgroup.h"
 #include "StationApp/GUI/AudioConstants.h"
@@ -16,8 +16,7 @@
 #include <stdexcept>
 #include <string>
 
-GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft,
-                                                   NormalizedUnitTransformer &it)
+FreqOverTimeGraph::FreqOverTimeGraph(TrackInfoStore &tis, NormalizedUnitTransformer &ft, NormalizedUnitTransformer &it)
     : trackInfoStore(tis), freqTransformer(ft), intensityTransformer(it), playCursorPosition(0),
       freqLines(ft, VISUAL_SAMPLE_RATE >> 1), tmpFreqTransformer(ft), tmpIntensityTransformer(it),
       timeSignatureGrid(false), topBeatGrid(true), ignoreNewData(true), viewPosition(0), viewScale(150),
@@ -39,11 +38,11 @@ GpuTextureDrawingBackend::GpuTextureDrawingBackend(TrackInfoStore &tis, Normaliz
     trackDrawOrderNonce = 1;
 }
 
-GpuTextureDrawingBackend::~GpuTextureDrawingBackend()
+FreqOverTimeGraph::~FreqOverTimeGraph()
 {
 }
 
-void GpuTextureDrawingBackend::paint(juce::Graphics &g)
+void FreqOverTimeGraph::paint(juce::Graphics &g)
 {
 
     int64_t viewPositionCopy, viewScaleCopy;
@@ -78,12 +77,12 @@ void GpuTextureDrawingBackend::paint(juce::Graphics &g)
     }
 }
 
-void GpuTextureDrawingBackend::paintOverChildren(juce::Graphics &g)
+void FreqOverTimeGraph::paintOverChildren(juce::Graphics &g)
 {
     drawBorders(g);
 }
 
-void GpuTextureDrawingBackend::drawBorders(juce::Graphics &g)
+void FreqOverTimeGraph::drawBorders(juce::Graphics &g)
 {
     auto bounds = getLocalBounds();
     int borderWidth = FREQVIEW_BORDER_WIDTH;
@@ -145,7 +144,7 @@ void GpuTextureDrawingBackend::drawBorders(juce::Graphics &g)
     g.fillRect(middleLine);
 }
 
-void GpuTextureDrawingBackend::resized()
+void FreqOverTimeGraph::resized()
 {
     freqLines.setBounds(getLocalBounds());
 
@@ -155,7 +154,7 @@ void GpuTextureDrawingBackend::resized()
     glThreadUniformsNonce++;
 }
 
-void GpuTextureDrawingBackend::updateViewPosition(uint32_t samplePosition)
+void FreqOverTimeGraph::updateViewPosition(uint32_t samplePosition)
 {
     {
         std::lock_guard lock(glThreadUniformsMutex);
@@ -164,7 +163,7 @@ void GpuTextureDrawingBackend::updateViewPosition(uint32_t samplePosition)
     }
 }
 
-void GpuTextureDrawingBackend::updateViewScale(uint32_t samplesPerPixel)
+void FreqOverTimeGraph::updateViewScale(uint32_t samplesPerPixel)
 {
     {
         std::lock_guard lock(glThreadUniformsMutex);
@@ -173,7 +172,7 @@ void GpuTextureDrawingBackend::updateViewScale(uint32_t samplesPerPixel)
     }
 }
 
-void GpuTextureDrawingBackend::updateBpm(float nbpm, TaskingManager *tm)
+void FreqOverTimeGraph::updateBpm(float nbpm, TaskingManager *tm)
 {
     {
         std::lock_guard lock(glThreadUniformsMutex);
@@ -182,7 +181,7 @@ void GpuTextureDrawingBackend::updateBpm(float nbpm, TaskingManager *tm)
     }
 }
 
-void GpuTextureDrawingBackend::timeSignatureNumeratorUpdate(int numerator)
+void FreqOverTimeGraph::timeSignatureNumeratorUpdate(int numerator)
 {
     {
         std::lock_guard lock(glThreadUniformsMutex);
@@ -190,7 +189,7 @@ void GpuTextureDrawingBackend::timeSignatureNumeratorUpdate(int numerator)
     }
 }
 
-void GpuTextureDrawingBackend::newOpenGLContextCreated()
+void FreqOverTimeGraph::newOpenGLContextCreated()
 {
     spdlog::info("Initializing OpenGL context...");
     // Instanciate an instance of OpenGLShaderProgram
@@ -244,7 +243,7 @@ void GpuTextureDrawingBackend::newOpenGLContextCreated()
     ignoreNewData = false;
 }
 
-bool GpuTextureDrawingBackend::buildShaders()
+bool FreqOverTimeGraph::buildShaders()
 {
     bool builtTexturedShader = buildShader(texturedPositionedShader, fftVertexShader, fftFragmentShader);
     if (!builtTexturedShader)
@@ -262,13 +261,13 @@ bool GpuTextureDrawingBackend::buildShaders()
     return true;
 }
 
-bool GpuTextureDrawingBackend::buildShader(std::unique_ptr<juce::OpenGLShaderProgram> &sh, std::string vertexShader,
-                                           std::string fragmentShader)
+bool FreqOverTimeGraph::buildShader(std::unique_ptr<juce::OpenGLShaderProgram> &sh, std::string vertexShader,
+                                    std::string fragmentShader)
 {
     return sh->addVertexShader(vertexShader) && sh->addFragmentShader(fragmentShader) && sh->link();
 }
 
-void GpuTextureDrawingBackend::uploadShadersUniforms()
+void FreqOverTimeGraph::uploadShadersUniforms()
 {
     std::lock_guard lock(glThreadUniformsMutex);
     if (lastUsedGlThreadUnifNonce != glThreadUniformsNonce)
@@ -288,7 +287,7 @@ void GpuTextureDrawingBackend::uploadShadersUniforms()
     }
 }
 
-void GpuTextureDrawingBackend::renderOpenGL()
+void FreqOverTimeGraph::renderOpenGL()
 {
     // if necessary, clear all tiles first
     {
@@ -434,20 +433,20 @@ void GpuTextureDrawingBackend::renderOpenGL()
     }
 }
 
-void GpuTextureDrawingBackend::setTrackColor(uint64_t trackIdentifier, juce::Colour col)
+void FreqOverTimeGraph::setTrackColor(uint64_t trackIdentifier, juce::Colour col)
 {
     std::pair<uint64_t, juce::Colour> colorToPush(trackIdentifier, col);
     std::lock_guard lock(openGlThreadColorsMutex);
     colorUpdatesToApply.push(colorToPush);
 }
 
-void GpuTextureDrawingBackend::clearDisplayedFFTs()
+void FreqOverTimeGraph::clearDisplayedFFTs()
 {
     std::lock_guard lock(tilesResetMutex);
     needToResetTiles = true;
 }
 
-void GpuTextureDrawingBackend::openGLContextClosing()
+void FreqOverTimeGraph::openGLContextClosing()
 {
     for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
     {
@@ -460,9 +459,9 @@ void GpuTextureDrawingBackend::openGLContextClosing()
     ignoreNewData = true;
 }
 
-void GpuTextureDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin,
-                                             int64_t end, int fftSize, float *data, int channel, uint32_t sampleRate,
-                                             TaskingManager *, std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
+void FreqOverTimeGraph::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end,
+                                      int fftSize, float *data, int channel, uint32_t sampleRate, TaskingManager *,
+                                      std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
 {
 
     // either allocate or pick idle FftToDraw struct
@@ -491,7 +490,7 @@ void GpuTextureDrawingBackend::drawFftOnTile(uint64_t trackIdentifier, int64_t s
     }
 }
 
-void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> fftData)
+void FreqOverTimeGraph::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> fftData)
 {
     // if necessary, update the frequency transformers
     if (tmpFreqTransformer.getNonce() != freqTransformer.getNonce())
@@ -571,7 +570,7 @@ void GpuTextureDrawingBackend::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> 
     fftData->procTimeWg->recordCompletion();
 }
 
-int64_t GpuTextureDrawingBackend::getTileIndexIfExists(uint64_t trackIdentifier, int64_t secondTileIndex)
+int64_t FreqOverTimeGraph::getTileIndexIfExists(uint64_t trackIdentifier, int64_t secondTileIndex)
 {
     if (ignoreNewData)
     {
@@ -589,7 +588,7 @@ int64_t GpuTextureDrawingBackend::getTileIndexIfExists(uint64_t trackIdentifier,
     }
 }
 
-size_t GpuTextureDrawingBackend::createSecondTile(uint64_t trackIdentifier, int64_t secondTileIndex)
+size_t FreqOverTimeGraph::createSecondTile(uint64_t trackIdentifier, int64_t secondTileIndex)
 {
     // if we're aborting, it doesn't really matter which id we return as we will ignore writing
     if (ignoreNewData)
@@ -670,7 +669,7 @@ size_t GpuTextureDrawingBackend::createSecondTile(uint64_t trackIdentifier, int6
     return newTileIndex;
 }
 
-void GpuTextureDrawingBackend::addTrackTileToDrawingOrder(uint64_t trackIdentifer, size_t tileRingBufferIndex)
+void FreqOverTimeGraph::addTrackTileToDrawingOrder(uint64_t trackIdentifer, size_t tileRingBufferIndex)
 {
     trackDrawOrderNonce++;
 
@@ -700,7 +699,7 @@ void GpuTextureDrawingBackend::addTrackTileToDrawingOrder(uint64_t trackIdentife
     trackTilesInDrawingOrder.insert(trackTilesInDrawingOrder.end(), newTrackTilesList);
 }
 
-void GpuTextureDrawingBackend::removeTrackTileFromDrawingOrder(uint64_t trackIdentifier, size_t tileRingBufferIndex)
+void FreqOverTimeGraph::removeTrackTileFromDrawingOrder(uint64_t trackIdentifier, size_t tileRingBufferIndex)
 {
     trackDrawOrderNonce++;
 
@@ -721,7 +720,7 @@ void GpuTextureDrawingBackend::removeTrackTileFromDrawingOrder(uint64_t trackIde
     spdlog::warn("Trying to remove a tile that does not exist from drawing order!");
 }
 
-void GpuTextureDrawingBackend::ensureTrackTilesDrawOrderIsUpToDate()
+void FreqOverTimeGraph::ensureTrackTilesDrawOrderIsUpToDate()
 {
     if (trackDrawOrderNonce != lastTrackDrawOrderNonce)
     {
@@ -737,7 +736,7 @@ void GpuTextureDrawingBackend::ensureTrackTilesDrawOrderIsUpToDate()
     }
 }
 
-void GpuTextureDrawingBackend::setTilePixelIntensity(size_t tileRingBufferIndex, int x, int y, float intensity)
+void FreqOverTimeGraph::setTilePixelIntensity(size_t tileRingBufferIndex, int x, int y, float intensity)
 {
     if (ignoreNewData)
     {
@@ -746,7 +745,7 @@ void GpuTextureDrawingBackend::setTilePixelIntensity(size_t tileRingBufferIndex,
     secondTilesRingBuffer[tileRingBufferIndex].mesh->setPixelAt(x, y, intensity);
 }
 
-std::vector<ClearTrackInfoRange> GpuTextureDrawingBackend::getClearedTrackRanges()
+std::vector<ClearTrackInfoRange> FreqOverTimeGraph::getClearedTrackRanges()
 {
     std::lock_guard lock(clearedRangesMutex);
     std::vector<ClearTrackInfoRange> response;
@@ -759,14 +758,14 @@ std::vector<ClearTrackInfoRange> GpuTextureDrawingBackend::getClearedTrackRanges
     return response;
 }
 
-void GpuTextureDrawingBackend::setMouseCursor(bool onComponent, int x, int y)
+void FreqOverTimeGraph::setMouseCursor(bool onComponent, int x, int y)
 {
     mouseOnComponent = onComponent;
     lastMouseX = x;
     lastMouseY = y;
 }
 
-void GpuTextureDrawingBackend::setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm)
+void FreqOverTimeGraph::setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm)
 {
     {
         std::lock_guard lock(selectedTrackMutex);
@@ -774,7 +773,7 @@ void GpuTextureDrawingBackend::setSelectedTrack(std::optional<uint64_t> selected
     }
 }
 
-int64_t GpuTextureDrawingBackend::getPlayCursorPosition()
+int64_t FreqOverTimeGraph::getPlayCursorPosition()
 {
     std::lock_guard lock(playCursorMutex);
     return playCursorPosition;
@@ -788,7 +787,7 @@ int64_t GpuTextureDrawingBackend::getPlayCursorPosition()
  * @param samplePosition sample position of the play cursor
  * @param sampleRate sample rate in which the cursor position is given
  */
-void GpuTextureDrawingBackend::submitNewPlayCursorPosition(int64_t samplePosition, uint32_t sampleRate)
+void FreqOverTimeGraph::submitNewPlayCursorPosition(int64_t samplePosition, uint32_t sampleRate)
 {
     std::lock_guard lock(playCursorMutex);
     int64_t newPlayCursorPos = samplePosition;
@@ -811,8 +810,8 @@ void GpuTextureDrawingBackend::submitNewPlayCursorPosition(int64_t samplePositio
  *
  * @param fftData struct containing the FFt data position, length, channel info and data
  */
-void GpuTextureDrawingBackend::displayNewFftData(std::shared_ptr<NewFftDataTask> fftData,
-                                                 std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
+void FreqOverTimeGraph::displayNewFftData(std::shared_ptr<NewFftDataTask> fftData,
+                                          std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
 {
     int fftSize = fftData->fftData->size() / fftData->noFFTs;
     int64_t fftSampleWidth = (int64_t)fftData->segmentSampleLength / (int64_t)fftData->noFFTs;

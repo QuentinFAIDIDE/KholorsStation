@@ -9,8 +9,8 @@
 #include "StationApp/Audio/VolumeSensitivityTask.h"
 #include "StationApp/GUI/AudioConstants.h"
 #include "StationApp/GUI/ClearTask.h"
+#include "StationApp/GUI/FreqOverTimeGraph.h"
 #include "StationApp/GUI/FrequencyScale.h"
-#include "StationApp/GUI/GpuTextureDrawingBackend.h"
 #include "StationApp/GUI/MouseCursorInfoTask.h"
 #include "StationApp/GUI/TrackList.h"
 #include "StationApp/GUI/TrackSelectionTask.h"
@@ -35,9 +35,8 @@ DashboardView::DashboardView(TrackInfoStore &tis, TaskingManager &tm)
 
     setOpaque(true);
 
-    fftDrawBackend =
-        std::make_shared<GpuTextureDrawingBackend>(trackInfoStore, frequencyTransformer, intensityTransformer);
-    addAndMakeVisible(fftDrawBackend.get());
+    freqOverTimeGraph = std::make_shared<FreqOverTimeGraph>(trackInfoStore, frequencyTransformer, intensityTransformer);
+    addAndMakeVisible(freqOverTimeGraph.get());
 
     auto freqProjection = std::make_shared<Log10Projection>(0.005);
     frequencyTransformer.setProjection(freqProjection);
@@ -82,7 +81,7 @@ void DashboardView::resized()
     auto trackListBounds = fftBounds.removeFromRight(TRACK_LIST_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
     auto frequencyGridBounds = fftBounds.removeFromLeft(FREQUENCY_GRID_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
     auto timeGridBounds = fftBounds.removeFromBottom(TIME_GRID_HEIGHT);
-    fftDrawBackend->setBounds(fftBounds);
+    freqOverTimeGraph->setBounds(fftBounds);
     frequencyScale.setBounds(frequencyGridBounds);
     timeScale.setBounds(timeGridBounds);
     trackList.setBounds(trackListBounds);
@@ -90,7 +89,7 @@ void DashboardView::resized()
     trackList.setFreqViewWidth(fftBounds.getWidth());
 
     std::lock_guard lock(viewMutex);
-    fftDrawBackend->updateViewPosition(viewPosition);
+    freqOverTimeGraph->updateViewPosition(viewPosition);
 
     unpaintedArea1 = frequencyGridBounds.withY(frequencyGridBounds.getY() + frequencyGridBounds.getHeight());
     unpaintedArea1.setHeight(getLocalBounds().getHeight() - frequencyGridBounds.getHeight());
@@ -119,10 +118,10 @@ void DashboardView::timerCallback()
     if (!isViewMoving && (currentTime - lastFftDrawTimeMsCopy) < MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS)
     {
         // first check that play cursor is in bounds
-        int64_t lastPlayCursorPos = fftDrawBackend->getPlayCursorPosition();
+        int64_t lastPlayCursorPos = freqOverTimeGraph->getPlayCursorPosition();
         std::lock_guard lock(viewMutex);
         int64_t leftScreenSideSamplePos = viewPosition;
-        int64_t rightScreenSideSamplePos = viewPosition + (fftDrawBackend->getBounds().getWidth() * viewScale);
+        int64_t rightScreenSideSamplePos = viewPosition + (freqOverTimeGraph->getBounds().getWidth() * viewScale);
         int64_t screenQuarter = (rightScreenSideSamplePos - leftScreenSideSamplePos) / 4;
         // if play cursor is outside the view, reset view position where play cursor is at 3/4
         if (lastPlayCursorPos < leftScreenSideSamplePos || lastPlayCursorPos > rightScreenSideSamplePos)
@@ -132,7 +131,7 @@ void DashboardView::timerCallback()
             {
                 viewPosition = 0;
             }
-            fftDrawBackend->updateViewPosition(viewPosition);
+            freqOverTimeGraph->updateViewPosition(viewPosition);
             timeScale.setViewPosition(viewPosition);
             trackList.setViewPosition(viewPosition);
             // if we show the cursor, we should update its value shown on screen in the tips
@@ -150,7 +149,7 @@ void DashboardView::timerCallback()
             {
                 viewPosition = 0;
             }
-            fftDrawBackend->updateViewPosition(viewPosition);
+            freqOverTimeGraph->updateViewPosition(viewPosition);
             timeScale.setViewPosition(viewPosition);
             trackList.setViewPosition(viewPosition);
             // if we show the cursor, we should update its value shown on screen in the tips
@@ -162,7 +161,7 @@ void DashboardView::timerCallback()
     }
     // if some tracks have been cleared from some ranges on fftDrawing backend, replicate that
     // on other related components
-    auto tracksClearedInMainView = fftDrawBackend->getClearedTrackRanges();
+    auto tracksClearedInMainView = freqOverTimeGraph->getClearedTrackRanges();
     for (size_t i = 0; i < tracksClearedInMainView.size(); i++)
     {
         trackList.clearTrackFromRange(tracksClearedInMainView[i].trackIdentifier,
@@ -170,7 +169,7 @@ void DashboardView::timerCallback()
     }
     lastTimerCallMs = currentTime;
 
-    fftDrawBackend->repaint();
+    freqOverTimeGraph->repaint();
     timeScale.repaint();
 }
 
@@ -204,15 +203,15 @@ bool DashboardView::taskHandler(std::shared_ptr<Task> task)
 
                 if ((currentTime - lastFftDrawTimeMsCopy) > MAX_IDLE_MS_TIME_BEFORE_CLEAR)
                 {
-                    fftDrawBackend->clearDisplayedFFTs();
+                    freqOverTimeGraph->clearDisplayedFFTs();
                     trackList.clear();
                 }
 
                 // send fft data to drawing backend and update play cursor
-                fftDrawBackend->displayNewFftData(newFftDataTask, processingTimeWaitgroup);
-                fftDrawBackend->submitNewPlayCursorPosition((int64_t)newFftDataTask->segmentStartSample +
-                                                                (int64_t)newFftDataTask->segmentSampleLength,
-                                                            newFftDataTask->sampleRate);
+                freqOverTimeGraph->displayNewFftData(newFftDataTask, processingTimeWaitgroup);
+                freqOverTimeGraph->submitNewPlayCursorPosition((int64_t)newFftDataTask->segmentStartSample +
+                                                                   (int64_t)newFftDataTask->segmentSampleLength,
+                                                               newFftDataTask->sampleRate);
 
                 // record which track is playing and where to display labels
                 trackList.recordSfft(newFftDataTask);
@@ -249,7 +248,7 @@ bool DashboardView::taskHandler(std::shared_ptr<Task> task)
     {
         juce::Colour col(colorUpdateTask->redColorLevel, colorUpdateTask->greenColorLevel,
                          colorUpdateTask->blueColorLevel);
-        fftDrawBackend->setTrackColor(colorUpdateTask->identifier, col);
+        freqOverTimeGraph->setTrackColor(colorUpdateTask->identifier, col);
         colorUpdateTask->setCompleted(true);
         return true;
     }
@@ -259,7 +258,7 @@ bool DashboardView::taskHandler(std::shared_ptr<Task> task)
     {
         if (std::abs(lastReceivedBpm - bpmUpdateTask->bpm) >= std::numeric_limits<float>::epsilon())
         {
-            fftDrawBackend->updateBpm(bpmUpdateTask->bpm, bpmUpdateTask->getTaskingManager());
+            freqOverTimeGraph->updateBpm(bpmUpdateTask->bpm, bpmUpdateTask->getTaskingManager());
             timeScale.setBpm(bpmUpdateTask->bpm);
             lastReceivedBpm = bpmUpdateTask->bpm;
         }
@@ -270,7 +269,7 @@ bool DashboardView::taskHandler(std::shared_ptr<Task> task)
     auto timeSignatureUpdate = std::dynamic_pointer_cast<TimeSignatureUpdateTask>(task);
     if (timeSignatureUpdate != nullptr && !timeSignatureUpdate->isCompleted())
     {
-        fftDrawBackend->timeSignatureNumeratorUpdate(timeSignatureUpdate->numerator);
+        freqOverTimeGraph->timeSignatureNumeratorUpdate(timeSignatureUpdate->numerator);
         timeSignatureUpdate->setCompleted(true);
         return false;
     }
@@ -278,7 +277,7 @@ bool DashboardView::taskHandler(std::shared_ptr<Task> task)
     auto selectionUpdate = std::dynamic_pointer_cast<TrackSelectionTask>(task);
     if (selectionUpdate != nullptr && !selectionUpdate->isCompleted())
     {
-        fftDrawBackend->setSelectedTrack(selectionUpdate->selectedTrack, selectionUpdate->getTaskingManager());
+        freqOverTimeGraph->setSelectedTrack(selectionUpdate->selectedTrack, selectionUpdate->getTaskingManager());
         selectionUpdate->setCompleted(true);
         return false;
     }
@@ -286,7 +285,7 @@ bool DashboardView::taskHandler(std::shared_ptr<Task> task)
     auto clearTask = std::dynamic_pointer_cast<ClearTask>(task);
     if (clearTask != nullptr && !clearTask->isCompleted())
     {
-        fftDrawBackend->clearDisplayedFFTs();
+        freqOverTimeGraph->clearDisplayedFFTs();
         trackList.clear();
         clearTask->setCompleted(true);
         return false;
@@ -348,7 +347,7 @@ void DashboardView::mouseDrag(const juce::MouseEvent &e)
 
             viewScale = juce::jlimit(MIN_SCALE_SAMPLE_PER_PIXEL, MAX_SCALE_SAMPLE_PER_PIXEL,
                                      int(float(viewScale) * (1.0f + (float(dragY) * PIXEL_SCALE_SPEED))));
-            fftDrawBackend->updateViewScale(viewScale);
+            freqOverTimeGraph->updateViewScale(viewScale);
             timeScale.setViewScale(viewScale);
             trackList.setViewScale(viewScale);
 
@@ -362,7 +361,7 @@ void DashboardView::mouseDrag(const juce::MouseEvent &e)
             {
                 viewPosition = 0;
             }
-            fftDrawBackend->updateViewPosition(viewPosition);
+            freqOverTimeGraph->updateViewPosition(viewPosition);
             timeScale.setViewPosition(viewPosition);
             trackList.setViewPosition(viewPosition);
 
@@ -377,7 +376,7 @@ void DashboardView::mouseDrag(const juce::MouseEvent &e)
             {
                 viewPosition = 0;
             }
-            fftDrawBackend->updateViewPosition(viewPosition);
+            freqOverTimeGraph->updateViewPosition(viewPosition);
             timeScale.setViewPosition(viewPosition);
 
             needRepaint = true;
@@ -385,7 +384,7 @@ void DashboardView::mouseDrag(const juce::MouseEvent &e)
 
         if (needRepaint)
         {
-            fftDrawBackend->repaint();
+            freqOverTimeGraph->repaint();
             timeScale.repaint();
         }
     }
@@ -398,14 +397,14 @@ void DashboardView::mouseMove(const juce::MouseEvent &me)
 
 void DashboardView::broadcastMouseEventInfo(const juce::MouseEvent &me)
 {
-    auto positionRelativeToDashboardView = me.getEventRelativeTo(fftDrawBackend.get());
-    bool showCursor = fftDrawBackend->getBounds().contains(me.getPosition());
-    fftDrawBackend->setMouseCursor(showCursor, positionRelativeToDashboardView.position.x,
-                                   positionRelativeToDashboardView.position.y);
+    auto positionRelativeToDashboardView = me.getEventRelativeTo(freqOverTimeGraph.get());
+    bool showCursor = freqOverTimeGraph->getBounds().contains(me.getPosition());
+    freqOverTimeGraph->setMouseCursor(showCursor, positionRelativeToDashboardView.position.x,
+                                      positionRelativeToDashboardView.position.y);
 
     emitMousePositionInfoTask(showCursor, positionRelativeToDashboardView.x, positionRelativeToDashboardView.y);
 
-    fftDrawBackend->repaint();
+    freqOverTimeGraph->repaint();
 }
 
 void DashboardView::emitMousePositionInfoTask(bool shouldShow, int x, int y)
@@ -420,7 +419,7 @@ void DashboardView::emitMousePositionInfoTask(bool shouldShow, int x, int y)
     if (shouldShow)
     {
         float positionInChannel = 0.0f;
-        float halfHeight = 0.5f * float(fftDrawBackend->getHeight());
+        float halfHeight = 0.5f * float(freqOverTimeGraph->getHeight());
         bool isOnTopChannel = y < halfHeight;
         if (isOnTopChannel)
         {
@@ -443,8 +442,8 @@ void DashboardView::emitMousePositionInfoTask(bool shouldShow, int x, int y)
 
 void DashboardView::mouseExit(const juce::MouseEvent &)
 {
-    fftDrawBackend->setMouseCursor(false, -1, -1);
+    freqOverTimeGraph->setMouseCursor(false, -1, -1);
     auto cursorUpdateTask = std::make_shared<MouseCursorInfoTask>(false, 0, 0);
     taskingManager.broadcastTask(cursorUpdateTask);
-    fftDrawBackend->repaint();
+    freqOverTimeGraph->repaint();
 }

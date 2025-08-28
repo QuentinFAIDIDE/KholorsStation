@@ -2,8 +2,8 @@
 
 #include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/GUI/FreqOverTimeGraph.h"
 #include "StationApp/GUI/FrequencyScale.h"
-#include "StationApp/GUI/GpuTextureDrawingBackend.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "StationApp/GUI/TimeScale.h"
 #include "StationApp/GUI/TrackList.h"
@@ -68,9 +68,9 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
     TaskingManager &taskingManager;
     ProcessingTimer processingTimer;
 
-    NormalizedUnitTransformer frequencyTransformer;           /**< Transformer for the frequency displayed */
-    NormalizedUnitTransformer intensityTransformer;           /**< Transformer for the intensity displayed */
-    std::shared_ptr<GpuTextureDrawingBackend> fftDrawBackend; /**< Juce component that draws FFTs on screen */
+    NormalizedUnitTransformer frequencyTransformer;       /**< Transformer for the frequency displayed */
+    NormalizedUnitTransformer intensityTransformer;       /**< Transformer for the intensity displayed */
+    std::shared_ptr<FreqOverTimeGraph> freqOverTimeGraph; /**< Juce component that draws FFTs on screen */
     TrackInfoStore &trackInfoStore;         /**< Store track names and color for FftDrawingBackend to access */
     int64_t lastMouseDragX, lastMouseDragY; /**< Last position of the mouse cursor at last drag iteration */
     int64_t lastFftDrawTimeMs;              /**< Last millisecond timestamp at when something was drawn */
