@@ -34,11 +34,11 @@
 
 #define MAX_TIME_SIGNATURE_GRID_VIEW_SCALE 250
 
-class GpuTextureDrawingBackend : public juce::Component, public juce::OpenGLRenderer
+class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
 {
   public:
-    GpuTextureDrawingBackend(TrackInfoStore &tis, NormalizedUnitTransformer &ft, NormalizedUnitTransformer &it);
-    ~GpuTextureDrawingBackend();
+    FreqOverTimeGraph(TrackInfoStore &tis, NormalizedUnitTransformer &ft, NormalizedUnitTransformer &it);
+    ~FreqOverTimeGraph();
 
     struct TrackSecondTile
     {
