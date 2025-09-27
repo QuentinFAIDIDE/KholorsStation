@@ -75,6 +75,14 @@ void DashboardView::paintOverChildren(juce::Graphics &g)
 {
 }
 
+void DashboardView::updateWidgetsViewPositions(int64_t newPosition)
+{
+    viewPosition = newPosition < 0 ? 0 : newPosition;
+    freqOverTimeGraph->updateViewPosition(viewPosition);
+    timeScale.setViewPosition(viewPosition);
+    trackList.setViewPosition(viewPosition);
+}
+
 void DashboardView::resized()
 {
     auto fftBounds = getLocalBounds();
@@ -126,37 +134,14 @@ void DashboardView::timerCallback()
         // if play cursor is outside the view, reset view position where play cursor is at 3/4
         if (lastPlayCursorPos < leftScreenSideSamplePos || lastPlayCursorPos > rightScreenSideSamplePos)
         {
-            viewPosition = lastPlayCursorPos - (3 * screenQuarter);
-            if (viewPosition < 0)
-            {
-                viewPosition = 0;
-            }
-            freqOverTimeGraph->updateViewPosition(viewPosition);
-            timeScale.setViewPosition(viewPosition);
-            trackList.setViewPosition(viewPosition);
-            // if we show the cursor, we should update its value shown on screen in the tips
-            if (lastCursorShowStatus)
-            {
-                emitMousePositionInfoTask(true, lastFftMousePosX, lastFftMousePosY);
-            }
+            updateWidgetsViewPositions(lastPlayCursorPos - (3 * screenQuarter));
         }
         // if play cursor is between 3/4 of view and right side, apply constant view moving speed
         else if (lastPlayCursorPos >= (rightScreenSideSamplePos - screenQuarter + 1) &&
                  lastPlayCursorPos < (rightScreenSideSamplePos - (screenQuarter >> 1)))
         {
-            viewPosition += (int64_t)((float(elapsedSinceLastCallMs) / 1000.0) * float(VISUAL_SAMPLE_RATE) + 0.5f);
-            if (viewPosition < 0)
-            {
-                viewPosition = 0;
-            }
-            freqOverTimeGraph->updateViewPosition(viewPosition);
-            timeScale.setViewPosition(viewPosition);
-            trackList.setViewPosition(viewPosition);
-            // if we show the cursor, we should update its value shown on screen in the tips
-            if (lastCursorShowStatus)
-            {
-                emitMousePositionInfoTask(true, lastFftMousePosX, lastFftMousePosY);
-            }
+            int64_t increment = (int64_t)((float(elapsedSinceLastCallMs) / 1000.0) * float(VISUAL_SAMPLE_RATE) + 0.5f);
+            updateWidgetsViewPositions(viewPosition + increment);
         }
     }
     // if some tracks have been cleared from some ranges on fftDrawing backend, replicate that
@@ -361,9 +346,7 @@ void DashboardView::mouseDrag(const juce::MouseEvent &e)
             {
                 viewPosition = 0;
             }
-            freqOverTimeGraph->updateViewPosition(viewPosition);
-            timeScale.setViewPosition(viewPosition);
-            trackList.setViewPosition(viewPosition);
+            updateWidgetsViewPositions(viewPosition);
 
             needRepaint = true;
         }
@@ -376,8 +359,7 @@ void DashboardView::mouseDrag(const juce::MouseEvent &e)
             {
                 viewPosition = 0;
             }
-            freqOverTimeGraph->updateViewPosition(viewPosition);
-            timeScale.setViewPosition(viewPosition);
+            updateWidgetsViewPositions(viewPosition);
 
             needRepaint = true;
         }
