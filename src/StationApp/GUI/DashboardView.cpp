@@ -83,6 +83,39 @@ void DashboardView::updateWidgetsViewPositions(int64_t newPosition)
     trackList.setViewPosition(viewPosition);
 }
 
+void DashboardView::updateAutoscroll(int64_t currentTime, int64_t elapsedSinceLastCallMs, int64_t lastFftDrawTimeMsCopy)
+{
+    if (!isViewMoving && (currentTime - lastFftDrawTimeMsCopy) < MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS)
+    {
+        int64_t lastPlayCursorPos = freqOverTimeGraph->getPlayCursorPosition();
+        std::lock_guard lock(viewMutex);
+        int64_t leftScreenSideSamplePos = viewPosition;
+        int64_t rightScreenSideSamplePos = viewPosition + (freqOverTimeGraph->getBounds().getWidth() * viewScale);
+        int64_t screenQuarter = (rightScreenSideSamplePos - leftScreenSideSamplePos) / 4;
+
+        if (lastPlayCursorPos < leftScreenSideSamplePos || lastPlayCursorPos > rightScreenSideSamplePos)
+        {
+            updateWidgetsViewPositions(lastPlayCursorPos - (3 * screenQuarter));
+        }
+        else if (lastPlayCursorPos >= (rightScreenSideSamplePos - screenQuarter + 1) &&
+                 lastPlayCursorPos < (rightScreenSideSamplePos - (screenQuarter >> 1)))
+        {
+            int64_t increment = (int64_t)((float(elapsedSinceLastCallMs) / 1000.0) * float(VISUAL_SAMPLE_RATE) + 0.5f);
+            updateWidgetsViewPositions(viewPosition + increment);
+        }
+    }
+}
+
+void DashboardView::propagateClearedFft()
+{
+    auto tracksClearedInMainView = freqOverTimeGraph->getClearedTrackRanges();
+    for (size_t i = 0; i < tracksClearedInMainView.size(); i++)
+    {
+        trackList.clearTrackFromRange(tracksClearedInMainView[i].trackIdentifier,
+                                      tracksClearedInMainView[i].startSample, tracksClearedInMainView[i].length);
+    }
+}
+
 void DashboardView::resized()
 {
     auto fftBounds = getLocalBounds();
@@ -108,50 +141,30 @@ void DashboardView::resized()
 
 void DashboardView::timerCallback()
 {
+    // get the time since the timer was last called
     int64_t currentTime = juce::Time().getCurrentTime().toMilliseconds();
     int64_t elapsedSinceLastCallMs = currentTime - lastTimerCallMs;
+
+    // get the time since the fft were last drawn
     int64_t lastFftDrawTimeMsCopy;
     {
         std::lock_guard lock(lastFftDrawTimeMutex);
         lastFftDrawTimeMsCopy = lastFftDrawTimeMs;
     }
 
-    // if last FFT was recent but last redraw of track names was not
+    // repaint track list if it was not repainted recently
     if ((currentTime - trackList.getLastRedrawMs()) > MAX_TIME_WITHOUT_TRACK_LIST_PAINT_MS)
     {
         trackList.repaint();
     }
 
-    // if user is not currently moving the view and that last fft was received recently enough
-    if (!isViewMoving && (currentTime - lastFftDrawTimeMsCopy) < MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS)
-    {
-        // first check that play cursor is in bounds
-        int64_t lastPlayCursorPos = freqOverTimeGraph->getPlayCursorPosition();
-        std::lock_guard lock(viewMutex);
-        int64_t leftScreenSideSamplePos = viewPosition;
-        int64_t rightScreenSideSamplePos = viewPosition + (freqOverTimeGraph->getBounds().getWidth() * viewScale);
-        int64_t screenQuarter = (rightScreenSideSamplePos - leftScreenSideSamplePos) / 4;
-        // if play cursor is outside the view, reset view position where play cursor is at 3/4
-        if (lastPlayCursorPos < leftScreenSideSamplePos || lastPlayCursorPos > rightScreenSideSamplePos)
-        {
-            updateWidgetsViewPositions(lastPlayCursorPos - (3 * screenQuarter));
-        }
-        // if play cursor is between 3/4 of view and right side, apply constant view moving speed
-        else if (lastPlayCursorPos >= (rightScreenSideSamplePos - screenQuarter + 1) &&
-                 lastPlayCursorPos < (rightScreenSideSamplePos - (screenQuarter >> 1)))
-        {
-            int64_t increment = (int64_t)((float(elapsedSinceLastCallMs) / 1000.0) * float(VISUAL_SAMPLE_RATE) + 0.5f);
-            updateWidgetsViewPositions(viewPosition + increment);
-        }
-    }
-    // if some tracks have been cleared from some ranges on fftDrawing backend, replicate that
-    // on other related components
-    auto tracksClearedInMainView = freqOverTimeGraph->getClearedTrackRanges();
-    for (size_t i = 0; i < tracksClearedInMainView.size(); i++)
-    {
-        trackList.clearTrackFromRange(tracksClearedInMainView[i].trackIdentifier,
-                                      tracksClearedInMainView[i].startSample, tracksClearedInMainView[i].length);
-    }
+    // move the view position based on the play cursor position
+    updateAutoscroll(currentTime, elapsedSinceLastCallMs, lastFftDrawTimeMsCopy);
+
+    // checks the list if FFTs that were cleared from the main graph, and propagate to
+    // other components that are storing them (so deletions are in sync)
+    propagateClearedFft();
+
     lastTimerCallMs = currentTime;
 
     freqOverTimeGraph->repaint();
