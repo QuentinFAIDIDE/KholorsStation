@@ -6,6 +6,8 @@
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/ClearTrackInfoRange.h"
 #include "StationApp/GUI/Graphs/FrequencyLinesDrawer.h"
+#include "StationApp/GUI/Graphs/GraphMouseCursor.h"
+#include "StationApp/GUI/Graphs/GraphPlayCursor.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "StationApp/OpenGL/BeatGridMesh.h"
 #include "StationApp/OpenGL/TexturedRectangle.h"
@@ -15,11 +17,7 @@
 #include <cstdint>
 #include <memory>
 
-#define MIN_SAMPLE_PLAY_CURSOR_BACKWARD_MOVEMENT 24000
 #define IMAGES_RING_BUFFER_SIZE 128
-
-#define PLAY_CURSOR_WIDTH 2
-
 // Dimensions of a one-second tile.
 // Warning! It is hardcoded as well in the openGL shaders
 // for now, but I should soon rely on textureSize instead
@@ -269,7 +267,7 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
      * @return true shaders have been sucessfully built
      * @return false shaders have failed to build
      */
-    bool buildShaders();
+    bool buildAllShaders();
 
     /**
      * @brief Build a specific shader program.
@@ -316,7 +314,7 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
      *
      * @param fftData Struct with the FFt and position data.
      */
-    void drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> fftData);
+    void drawFftToGpuTexture(std::shared_ptr<FftToDraw> fftData);
 
     /**
      * @brief Add this tile to the track drawing order.
@@ -340,12 +338,68 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
      */
     void ensureTrackTilesDrawOrderIsUpToDate();
 
+    /**
+     * @brief Clear all tiles if reset is needed. Called from OpenGL thread.
+     */
+    void clearAllTilesIfNeeded();
+
+    /**
+     * @brief Process and draw all queued FFTs. Called from OpenGL thread.
+     */
+    void drawQueuedFftsToTextures();
+
+    /**
+     * @brief Refresh GPU textures every 5 iterations. Called from OpenGL thread.
+     */
+    void eventuallyRefreshGPUTextures();
+
+    /**
+     * @brief Apply queued color updates to track tiles. Called from OpenGL thread.
+     */
+    void applyQueuedColorUpdates();
+
+    /**
+     * @brief Draw background beat grid. Called from OpenGL thread.
+     */
+    void drawGlBackgroundBeatgrid();
+
+    /**
+     * @brief Draw FFT textures for visible tracks. Called from OpenGL thread.
+     */
+    void drawGlFftTextures();
+
+    /**
+     * @brief Get an idle FftToDraw struct from pool or create new one.
+     */
+    std::shared_ptr<FftToDraw> getIdleFftToDrawStruct();
+
+    /**
+     * @brief Sync unit transformers if their nonces have changed.
+     */
+    void syncUnitTransformers();
+
+    /**
+     * @brief Get texture tile at track position, creating if needed.
+     */
+    size_t getTextureTileAtTrackPosition(uint64_t trackIdentifier, int64_t secondTileIndex);
+
+    /**
+     * @brief Generate pixel intensities line from FFT data.
+     */
+    float* getFftPixelIntensitiesLine(std::shared_ptr<FftToDraw> fftData, float sampleRateRatio);
+
+    /**
+     * @brief Enable blending and clear openGL view with background color. Called from OpenGL thread.
+     */
+    void clearGlView();
+
+    float computeAudioToVisualSampleRateRatio(uint32_t sampleRate);
+
     TrackInfoStore &trackInfoStore;
     NormalizedUnitTransformer &freqTransformer;
     NormalizedUnitTransformer &intensityTransformer;
 
-    int64_t playCursorPosition; /**< position of the play cursor to draw */
-    std::mutex playCursorMutex; /**< Mutex to protect access to play cursor */
+    GraphPlayCursor playCursor; /**< Manages play cursor position and rendering */
 
     int64_t tilesNonce;          /**< A nonce that is incremented when the tiles are updated */
     std::mutex imageAccessMutex; /**< Mutex to protect image access */
@@ -403,10 +457,10 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
 
     std::mutex clearedRangesMutex;
     std::queue<ClearTrackInfoRange> clearedRanges; /**< A list of ranges on which specific tracks were cleared. Here to
-                                                      prevent TrackList from showing info about deleted data. */
+                                                      act as a master deleter, not show volume or track names in
+                                                      trackList when cleared. */
 
-    int lastMouseX, lastMouseY;
-    bool mouseOnComponent;
+    GraphMouseCursor mouseCursor; /**< Manages mouse cursor crosshair rendering */
 
     std::optional<uint64_t> currentlySelectedTrack;
     std::mutex selectedTrackMutex;

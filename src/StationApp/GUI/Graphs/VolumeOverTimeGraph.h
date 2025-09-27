@@ -1,7 +1,7 @@
 #pragma once
 
 #include "StationApp/Audio/TrackInfoStore.h"
-#include "StationApp/GUI/ClearTrackInfoRange.h"
+#include "StationApp/OpenGL/BeatGridMesh.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "juce_opengl/juce_opengl.h"
 
@@ -65,13 +65,6 @@ class VolumeOverTimeGraph : public juce::Component, juce::OpenGLRenderer
     void openGLContextClosing() override;
 
     /**
-     * @brief Return a list of ranges where specific tracks have been
-     * cleared from.
-     * @return std::vector<ClearTrackInfoRange> vector of ranges to clear with trackIdentifiers.
-     */
-    std::vector<ClearTrackInfoRange> getClearedTrackRanges();
-
-    /**
      * @brief Set the mouse cursor position on component, as it is intercepted
      * by parent and is not received. We could let the mouse events through
      * but we're with this patterN;
@@ -91,4 +84,35 @@ class VolumeOverTimeGraph : public juce::Component, juce::OpenGLRenderer
 
   private:
     TrackInfoStore &trackInfoStore;
+
+    int64_t playCursorPosition; /**< position of the play cursor to draw */
+    std::mutex playCursorMutex; /**< Mutex to protect access to play cursor */
+    juce::Colour backgroundColor;
+
+    int timeSignature, lastAppliedTimeSignature;
+
+    std::unique_ptr<juce::OpenGLShaderProgram> backgroundGridShader; /**< Shader to draw grids on background */
+    juce::OpenGLContext openGLContext;
+
+    BeatGridMesh timeSignatureGrid, topBeatGrid; /**< OpenGL Mesh for background */
+
+    std::atomic<bool> ignoreNewData; /**< after the openGL thread closes, prevent access to openGL resources */
+    int64_t viewPosition, viewScale, viewHeight, viewWidth; /*< read by gl thread to update uniforms and view */
+    float bpm;                         /**< values read by openGL thread to update uniforms and view */
+    std::mutex glThreadUniformsMutex;  /**< to lock modifications of position, scale or bpm */
+    int64_t glThreadUniformsNonce;     /**< to know if we need to update position and  */
+    int64_t lastUsedGlThreadUnifNonce; /**< the last nonce value when the uniforms got updated*/
+
+    std::mutex openGlThreadColorsMutex; /**< Locking color updates queues and color map for the openGL thread */
+    std::queue<std::pair<uint64_t, juce::Colour>>
+        colorUpdatesToApply; /**< track colors to be applied by openGL thread, need the lock */
+    std::map<uint64_t, juce::Colour> knownTrackColors; /**< track colors known to the openGL thread */
+
+    bool needToResetTiles;      /**< true when the openGL thread is expected to clear all tiles */
+    std::mutex tilesResetMutex; /**< mutex to protect acces to clearAllTiles */
+
+    int lastMouseX, lastMouseY;
+    bool mouseOnComponent;
+
+    int64_t renderOpenGlIter; /**< a simple counter which is iterated at each render to track even/odd rendering */
 };
