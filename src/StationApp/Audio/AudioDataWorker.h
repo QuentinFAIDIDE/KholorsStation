@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AudioTransport/AudioSegment.h"
 #include "AudioTransport/SyncServer.h"
 #include "StationApp/Audio/FftRunner.h"
 #include "TaskManagement/TaskListener.h"
@@ -32,6 +33,10 @@ class AudioDataWorker : public TaskListener
     bool taskHandler(std::shared_ptr<Task> task) override;
 
   private:
+    void processAudioSegment(std::shared_ptr<AudioTransport::AudioSegment> audioSegment,
+                             std::shared_ptr<juce::AudioSampleBuffer> audioBuffer);
+    void processTrackInfo(std::shared_ptr<AudioTransport::TrackInfo> trackInfo);
+    void processDawInfo(std::shared_ptr<AudioTransport::DawInfo> dawInfo);
     bool shouldStop;            /**< This will switch to true if we are waiting to stop the task processing */
     std::mutex shouldStopMutex; /**< Mutex to protect concurrent access of shouldStop variable */
     std::vector<std::thread> dataProcessingThreads; /**< threads that read data from server and emit tasks from it */
