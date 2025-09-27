@@ -75,7 +75,7 @@ void DashboardView::paintOverChildren(juce::Graphics &g)
 {
 }
 
-void DashboardView::updateWidgetsViewPositions(int64_t newPosition)
+void DashboardView::updateGraphsViewPositions(int64_t newPosition)
 {
     viewPosition = newPosition < 0 ? 0 : newPosition;
     freqOverTimeGraph->updateViewPosition(viewPosition);
@@ -83,7 +83,7 @@ void DashboardView::updateWidgetsViewPositions(int64_t newPosition)
     trackList.setViewPosition(viewPosition);
 }
 
-void DashboardView::updateWidgetsViewScale(int64_t newScale)
+void DashboardView::updateGraphsViewScale(int64_t newScale)
 {
     viewScale = newScale;
     freqOverTimeGraph->updateViewScale(viewScale);
@@ -96,7 +96,7 @@ bool DashboardView::handleZoom(int dragY, int mouseX)
     int64_t oldViewScale = viewScale;
     viewScale = juce::jlimit(MIN_SCALE_SAMPLE_PER_PIXEL, MAX_SCALE_SAMPLE_PER_PIXEL,
                              int(float(viewScale) * (1.0f + (float(dragY) * PIXEL_SCALE_SPEED))));
-    updateWidgetsViewScale(viewScale);
+    updateGraphsViewScale(viewScale);
 
     int64_t oldCursorSamplePos = viewPosition + (mouseX * oldViewScale);
     int64_t newCursorSamplePos = viewPosition + (mouseX * viewScale);
@@ -107,7 +107,7 @@ bool DashboardView::handleZoom(int dragY, int mouseX)
     {
         viewPosition = 0;
     }
-    updateWidgetsViewPositions(viewPosition);
+    updateGraphsViewPositions(viewPosition);
     return true;
 }
 
@@ -119,7 +119,7 @@ bool DashboardView::handlePan(int dragX)
     {
         viewPosition = 0;
     }
-    updateWidgetsViewPositions(viewPosition);
+    updateGraphsViewPositions(viewPosition);
     return true;
 }
 
@@ -160,13 +160,13 @@ void DashboardView::updateAutoscroll(int64_t currentTime, int64_t elapsedSinceLa
 
         if (lastPlayCursorPos < leftScreenSideSamplePos || lastPlayCursorPos > rightScreenSideSamplePos)
         {
-            updateWidgetsViewPositions(lastPlayCursorPos - (3 * screenQuarter));
+            updateGraphsViewPositions(lastPlayCursorPos - (3 * screenQuarter));
         }
         else if (lastPlayCursorPos >= (rightScreenSideSamplePos - screenQuarter + 1) &&
                  lastPlayCursorPos < (rightScreenSideSamplePos - (screenQuarter >> 1)))
         {
             int64_t increment = (int64_t)((float(elapsedSinceLastCallMs) / 1000.0) * float(VISUAL_SAMPLE_RATE) + 0.5f);
-            updateWidgetsViewPositions(viewPosition + increment);
+            updateGraphsViewPositions(viewPosition + increment);
         }
     }
 }

@@ -78,9 +78,9 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
      */
     void emitMousePositionInfoTask(bool mouseOverFreqTimeGraph, int x, int y);
 
-    void updateWidgetsViewPositions(int64_t newPosition);
+    void updateGraphsViewPositions(int64_t newPosition);
 
-    void updateWidgetsViewScale(int64_t newScale);
+    void updateGraphsViewScale(int64_t newScale);
 
     bool handleZoom(int dragY, int mouseX);
     bool handlePan(int dragX);
