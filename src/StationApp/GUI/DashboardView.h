@@ -1,12 +1,17 @@
 #pragma once
 
+#include "StationApp/Audio/BpmUpdateTask.h"
 #include "StationApp/Audio/ProcessingTimer.h"
+#include "StationApp/Audio/TimeSignatureUpdateTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/Audio/VolumeSensitivityTask.h"
+#include "StationApp/GUI/ClearTask.h"
 #include "StationApp/GUI/Graphs/FreqOverTimeGraph.h"
 #include "StationApp/GUI/Graphs/FrequencyScale.h"
 #include "StationApp/GUI/Graphs/TimeScale.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "StationApp/GUI/TrackList.h"
+#include "StationApp/GUI/TrackSelectionTask.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_gui_basics/juce_gui_basics.h"
@@ -63,13 +68,36 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
      */
     void broadcastMouseEventInfo(const juce::MouseEvent &me);
 
-    void emitMousePositionInfoTask(bool shouldShow, int x, int y);
+    /**
+     * @brief called to broadcast the mouse position relative to the fft view to the tip bar
+     * through a position info task.
+     *
+     * @param mouseOverFreqTimeGraph if the mouse cross is inside the FFT and the position tip should be shown.
+     * @param x the x position relative to the dashbaord view
+     * @param y the y position relative to the dashbaord view
+     */
+    void emitMousePositionInfoTask(bool mouseOverFreqTimeGraph, int x, int y);
 
     void updateWidgetsViewPositions(int64_t newPosition);
+
+    void updateWidgetsViewScale(int64_t newScale);
+
+    bool handleZoom(int dragY, int mouseX);
+    bool handlePan(int dragX);
+
+    void updateViewMouseDrag(const juce::MouseEvent &e);
 
     void updateAutoscroll(int64_t currentTime, int64_t elapsedSinceLastCallMs, int64_t lastFftDrawTimeMsCopy);
 
     void propagateClearedFft();
+
+    bool handleNewFftDataTask(std::shared_ptr<NewFftDataTask> task);
+    bool handleTrackColorUpdateTask(std::shared_ptr<TrackColorUpdateTask> task);
+    bool handleBpmUpdateTask(std::shared_ptr<BpmUpdateTask> task);
+    bool handleTimeSignatureUpdateTask(std::shared_ptr<TimeSignatureUpdateTask> task);
+    bool handleTrackSelectionTask(std::shared_ptr<TrackSelectionTask> task);
+    bool handleClearTask(std::shared_ptr<ClearTask> task);
+    bool handleVolumeSensitivityTask(std::shared_ptr<VolumeSensitivityTask> task);
 
     TaskingManager &taskingManager;
     ProcessingTimer processingTimer;
