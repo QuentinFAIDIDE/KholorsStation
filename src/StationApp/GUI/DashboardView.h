@@ -67,6 +67,10 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
 
     void updateWidgetsViewPositions(int64_t newPosition);
 
+    void updateAutoscroll(int64_t currentTime, int64_t elapsedSinceLastCallMs, int64_t lastFftDrawTimeMsCopy);
+
+    void propagateClearedFft();
+
     TaskingManager &taskingManager;
     ProcessingTimer processingTimer;
 
