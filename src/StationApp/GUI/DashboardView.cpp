@@ -11,6 +11,7 @@
 #include "StationApp/GUI/ClearTask.h"
 #include "StationApp/GUI/Graphs/FreqOverTimeGraph.h"
 #include "StationApp/GUI/Graphs/FrequencyScale.h"
+#include "StationApp/GUI/Graphs/VolumeOverTimeGraph.h"
 #include "StationApp/GUI/MouseCursorInfoTask.h"
 #include "StationApp/GUI/TrackList.h"
 #include "StationApp/GUI/TrackSelectionTask.h"
@@ -18,6 +19,7 @@
 #include "juce_core/juce_core.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <cstddef>
+#include <cstdint>
 #include <ctime>
 #include <limits>
 #include <memory>
@@ -37,6 +39,9 @@ DashboardView::DashboardView(TrackInfoStore &tis, TaskingManager &tm)
 
     freqOverTimeGraph = std::make_shared<FreqOverTimeGraph>(trackInfoStore, frequencyTransformer, intensityTransformer);
     addAndMakeVisible(freqOverTimeGraph.get());
+
+    volumeOverTimeGraph = std::make_shared<VolumeOverTimeGraph>(trackInfoStore);
+    addAndMakeVisible(volumeOverTimeGraph.get());
 
     auto freqProjection = std::make_shared<Log10Projection>(0.005);
     frequencyTransformer.setProjection(freqProjection);
@@ -69,6 +74,7 @@ void DashboardView::paint(juce::Graphics &g)
     g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
     g.fillRect(unpaintedArea1);
     g.fillRect(unpaintedArea2);
+    g.fillRect(unpaintedArea3);
 }
 
 void DashboardView::paintOverChildren(juce::Graphics &g)
@@ -79,6 +85,7 @@ void DashboardView::updateGraphsViewPositions(int64_t newPosition)
 {
     viewPosition = newPosition < 0 ? 0 : newPosition;
     freqOverTimeGraph->updateViewPosition(viewPosition);
+    volumeOverTimeGraph->updateViewPosition(viewPosition);
     timeScale.setViewPosition(viewPosition);
     trackList.setViewPosition(viewPosition);
 }
@@ -87,6 +94,7 @@ void DashboardView::updateGraphsViewScale(int64_t newScale)
 {
     viewScale = newScale;
     freqOverTimeGraph->updateViewScale(viewScale);
+    volumeOverTimeGraph->updateViewScale(viewScale);
     timeScale.setViewScale(viewScale);
     trackList.setViewScale(viewScale);
 }
@@ -144,6 +152,7 @@ void DashboardView::updateViewMouseDrag(const juce::MouseEvent &e)
     if (needRepaint)
     {
         freqOverTimeGraph->repaint();
+        volumeOverTimeGraph->repaint();
         timeScale.repaint();
     }
 }
@@ -178,6 +187,9 @@ void DashboardView::propagateClearedFft()
     {
         trackList.clearTrackFromRange(tracksClearedInMainView[i].trackIdentifier,
                                       tracksClearedInMainView[i].startSample, tracksClearedInMainView[i].length);
+        volumeOverTimeGraph->clearTrackFromRange(tracksClearedInMainView[i].trackIdentifier,
+                                                 tracksClearedInMainView[i].startSample,
+                                                 tracksClearedInMainView[i].length);
     }
 }
 
@@ -199,10 +211,12 @@ bool DashboardView::handleNewFftDataTask(std::shared_ptr<NewFftDataTask> task)
             {
                 freqOverTimeGraph->clearDisplayedFFTs();
                 trackList.clear();
+                volumeOverTimeGraph->clear();
             }
             freqOverTimeGraph->displayNewFftData(task, processingTimeWaitgroup);
-            freqOverTimeGraph->submitNewPlayCursorPosition(
-                (int64_t)task->segmentStartSample + (int64_t)task->segmentSampleLength, task->sampleRate);
+            int64_t playHeadPosition = (int64_t)task->segmentStartSample + (int64_t)task->segmentSampleLength;
+            freqOverTimeGraph->submitNewPlayCursorPosition(playHeadPosition, task->sampleRate);
+            volumeOverTimeGraph->submitNewPlayCursorPosition(playHeadPosition, task->sampleRate);
             trackList.recordSfft(task);
             {
                 std::lock_guard lock(lastFftDrawTimeMutex);
@@ -232,6 +246,7 @@ bool DashboardView::handleTrackColorUpdateTask(std::shared_ptr<TrackColorUpdateT
 {
     juce::Colour col(task->redColorLevel, task->greenColorLevel, task->blueColorLevel);
     freqOverTimeGraph->setTrackColor(task->identifier, col);
+    volumeOverTimeGraph->setTrackColor(task->identifier, col);
     // NOTE: the track list directly takes colours from the trackInfoStore,
     // so we do not propagate to it.
     task->setCompleted(true);
@@ -243,6 +258,7 @@ bool DashboardView::handleBpmUpdateTask(std::shared_ptr<BpmUpdateTask> task)
     if (std::abs(lastReceivedBpm - task->bpm) >= std::numeric_limits<float>::epsilon())
     {
         freqOverTimeGraph->updateBpm(task->bpm, task->getTaskingManager());
+        volumeOverTimeGraph->updateBpm(task->bpm, task->getTaskingManager());
         timeScale.setBpm(task->bpm);
         lastReceivedBpm = task->bpm;
     }
@@ -253,6 +269,7 @@ bool DashboardView::handleBpmUpdateTask(std::shared_ptr<BpmUpdateTask> task)
 bool DashboardView::handleTimeSignatureUpdateTask(std::shared_ptr<TimeSignatureUpdateTask> task)
 {
     freqOverTimeGraph->timeSignatureNumeratorUpdate(task->numerator);
+    volumeOverTimeGraph->timeSignatureNumeratorUpdate(task->numerator);
     task->setCompleted(true);
     return false;
 }
@@ -260,6 +277,7 @@ bool DashboardView::handleTimeSignatureUpdateTask(std::shared_ptr<TimeSignatureU
 bool DashboardView::handleTrackSelectionTask(std::shared_ptr<TrackSelectionTask> task)
 {
     freqOverTimeGraph->setSelectedTrack(task->selectedTrack, task->getTaskingManager());
+    volumeOverTimeGraph->setSelectedTrack(task->selectedTrack, task->getTaskingManager());
     task->setCompleted(true);
     return false;
 }
@@ -267,6 +285,7 @@ bool DashboardView::handleTrackSelectionTask(std::shared_ptr<TrackSelectionTask>
 bool DashboardView::handleClearTask(std::shared_ptr<ClearTask> task)
 {
     freqOverTimeGraph->clearDisplayedFFTs();
+    volumeOverTimeGraph->clear();
     trackList.clear();
     task->setCompleted(true);
     return false;
@@ -286,7 +305,10 @@ void DashboardView::resized()
     auto trackListBounds = fftBounds.removeFromRight(TRACK_LIST_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
     auto frequencyGridBounds = fftBounds.removeFromLeft(FREQUENCY_GRID_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
     auto timeGridBounds = fftBounds.removeFromBottom(TIME_GRID_HEIGHT);
+    auto volumeBounds = fftBounds.removeFromBottom(VOLUME_GRAPH_HEIGHT);
+    unpaintedArea3 = fftBounds.removeFromBottom(TIME_GRAPHS_PADDING);
     freqOverTimeGraph->setBounds(fftBounds);
+    volumeOverTimeGraph->setBounds(volumeBounds);
     frequencyScale.setBounds(frequencyGridBounds);
     timeScale.setBounds(timeGridBounds);
     trackList.setBounds(trackListBounds);
@@ -295,6 +317,7 @@ void DashboardView::resized()
 
     std::lock_guard lock(viewMutex);
     freqOverTimeGraph->updateViewPosition(viewPosition);
+    volumeOverTimeGraph->updateViewPosition(viewPosition);
 
     unpaintedArea1 = frequencyGridBounds.withY(frequencyGridBounds.getY() + frequencyGridBounds.getHeight());
     unpaintedArea1.setHeight(getLocalBounds().getHeight() - frequencyGridBounds.getHeight());
@@ -332,6 +355,7 @@ void DashboardView::timerCallback()
     lastTimerCallMs = currentTime;
 
     freqOverTimeGraph->repaint();
+    volumeOverTimeGraph->repaint();
     timeScale.repaint();
 }
 

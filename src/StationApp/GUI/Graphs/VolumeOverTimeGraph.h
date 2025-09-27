@@ -1,6 +1,8 @@
 #pragma once
 
 #include "StationApp/Audio/TrackInfoStore.h"
+#include "StationApp/GUI/Graphs/GraphMouseCursor.h"
+#include "StationApp/GUI/Graphs/GraphPlayCursor.h"
 #include "StationApp/OpenGL/BeatGridMesh.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "juce_opengl/juce_opengl.h"
@@ -82,11 +84,29 @@ class VolumeOverTimeGraph : public juce::Component, juce::OpenGLRenderer
      */
     void setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm);
 
+    /**
+     * @brief Clear track data from specified range.
+     */
+    void clearTrackFromRange(uint64_t trackIdentifier, int64_t startSample, int64_t length);
+
+    /**
+     * @brief Clear all data.
+     */
+    void clear();
+
+    /**
+     * @brief Set the color of a track.
+     */
+    void setTrackColor(uint64_t trackIdentifier, juce::Colour col);
+
+    void submitNewPlayCursorPosition(int64_t samplePosition, uint32_t sampleRate);
+
   private:
     TrackInfoStore &trackInfoStore;
 
-    int64_t playCursorPosition; /**< position of the play cursor to draw */
-    std::mutex playCursorMutex; /**< Mutex to protect access to play cursor */
+    GraphPlayCursor playCursor;   /**< Manages play cursor position and rendering */
+    GraphMouseCursor mouseCursor; /**< Manages mouse cursor crosshair rendering */
+
     juce::Colour backgroundColor;
 
     int timeSignature, lastAppliedTimeSignature;
@@ -115,4 +135,30 @@ class VolumeOverTimeGraph : public juce::Component, juce::OpenGLRenderer
     bool mouseOnComponent;
 
     int64_t renderOpenGlIter; /**< a simple counter which is iterated at each render to track even/odd rendering */
+
+    /**
+     * @brief Build all OpenGL shader programs.
+     */
+    bool buildAllShaders();
+
+    /**
+     * @brief Build a specific shader program.
+     */
+    bool buildShader(std::unique_ptr<juce::OpenGLShaderProgram> &sh, std::string vertexShader,
+                     std::string fragmentShader);
+
+    /**
+     * @brief Upload shader uniforms to GPU.
+     */
+    void uploadShadersUniforms();
+
+    /**
+     * @brief Clear OpenGL view and set up blending.
+     */
+    void clearGlView();
+
+    /**
+     * @brief Draw background beat grid.
+     */
+    void drawGlBackgroundBeatgrid();
 };
