@@ -1,0 +1,3 @@
+#pragma once
+
+#define MAX_TIME_SIGNATURE_GRID_VIEW_SCALE 250

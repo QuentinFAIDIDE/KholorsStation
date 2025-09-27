@@ -27,8 +27,6 @@
 
 #define FFT_POSITION_FORWARD_SAMPLE_SHIFT 1920
 
-#define MAX_TIME_SIGNATURE_GRID_VIEW_SCALE 250
-
 class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
 {
   public:
@@ -386,7 +384,7 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
     /**
      * @brief Generate pixel intensities line from FFT data.
      */
-    float* getFftPixelIntensitiesLine(std::shared_ptr<FftToDraw> fftData, float sampleRateRatio);
+    float *getFftPixelIntensitiesLine(std::shared_ptr<FftToDraw> fftData, float sampleRateRatio);
 
     /**
      * @brief Enable blending and clear openGL view with background color. Called from OpenGL thread.
@@ -399,7 +397,8 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
     NormalizedUnitTransformer &freqTransformer;
     NormalizedUnitTransformer &intensityTransformer;
 
-    GraphPlayCursor playCursor; /**< Manages play cursor position and rendering */
+    GraphPlayCursor playCursor;   /**< Manages play cursor position and rendering */
+    GraphMouseCursor mouseCursor; /**< Manages mouse cursor crosshair rendering */
 
     int64_t tilesNonce;          /**< A nonce that is incremented when the tiles are updated */
     std::mutex imageAccessMutex; /**< Mutex to protect image access */
@@ -459,8 +458,6 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
     std::queue<ClearTrackInfoRange> clearedRanges; /**< A list of ranges on which specific tracks were cleared. Here to
                                                       act as a master deleter, not show volume or track names in
                                                       trackList when cleared. */
-
-    GraphMouseCursor mouseCursor; /**< Manages mouse cursor crosshair rendering */
 
     std::optional<uint64_t> currentlySelectedTrack;
     std::mutex selectedTrackMutex;

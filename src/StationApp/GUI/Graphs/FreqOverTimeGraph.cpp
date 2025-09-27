@@ -2,6 +2,7 @@
 #include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/ProcessingTimerWaitgroup.h"
 #include "StationApp/GUI/AudioConstants.h"
+#include "StationApp/GUI/Graphs/Constants.h"
 #include "StationApp/GUI/Graphs/GraphBorders.h"
 #include "StationApp/OpenGL/BeatGridMesh.h"
 #include "StationApp/OpenGL/GLInfoLogger.h"
@@ -165,9 +166,9 @@ bool FreqOverTimeGraph::buildAllShaders()
         std::cerr << "Failed to build textured positioned shaders" << std::endl;
         return false;
     }
-    bool builtColoredShader =
+    bool builtBackgroundShader =
         buildShader(backgroundGridShader, gridBackgroundVertexShader, gridBackgroundFragmentShader);
-    if (!builtColoredShader)
+    if (!builtBackgroundShader)
     {
         std::cerr << "Failed to build coloured positioned shaders" << std::endl;
         return false;

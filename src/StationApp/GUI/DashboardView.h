@@ -9,6 +9,7 @@
 #include "StationApp/GUI/Graphs/FreqOverTimeGraph.h"
 #include "StationApp/GUI/Graphs/FrequencyScale.h"
 #include "StationApp/GUI/Graphs/TimeScale.h"
+#include "StationApp/GUI/Graphs/VolumeOverTimeGraph.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "StationApp/GUI/TrackList.h"
 #include "StationApp/GUI/TrackSelectionTask.h"
@@ -25,7 +26,9 @@
 #define VIEW_MOVE_TIME_INTERVAL_MS 15
 #define FREQUENCY_GRID_WIDTH 110
 #define TIME_GRID_HEIGHT 75
+#define VOLUME_GRAPH_HEIGHT 230
 #define TRACK_LIST_WIDTH 220
+#define TIME_GRAPHS_PADDING 30
 
 /**
  * @brief Describe a class which displays a timeline, and
@@ -102,9 +105,10 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
     TaskingManager &taskingManager;
     ProcessingTimer processingTimer;
 
-    NormalizedUnitTransformer frequencyTransformer;       /**< Transformer for the frequency displayed */
-    NormalizedUnitTransformer intensityTransformer;       /**< Transformer for the intensity displayed */
-    std::shared_ptr<FreqOverTimeGraph> freqOverTimeGraph; /**< Juce component that draws FFTs on screen */
+    NormalizedUnitTransformer frequencyTransformer;           /**< Transformer for the frequency displayed */
+    NormalizedUnitTransformer intensityTransformer;           /**< Transformer for the intensity displayed */
+    std::shared_ptr<FreqOverTimeGraph> freqOverTimeGraph;     /**< Juce component that draws FFTs on screen */
+    std::shared_ptr<VolumeOverTimeGraph> volumeOverTimeGraph; /**< Juce component that draws volumes on screen */
     TrackInfoStore &trackInfoStore;         /**< Store track names and color for FftDrawingBackend to access */
     int64_t lastMouseDragX, lastMouseDragY; /**< Last position of the mouse cursor at last drag iteration */
     int64_t lastFftDrawTimeMs;              /**< Last millisecond timestamp at when something was drawn */
@@ -124,7 +128,8 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
 
     TrackList trackList;
 
-    juce::Rectangle<int> unpaintedArea1, unpaintedArea2; /**< Area left unpainted that FreqView needs to paint */
+    juce::Rectangle<int> unpaintedArea1, unpaintedArea2,
+        unpaintedArea3; /**< Area left unpainted that FreqView needs to paint */
 
     int lastFftMousePosX;
     int lastFftMousePosY;
