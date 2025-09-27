@@ -65,6 +65,8 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
 
     void emitMousePositionInfoTask(bool shouldShow, int x, int y);
 
+    void updateWidgetsViewPositions(int64_t newPosition);
+
     TaskingManager &taskingManager;
     ProcessingTimer processingTimer;
 
