@@ -6,6 +6,7 @@
 #include "StationApp/Audio/BpmUpdateTask.h"
 #include "StationApp/Audio/FftResultVectorReuseTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
+#include "StationApp/Audio/NewTrackVolumeDataTask.h"
 #include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/Audio/TimeSignatureUpdateTask.h"
 #include "StationApp/Audio/TrackInfoUpdateTask.h"
@@ -41,10 +42,20 @@ void AudioDataWorker::processAudioSegment(std::shared_ptr<AudioTransport::AudioS
         return;
     }
 
+    // NOTE: the audioSegment only contains one channel of data, but it contains
+    // the number of channels of the original tracks, which helps figures out if
+    // is mono and should be drawn on both channels on the UI.
+
     for (size_t i = 0; i < audioSegment->noAudioSamples; i++)
     {
         audioBuffer->setSample(0, (int)i, audioSegment->audioSamples[i]);
     }
+
+    float volume = audioBuffer->getRMSLevel(0, 0, audioSegment->noAudioSamples);
+    auto volumeUpdateTask = std::make_shared<NewTrackVolumeDataTask>(
+        audioSegment->trackIdentifier, audioSegment->noChannels, audioSegment->channel,
+        audioSegment->segmentStartSample, audioSegment->noAudioSamples, volume);
+    taskingManager.broadcastTask(volumeUpdateTask);
 
     int numFFTs = fftProcessor.getNumFftFromNumSamples(audioSegment->noAudioSamples);
     auto shortTimeFFTs = fftProcessor.performFft(audioBuffer);
