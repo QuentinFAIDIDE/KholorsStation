@@ -5,11 +5,11 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "juce_opengl/juce_opengl.h"
 
-class StereoOverTimeGraph : public juce::Component, juce::OpenGLRenderer
+class VolumeOverTimeGraph : public juce::Component, juce::OpenGLRenderer
 {
   public:
-    StereoOverTimeGraph(TrackInfoStore &tis);
-    ~StereoOverTimeGraph();
+    VolumeOverTimeGraph(TrackInfoStore &tis);
+    ~VolumeOverTimeGraph();
 
     void paint(juce::Graphics &g) override;
     void paintOverChildren(juce::Graphics &g) override;
