@@ -83,6 +83,71 @@ void DashboardView::updateWidgetsViewPositions(int64_t newPosition)
     trackList.setViewPosition(viewPosition);
 }
 
+void DashboardView::updateWidgetsViewScale(int64_t newScale)
+{
+    viewScale = newScale;
+    freqOverTimeGraph->updateViewScale(viewScale);
+    timeScale.setViewScale(viewScale);
+    trackList.setViewScale(viewScale);
+}
+
+bool DashboardView::handleZoom(int dragY, int mouseX)
+{
+    int64_t oldViewScale = viewScale;
+    viewScale = juce::jlimit(MIN_SCALE_SAMPLE_PER_PIXEL, MAX_SCALE_SAMPLE_PER_PIXEL,
+                             int(float(viewScale) * (1.0f + (float(dragY) * PIXEL_SCALE_SPEED))));
+    updateWidgetsViewScale(viewScale);
+
+    int64_t oldCursorSamplePos = viewPosition + (mouseX * oldViewScale);
+    int64_t newCursorSamplePos = viewPosition + (mouseX * viewScale);
+    int sampleShiftToAlignZoomToCursor = oldCursorSamplePos - newCursorSamplePos;
+
+    viewPosition += sampleShiftToAlignZoomToCursor;
+    if (viewPosition < 0)
+    {
+        viewPosition = 0;
+    }
+    updateWidgetsViewPositions(viewPosition);
+    return true;
+}
+
+bool DashboardView::handlePan(int dragX)
+{
+    int64_t samplesDiff = dragX * viewScale;
+    viewPosition -= samplesDiff;
+    if (viewPosition < 0)
+    {
+        viewPosition = 0;
+    }
+    updateWidgetsViewPositions(viewPosition);
+    return true;
+}
+
+void DashboardView::updateViewMouseDrag(const juce::MouseEvent &e)
+{
+    std::lock_guard lock(viewMutex);
+
+    int dragX = e.x - lastMouseDragX;
+    int dragY = e.y - lastMouseDragY;
+
+    lastMouseDragX = e.x;
+    lastMouseDragY = e.y;
+
+    bool needRepaint = false;
+
+    if (dragY != 0)
+        needRepaint = handleZoom(dragY, e.x);
+
+    if (dragX != 0)
+        needRepaint = handlePan(dragX) || needRepaint;
+
+    if (needRepaint)
+    {
+        freqOverTimeGraph->repaint();
+        timeScale.repaint();
+    }
+}
+
 void DashboardView::updateAutoscroll(int64_t currentTime, int64_t elapsedSinceLastCallMs, int64_t lastFftDrawTimeMsCopy)
 {
     if (!isViewMoving && (currentTime - lastFftDrawTimeMsCopy) < MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS)
@@ -114,6 +179,105 @@ void DashboardView::propagateClearedFft()
         trackList.clearTrackFromRange(tracksClearedInMainView[i].trackIdentifier,
                                       tracksClearedInMainView[i].startSample, tracksClearedInMainView[i].length);
     }
+}
+
+bool DashboardView::handleNewFftDataTask(std::shared_ptr<NewFftDataTask> task)
+{
+    if (!task->skip)
+    {
+        auto processingTimeWaitgroup = processingTimer.getNewProcessingTimerWaitgroup(task->sentTimeUnixMs);
+        if (processingTimeWaitgroup != nullptr)
+        {
+            processingTimeWaitgroup->add();
+            int64_t currentTime = juce::Time().getCurrentTime().toMilliseconds();
+            int64_t lastFftDrawTimeMsCopy = 0;
+            {
+                std::lock_guard lock(lastFftDrawTimeMutex);
+                lastFftDrawTimeMsCopy = lastFftDrawTimeMs;
+            }
+            if ((currentTime - lastFftDrawTimeMsCopy) > MAX_IDLE_MS_TIME_BEFORE_CLEAR)
+            {
+                freqOverTimeGraph->clearDisplayedFFTs();
+                trackList.clear();
+            }
+            freqOverTimeGraph->displayNewFftData(task, processingTimeWaitgroup);
+            freqOverTimeGraph->submitNewPlayCursorPosition(
+                (int64_t)task->segmentStartSample + (int64_t)task->segmentSampleLength, task->sampleRate);
+            trackList.recordSfft(task);
+            {
+                std::lock_guard lock(lastFftDrawTimeMutex);
+                lastFftDrawTimeMs = currentTime;
+            }
+            processingTimeWaitgroup->recordCompletion();
+        }
+        else
+        {
+            spdlog::warn("A FFT drawing was skipped because too much FFTs are pending drawing.");
+        }
+    }
+    else
+    {
+        processingTimer.recordCompletion(-1, juce::Time::currentTimeMillis() - task->sentTimeUnixMs);
+    }
+
+    // this is replacing the array with the fft inside the memory pool to avoid reallocating at every FFT
+    auto reuseResultArrayTask = std::make_shared<FftResultVectorReuseTask>(task->fftData);
+    taskingManager.broadcastNestedTaskNow(reuseResultArrayTask);
+
+    task->setCompleted(true);
+    return false;
+}
+
+bool DashboardView::handleTrackColorUpdateTask(std::shared_ptr<TrackColorUpdateTask> task)
+{
+    juce::Colour col(task->redColorLevel, task->greenColorLevel, task->blueColorLevel);
+    freqOverTimeGraph->setTrackColor(task->identifier, col);
+    // NOTE: the track list directly takes colours from the trackInfoStore,
+    // so we do not propagate to it.
+    task->setCompleted(true);
+    return true;
+}
+
+bool DashboardView::handleBpmUpdateTask(std::shared_ptr<BpmUpdateTask> task)
+{
+    if (std::abs(lastReceivedBpm - task->bpm) >= std::numeric_limits<float>::epsilon())
+    {
+        freqOverTimeGraph->updateBpm(task->bpm, task->getTaskingManager());
+        timeScale.setBpm(task->bpm);
+        lastReceivedBpm = task->bpm;
+    }
+    task->setCompleted(true);
+    return false;
+}
+
+bool DashboardView::handleTimeSignatureUpdateTask(std::shared_ptr<TimeSignatureUpdateTask> task)
+{
+    freqOverTimeGraph->timeSignatureNumeratorUpdate(task->numerator);
+    task->setCompleted(true);
+    return false;
+}
+
+bool DashboardView::handleTrackSelectionTask(std::shared_ptr<TrackSelectionTask> task)
+{
+    freqOverTimeGraph->setSelectedTrack(task->selectedTrack, task->getTaskingManager());
+    task->setCompleted(true);
+    return false;
+}
+
+bool DashboardView::handleClearTask(std::shared_ptr<ClearTask> task)
+{
+    freqOverTimeGraph->clearDisplayedFFTs();
+    trackList.clear();
+    task->setCompleted(true);
+    return false;
+}
+
+bool DashboardView::handleVolumeSensitivityTask(std::shared_ptr<VolumeSensitivityTask> task)
+{
+    auto intensityProjection = std::make_shared<SigmoidProjection>(task->sensitivity);
+    intensityTransformer.setProjection(intensityProjection);
+    task->setCompleted(true);
+    return false;
 }
 
 void DashboardView::resized()
@@ -173,132 +337,33 @@ void DashboardView::timerCallback()
 
 bool DashboardView::taskHandler(std::shared_ptr<Task> task)
 {
-    auto newFftDataTask = std::dynamic_pointer_cast<NewFftDataTask>(task);
-    if (newFftDataTask != nullptr && !newFftDataTask->isCompleted() && !newFftDataTask->hasFailed())
-    {
+    if (auto newFftDataTask = std::dynamic_pointer_cast<NewFftDataTask>(task))
+        if (!newFftDataTask->isCompleted() && !newFftDataTask->hasFailed())
+            return handleNewFftDataTask(newFftDataTask);
 
-        // call on the drawing backend to add the FFT data to the displayed textures
-        if (!newFftDataTask->skip)
-        {
-            // create a segment processing time waitgroup and pass it to fft drawing backend
-            auto processingTimeWaitgroup =
-                processingTimer.getNewProcessingTimerWaitgroup(newFftDataTask->sentTimeUnixMs);
+    if (auto colorUpdateTask = std::dynamic_pointer_cast<TrackColorUpdateTask>(task))
+        return handleTrackColorUpdateTask(colorUpdateTask);
 
-            // Only proceed if we have been able to get a preallocated processing timer.
-            // If not that means we are on overload.
-            if (processingTimeWaitgroup != nullptr)
-            {
-                processingTimeWaitgroup->add();
+    if (auto bpmUpdateTask = std::dynamic_pointer_cast<BpmUpdateTask>(task))
+        if (!bpmUpdateTask->isCompleted())
+            return handleBpmUpdateTask(bpmUpdateTask);
 
-                // if time since last drawing was too large, clear all past data
-                int64_t currentTime = juce::Time().getCurrentTime().toMilliseconds();
+    if (auto timeSignatureUpdate = std::dynamic_pointer_cast<TimeSignatureUpdateTask>(task))
+        if (!timeSignatureUpdate->isCompleted())
+            return handleTimeSignatureUpdateTask(timeSignatureUpdate);
 
-                int64_t lastFftDrawTimeMsCopy = 0;
-                {
-                    std::lock_guard lock(lastFftDrawTimeMutex);
-                    lastFftDrawTimeMsCopy = lastFftDrawTimeMs;
-                }
+    if (auto selectionUpdate = std::dynamic_pointer_cast<TrackSelectionTask>(task))
+        if (!selectionUpdate->isCompleted())
+            return handleTrackSelectionTask(selectionUpdate);
 
-                if ((currentTime - lastFftDrawTimeMsCopy) > MAX_IDLE_MS_TIME_BEFORE_CLEAR)
-                {
-                    freqOverTimeGraph->clearDisplayedFFTs();
-                    trackList.clear();
-                }
+    if (auto clearTask = std::dynamic_pointer_cast<ClearTask>(task))
+        if (!clearTask->isCompleted())
+            return handleClearTask(clearTask);
 
-                // send fft data to drawing backend and update play cursor
-                freqOverTimeGraph->displayNewFftData(newFftDataTask, processingTimeWaitgroup);
-                freqOverTimeGraph->submitNewPlayCursorPosition((int64_t)newFftDataTask->segmentStartSample +
-                                                                   (int64_t)newFftDataTask->segmentSampleLength,
-                                                               newFftDataTask->sampleRate);
+    if (auto volumeSensitivityUpdateTask = std::dynamic_pointer_cast<VolumeSensitivityTask>(task))
+        if (!volumeSensitivityUpdateTask->isCompleted())
+            return handleVolumeSensitivityTask(volumeSensitivityUpdateTask);
 
-                // record which track is playing and where to display labels
-                trackList.recordSfft(newFftDataTask);
-
-                // record last drawing time
-                {
-                    std::lock_guard lock(lastFftDrawTimeMutex);
-                    lastFftDrawTimeMs = currentTime;
-                }
-
-                // complete first half of segment processing time waitgroup here
-                processingTimeWaitgroup->recordCompletion();
-            }
-            else
-            {
-                spdlog::warn("A FFT drawing was skipped because too much FFTs are pending drawing.");
-            }
-        }
-        else
-        {
-            // if we skip displaying this fft, we still report the processing time
-            processingTimer.recordCompletion(-1, juce::Time::currentTimeMillis() - newFftDataTask->sentTimeUnixMs);
-        }
-
-        auto reuseResultArrayTask = std::make_shared<FftResultVectorReuseTask>(newFftDataTask->fftData);
-        taskingManager.broadcastNestedTaskNow(reuseResultArrayTask);
-
-        newFftDataTask->setCompleted(true);
-        return false;
-    }
-
-    auto colorUpdateTask = std::dynamic_pointer_cast<TrackColorUpdateTask>(task);
-    if (colorUpdateTask != nullptr)
-    {
-        juce::Colour col(colorUpdateTask->redColorLevel, colorUpdateTask->greenColorLevel,
-                         colorUpdateTask->blueColorLevel);
-        freqOverTimeGraph->setTrackColor(colorUpdateTask->identifier, col);
-        colorUpdateTask->setCompleted(true);
-        return true;
-    }
-
-    auto bpmUpdateTask = std::dynamic_pointer_cast<BpmUpdateTask>(task);
-    if (bpmUpdateTask != nullptr && !bpmUpdateTask->isCompleted())
-    {
-        if (std::abs(lastReceivedBpm - bpmUpdateTask->bpm) >= std::numeric_limits<float>::epsilon())
-        {
-            freqOverTimeGraph->updateBpm(bpmUpdateTask->bpm, bpmUpdateTask->getTaskingManager());
-            timeScale.setBpm(bpmUpdateTask->bpm);
-            lastReceivedBpm = bpmUpdateTask->bpm;
-        }
-        bpmUpdateTask->setCompleted(true);
-        return false;
-    }
-
-    auto timeSignatureUpdate = std::dynamic_pointer_cast<TimeSignatureUpdateTask>(task);
-    if (timeSignatureUpdate != nullptr && !timeSignatureUpdate->isCompleted())
-    {
-        freqOverTimeGraph->timeSignatureNumeratorUpdate(timeSignatureUpdate->numerator);
-        timeSignatureUpdate->setCompleted(true);
-        return false;
-    }
-
-    auto selectionUpdate = std::dynamic_pointer_cast<TrackSelectionTask>(task);
-    if (selectionUpdate != nullptr && !selectionUpdate->isCompleted())
-    {
-        freqOverTimeGraph->setSelectedTrack(selectionUpdate->selectedTrack, selectionUpdate->getTaskingManager());
-        selectionUpdate->setCompleted(true);
-        return false;
-    }
-
-    auto clearTask = std::dynamic_pointer_cast<ClearTask>(task);
-    if (clearTask != nullptr && !clearTask->isCompleted())
-    {
-        freqOverTimeGraph->clearDisplayedFFTs();
-        trackList.clear();
-        clearTask->setCompleted(true);
-        return false;
-    };
-
-    auto volumeSensitivityUpdateTask = std::dynamic_pointer_cast<VolumeSensitivityTask>(task);
-    if (volumeSensitivityUpdateTask != nullptr && !volumeSensitivityUpdateTask->isCompleted())
-    {
-        auto intensityProjection = std::make_shared<SigmoidProjection>(volumeSensitivityUpdateTask->sensitivity);
-        intensityTransformer.setProjection(intensityProjection);
-        volumeSensitivityUpdateTask->setCompleted(true);
-        return false;
-    }
-
-    // we are not stopping any tasks from being broadcasted further
     return false;
 }
 
@@ -329,59 +394,7 @@ void DashboardView::mouseDrag(const juce::MouseEvent &e)
 
     if (e.mods.isMiddleButtonDown())
     {
-        std::lock_guard lock(viewMutex);
-
-        int dragX = e.x - lastMouseDragX;
-        int dragY = e.y - lastMouseDragY;
-
-        lastMouseDragX = e.x;
-        lastMouseDragY = e.y;
-
-        bool needRepaint = false;
-
-        if (dragY != 0)
-        {
-            int64_t oldViewScale = viewScale;
-
-            viewScale = juce::jlimit(MIN_SCALE_SAMPLE_PER_PIXEL, MAX_SCALE_SAMPLE_PER_PIXEL,
-                                     int(float(viewScale) * (1.0f + (float(dragY) * PIXEL_SCALE_SPEED))));
-            freqOverTimeGraph->updateViewScale(viewScale);
-            timeScale.setViewScale(viewScale);
-            trackList.setViewScale(viewScale);
-
-            // we compute view position shift to maintain the same point under cursor after zooming
-            int64_t oldCursorSamplePos = viewPosition + (e.x * oldViewScale);
-            int64_t newCursorSamplePos = viewPosition + (e.x * viewScale);
-            int sampleShiftToAlignZoomToCursor = oldCursorSamplePos - newCursorSamplePos;
-
-            viewPosition += sampleShiftToAlignZoomToCursor;
-            if (viewPosition < 0)
-            {
-                viewPosition = 0;
-            }
-            updateWidgetsViewPositions(viewPosition);
-
-            needRepaint = true;
-        }
-
-        if (dragX != 0)
-        {
-            int64_t samplesDiff = dragX * viewScale;
-            viewPosition -= samplesDiff;
-            if (viewPosition < 0)
-            {
-                viewPosition = 0;
-            }
-            updateWidgetsViewPositions(viewPosition);
-
-            needRepaint = true;
-        }
-
-        if (needRepaint)
-        {
-            freqOverTimeGraph->repaint();
-            timeScale.repaint();
-        }
+        updateViewMouseDrag(e);
     }
 }
 
@@ -402,16 +415,16 @@ void DashboardView::broadcastMouseEventInfo(const juce::MouseEvent &me)
     freqOverTimeGraph->repaint();
 }
 
-void DashboardView::emitMousePositionInfoTask(bool shouldShow, int x, int y)
+void DashboardView::emitMousePositionInfoTask(bool mouseOverFreqTimeGraph, int x, int y)
 {
     lastFftMousePosX = x;
     lastFftMousePosY = y;
-    lastCursorShowStatus = shouldShow;
+    lastCursorShowStatus = mouseOverFreqTimeGraph;
 
     float positionInFreq = 0.0f;
     int64_t timeInSample = 0;
 
-    if (shouldShow)
+    if (mouseOverFreqTimeGraph)
     {
         float positionInChannel = 0.0f;
         float halfHeight = 0.5f * float(freqOverTimeGraph->getHeight());
@@ -431,7 +444,7 @@ void DashboardView::emitMousePositionInfoTask(bool shouldShow, int x, int y)
     timeInSample = viewPosition + (viewScale * x);
 
     auto cursorUpdateTask = std::make_shared<MouseCursorInfoTask>(
-        shouldShow, positionInFreq * 0.5f * float(VISUAL_SAMPLE_RATE), timeInSample);
+        mouseOverFreqTimeGraph, positionInFreq * 0.5f * float(VISUAL_SAMPLE_RATE), timeInSample);
     taskingManager.broadcastTask(cursorUpdateTask);
 }
 
