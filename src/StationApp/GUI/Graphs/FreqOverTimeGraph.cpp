@@ -18,10 +18,10 @@
 #include <string>
 
 FreqOverTimeGraph::FreqOverTimeGraph(TrackInfoStore &tis, NormalizedUnitTransformer &ft, NormalizedUnitTransformer &it)
-    : trackInfoStore(tis), freqTransformer(ft), intensityTransformer(it), playCursorPosition(0),
-      freqLines(ft, VISUAL_SAMPLE_RATE >> 1), tmpFreqTransformer(ft), tmpIntensityTransformer(it),
-      timeSignatureGrid(false), topBeatGrid(true), ignoreNewData(true), viewPosition(0), viewScale(150),
-      convolutionId(GpuConvolutionId::Emboss), bpm(120), needToResetTiles(false)
+    : trackInfoStore(tis), freqTransformer(ft), intensityTransformer(it), freqLines(ft, VISUAL_SAMPLE_RATE >> 1),
+      tmpFreqTransformer(ft), tmpIntensityTransformer(it), timeSignatureGrid(false), topBeatGrid(true),
+      ignoreNewData(true), viewPosition(0), viewScale(150), convolutionId(GpuConvolutionId::Emboss), bpm(120),
+      needToResetTiles(false)
 {
     setInterceptsMouseClicks(false, false);
     addAndMakeVisible(freqLines);
@@ -32,9 +32,6 @@ FreqOverTimeGraph::FreqOverTimeGraph(TrackInfoStore &tis, NormalizedUnitTransfor
     openGLContext.setRenderer(this);
     openGLContext.attachTo(*this);
     secondTileNextIndex = 0;
-    mouseOnComponent = false;
-    lastMouseX = 0;
-    lastMouseY = 0;
     lastTrackDrawOrderNonce = 0;
     trackDrawOrderNonce = 1;
 }
@@ -45,37 +42,15 @@ FreqOverTimeGraph::~FreqOverTimeGraph()
 
 void FreqOverTimeGraph::paint(juce::Graphics &g)
 {
-
     int64_t viewPositionCopy, viewScaleCopy;
     {
         std::lock_guard lock(glThreadUniformsMutex);
         viewPositionCopy = viewPosition;
         viewScaleCopy = viewScale;
     }
-    int playCursorStartPixel = 0;
-    {
-        std::lock_guard lock(playCursorMutex);
-        playCursorStartPixel = (float)(playCursorPosition - viewPositionCopy) / (float)viewScaleCopy;
-    }
-    // we won't draw the playhead cursor when it's to the 0 position, it's just ugly
-    if (playCursorStartPixel > 2)
-    {
-        auto areaRightToCursor = getLocalBounds().withTrimmedLeft(playCursorStartPixel);
-        auto playCursorBounds = areaRightToCursor.withWidth(PLAY_CURSOR_WIDTH);
 
-        g.setColour(KHOLORS_COLOR_WHITE);
-        g.fillRect(playCursorBounds);
-    }
-
-    // we draw mouse cursor horizontal and vertical lines
-    if (mouseOnComponent)
-    {
-        auto horizontalLine = getLocalBounds().withHeight(1).withY(lastMouseY);
-        auto verticalLine = getLocalBounds().withWidth(1).withX(lastMouseX);
-        g.setColour(KHOLORS_COLOR_WHITE);
-        g.fillRect(horizontalLine);
-        g.fillRect(verticalLine);
-    }
+    playCursor.paint(g, getLocalBounds(), viewPositionCopy, viewScaleCopy);
+    mouseCursor.paint(g, getLocalBounds());
 }
 
 void FreqOverTimeGraph::paintOverChildren(juce::Graphics &g)
@@ -135,7 +110,7 @@ void FreqOverTimeGraph::newOpenGLContextCreated()
     texturedPositionedShader.reset(new juce::OpenGLShaderProgram(openGLContext));
     backgroundGridShader.reset(new juce::OpenGLShaderProgram(openGLContext));
     // Compile and link the shader
-    if (buildShaders())
+    if (buildAllShaders())
     {
         spdlog::info("Sucessfully compiled OpenGL shaders");
 
@@ -182,7 +157,7 @@ void FreqOverTimeGraph::newOpenGLContextCreated()
     ignoreNewData = false;
 }
 
-bool FreqOverTimeGraph::buildShaders()
+bool FreqOverTimeGraph::buildAllShaders()
 {
     bool builtTexturedShader = buildShader(texturedPositionedShader, fftVertexShader, fftFragmentShader);
     if (!builtTexturedShader)
@@ -228,39 +203,49 @@ void FreqOverTimeGraph::uploadShadersUniforms()
 
 void FreqOverTimeGraph::renderOpenGL()
 {
-    // if necessary, clear all tiles first
+    clearAllTilesIfNeeded();
+    drawQueuedFftsToTextures();
+    eventuallyRefreshGPUTextures();
+    applyQueuedColorUpdates();
+    uploadShadersUniforms();
+
+    clearGlView();
+
+    drawGlBackgroundBeatgrid();
+    drawGlFftTextures();
+}
+
+void FreqOverTimeGraph::clearAllTilesIfNeeded()
+{
+    std::lock_guard lock(tilesResetMutex);
+    if (needToResetTiles)
     {
-        std::lock_guard lock(tilesResetMutex);
-        if (needToResetTiles)
         {
+            std::lock_guard lock2(clearedRangesMutex);
+            while (clearedRanges.size() > 0)
             {
-                // clear the queues of track ranges to clear as
-                // everything will be cleared in other components anyway
-                // when a full clearing is performed here
-                std::lock_guard lock2(clearedRangesMutex);
-                while (clearedRanges.size() > 0)
-                {
-                    clearedRanges.pop();
-                }
+                clearedRanges.pop();
             }
-
-            for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
-            {
-                if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
-                {
-                    secondTilesRingBuffer[i].mesh->clearAllData();
-                    secondTilesRingBuffer[i].mesh->refreshGpuTextureIfChanged();
-                }
-            }
-            needToResetTiles = false;
         }
-    }
 
-    // process queue of ffts to draw inside tiles
+        for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+        {
+            if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
+            {
+                secondTilesRingBuffer[i].mesh->clearAllData();
+                secondTilesRingBuffer[i].mesh->refreshGpuTextureIfChanged();
+            }
+        }
+        needToResetTiles = false;
+    }
+}
+
+void FreqOverTimeGraph::drawQueuedFftsToTextures()
+{
     std::vector<std::shared_ptr<FftToDraw>> currentFftsToDraw;
     {
         std::lock_guard lock(fftsToDrawMutex);
-        while (fftsToDrawQueue.size() > 0)
+        while (!fftsToDrawQueue.empty())
         {
             currentFftsToDraw.push_back(fftsToDrawQueue.front());
             fftsToDrawQueue.pop();
@@ -268,14 +253,16 @@ void FreqOverTimeGraph::renderOpenGL()
     }
     for (size_t i = 0; i < currentFftsToDraw.size(); i++)
     {
-        drawFftOnOpenGlThread(currentFftsToDraw[i]);
+        drawFftToGpuTexture(currentFftsToDraw[i]);
         {
             std::lock_guard lock(idleFftToDrawStructMutex);
             idleFftToDrawStructs.push(currentFftsToDraw[i]);
         }
     }
+}
 
-    // upload texture that changed, but only half of the time
+void FreqOverTimeGraph::eventuallyRefreshGPUTextures()
+{
     if (renderOpenGlIter % 5 == 0)
     {
         for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
@@ -284,8 +271,10 @@ void FreqOverTimeGraph::renderOpenGL()
         }
     }
     renderOpenGlIter++;
+}
 
-    // apply color updates
+void FreqOverTimeGraph::applyQueuedColorUpdates()
+{
     std::vector<std::pair<uint64_t, juce::Colour>> colorUpdates;
     {
         std::lock_guard lock(openGlThreadColorsMutex);
@@ -295,7 +284,6 @@ void FreqOverTimeGraph::renderOpenGL()
             colorUpdatesToApply.pop();
         }
     }
-    // for each color update to apply, check if indeed is new and apply to all track tiles
     for (size_t i = 0; i < colorUpdates.size(); i++)
     {
         auto existingTrackColor = knownTrackColors.find(colorUpdates[i].first);
@@ -311,10 +299,10 @@ void FreqOverTimeGraph::renderOpenGL()
             }
         }
     }
+}
 
-    // update GLSL uniforms if necessary (component height, view position or zoom) updates
-    uploadShadersUniforms();
-
+void FreqOverTimeGraph::clearGlView()
+{
     // enable the damn blending
     juce::gl::glEnable(juce::gl::GL_BLEND);
     juce::gl::glBlendFunc(juce::gl::GL_SRC_ALPHA, juce::gl::GL_ONE_MINUS_SRC_ALPHA);
@@ -323,7 +311,10 @@ void FreqOverTimeGraph::renderOpenGL()
     juce::gl::glClearColor(backgroundColor.getFloatRed(), backgroundColor.getFloatGreen(),
                            backgroundColor.getFloatBlue(), 1.0f);
     juce::gl::glClear(juce::gl::GL_COLOR_BUFFER_BIT);
+}
 
+void FreqOverTimeGraph::drawGlBackgroundBeatgrid()
+{
     // draw background
     backgroundGridShader->use();
 
@@ -349,16 +340,17 @@ void FreqOverTimeGraph::renderOpenGL()
     topBeatGrid.setVisible(viewScaleCopy >= MAX_TIME_SIGNATURE_GRID_VIEW_SCALE);
     timeSignatureGrid.drawGlObjects();
     topBeatGrid.drawGlObjects();
+}
 
+void FreqOverTimeGraph::drawGlFftTextures()
+{
     std::optional<uint64_t> selection;
     {
         std::lock_guard lock(selectedTrackMutex);
         selection = currentlySelectedTrack;
     }
 
-    // draw tiles with FFTs
     texturedPositionedShader->use();
-
     ensureTrackTilesDrawOrderIsUpToDate();
 
     for (size_t i = 0; i < trackTilesDrawOrder.size(); i++)
@@ -398,25 +390,23 @@ void FreqOverTimeGraph::openGLContextClosing()
     ignoreNewData = true;
 }
 
+std::shared_ptr<FreqOverTimeGraph::FftToDraw> FreqOverTimeGraph::getIdleFftToDrawStruct()
+{
+    std::lock_guard lock(idleFftToDrawStructMutex);
+    if (idleFftToDrawStructs.empty())
+    {
+        return std::make_shared<FftToDraw>();
+    }
+    auto fft = idleFftToDrawStructs.front();
+    idleFftToDrawStructs.pop();
+    return fft;
+}
+
 void FreqOverTimeGraph::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end,
                                       int fftSize, float *data, int channel, uint32_t sampleRate, TaskingManager *,
                                       std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
 {
-
-    // either allocate or pick idle FftToDraw struct
-    std::shared_ptr<FftToDraw> newFftToDraw;
-    {
-        std::lock_guard lock(idleFftToDrawStructMutex);
-        if (idleFftToDrawStructs.size() == 0)
-        {
-            newFftToDraw = std::make_shared<FftToDraw>();
-        }
-        else
-        {
-            newFftToDraw = idleFftToDrawStructs.front();
-            idleFftToDrawStructs.pop();
-        }
-    }
+    auto newFftToDraw = getIdleFftToDrawStruct();
 
     // set the data of the FFT to draw
     newFftToDraw->repurpose(trackIdentifier, secondTileIndex, begin, end, fftSize, data, channel, sampleRate,
@@ -429,9 +419,8 @@ void FreqOverTimeGraph::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTi
     }
 }
 
-void FreqOverTimeGraph::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> fftData)
+void FreqOverTimeGraph::syncUnitTransformers()
 {
-    // if necessary, update the frequency transformers
     if (tmpFreqTransformer.getNonce() != freqTransformer.getNonce())
     {
         tmpFreqTransformer.copyTransformer(freqTransformer);
@@ -440,70 +429,69 @@ void FreqOverTimeGraph::drawFftOnOpenGlThread(std::shared_ptr<FftToDraw> fftData
     {
         tmpIntensityTransformer.copyTransformer(intensityTransformer);
     }
+}
 
-    // if the tile does not exists, create it
-    size_t tileToDrawIn;
-    auto existingTrackTile = getTileIndexIfExists(fftData->trackIdentifier, fftData->secondTileIndex);
-    if (existingTrackTile >= 0)
+size_t FreqOverTimeGraph::getTextureTileAtTrackPosition(uint64_t trackIdentifier, int64_t secondTileIndex)
+{
+    auto existingTrackTile = getTileIndexIfExists(trackIdentifier, secondTileIndex);
+    return existingTrackTile >= 0 ? (size_t)existingTrackTile : createSecondTile(trackIdentifier, secondTileIndex);
+}
+
+float FreqOverTimeGraph::computeAudioToVisualSampleRateRatio(uint32_t sampleRate)
+{
+    if (sampleRate == VISUAL_SAMPLE_RATE)
     {
-        tileToDrawIn = (size_t)existingTrackTile;
+        return 1.0f;
     }
     else
     {
-        tileToDrawIn = createSecondTile(fftData->trackIdentifier, fftData->secondTileIndex);
+        return float(sampleRate) / float(VISUAL_SAMPLE_RATE);
     }
-    // we need to correct frequencies if the sample rates differs
-    float sampleRateRatio = 1.0f;
-    if (fftData->sampleRate != VISUAL_SAMPLE_RATE)
-    {
-        sampleRateRatio = float(fftData->sampleRate) / float(VISUAL_SAMPLE_RATE);
-    }
-    // draw the fft inside the tile
-    float startSecond = (float(fftData->begin) / float(VISUAL_SAMPLE_RATE));
-    float endSecond = (float(fftData->end) / float(VISUAL_SAMPLE_RATE));
-    size_t startPixel = (size_t)juce::jlimit(0, SECOND_TILE_WIDTH - 1, (int)(startSecond * float(SECOND_TILE_WIDTH)));
-    size_t endPixel = (size_t)juce::jlimit(0, SECOND_TILE_WIDTH - 1, (int)(endSecond * float(SECOND_TILE_WIDTH)));
+}
 
-    // it is necessary to adjust the frequency bin fetching to potentially different sample rates
+float *FreqOverTimeGraph::getFftPixelIntensitiesLine(std::shared_ptr<FftToDraw> fftData, float sampleRateRatio)
+{
     float rateAdjustedNoFreqBins = float(fftData->fftData.size()) / sampleRateRatio;
-
     size_t halfTileHeight = (SECOND_TILE_HEIGHT >> 1);
-    float floatHalfTileHeight = float(halfTileHeight);
-
-    float verticalPosStrafe = 1.0f / (floatHalfTileHeight - 1.0f);
+    float verticalPosStrafe = 1.0f / (float(halfTileHeight) - 1.0f);
 
     fftIntensitiesBuffer.reserve(halfTileHeight);
     float *baseIntensitiesPointer = fftIntensitiesBuffer.data();
     float *nextIntensityToWrite = baseIntensitiesPointer;
 
     float vposFloat = 0.0f;
-    // iterate from center towards borders
     for (size_t verticalPos = 0; verticalPos < halfTileHeight; verticalPos++)
     {
         size_t frequencyBinIndex = rateAdjustedNoFreqBins * tmpFreqTransformer.transformInv(vposFloat);
         vposFloat += verticalPosStrafe;
 
-        float intensityDb;
-        if (frequencyBinIndex < 0 || frequencyBinIndex >= fftData->fftData.size())
-        {
-            intensityDb = MIN_DB;
-        }
-        else
-        {
-            intensityDb = fftData->fftData[frequencyBinIndex];
-        }
+        float intensityDb = (frequencyBinIndex < 0 || frequencyBinIndex >= fftData->fftData.size())
+                                ? MIN_DB
+                                : fftData->fftData[frequencyBinIndex];
 
         float intensityNormalized = (-MIN_DB + intensityDb) / (-MIN_DB);
-        intensityNormalized = tmpIntensityTransformer.transform(intensityNormalized);
-
-        *nextIntensityToWrite = intensityNormalized;
-        nextIntensityToWrite++;
+        *nextIntensityToWrite++ = tmpIntensityTransformer.transform(intensityNormalized);
     }
+    return baseIntensitiesPointer;
+}
+
+void FreqOverTimeGraph::drawFftToGpuTexture(std::shared_ptr<FftToDraw> fftData)
+{
+    syncUnitTransformers();
+    size_t tileIndexToDrawIn = getTextureTileAtTrackPosition(fftData->trackIdentifier, fftData->secondTileIndex);
+    float sampleRateRatio = computeAudioToVisualSampleRateRatio(fftData->sampleRate);
+
+    float startSecond = (float(fftData->begin) / float(VISUAL_SAMPLE_RATE));
+    float endSecond = (float(fftData->end) / float(VISUAL_SAMPLE_RATE));
+    size_t startPixel = (size_t)juce::jlimit(0, SECOND_TILE_WIDTH - 1, (int)(startSecond * float(SECOND_TILE_WIDTH)));
+    size_t endPixel = (size_t)juce::jlimit(0, SECOND_TILE_WIDTH - 1, (int)(endSecond * float(SECOND_TILE_WIDTH)));
+
+    float *baseIntensitiesPointer = getFftPixelIntensitiesLine(fftData, sampleRateRatio);
 
     if (!ignoreNewData)
     {
-        secondTilesRingBuffer[tileToDrawIn].mesh->setRepeatedVerticalHalfLine(fftData->channel, startPixel, endPixel,
-                                                                              baseIntensitiesPointer);
+        secondTilesRingBuffer[tileIndexToDrawIn].mesh->setRepeatedVerticalHalfLine(fftData->channel, startPixel,
+                                                                                   endPixel, baseIntensitiesPointer);
     }
 
     fftData->procTimeWg->recordCompletion();
@@ -699,9 +687,7 @@ std::vector<ClearTrackInfoRange> FreqOverTimeGraph::getClearedTrackRanges()
 
 void FreqOverTimeGraph::setMouseCursor(bool onComponent, int x, int y)
 {
-    mouseOnComponent = onComponent;
-    lastMouseX = x;
-    lastMouseY = y;
+    mouseCursor.setMouseCursor(onComponent, x, y);
 }
 
 void FreqOverTimeGraph::setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm)
@@ -714,34 +700,12 @@ void FreqOverTimeGraph::setSelectedTrack(std::optional<uint64_t> selectedTrack, 
 
 int64_t FreqOverTimeGraph::getPlayCursorPosition()
 {
-    std::lock_guard lock(playCursorMutex);
-    return playCursorPosition;
+    return playCursor.getPlayCursorPosition();
 }
 
-/**
- * @brief Submit a new play cursor position to the drawing backend, which
- * may or may not accept it. It will first be converted to a position in
- * with a sample rate of VISUAL_SAMPLE_RATE.
- *
- * @param samplePosition sample position of the play cursor
- * @param sampleRate sample rate in which the cursor position is given
- */
 void FreqOverTimeGraph::submitNewPlayCursorPosition(int64_t samplePosition, uint32_t sampleRate)
 {
-    std::lock_guard lock(playCursorMutex);
-    int64_t newPlayCursorPos = samplePosition;
-    if (sampleRate != VISUAL_SAMPLE_RATE)
-    {
-        newPlayCursorPos = (int64_t)(float(samplePosition) * ((float)VISUAL_SAMPLE_RATE / (float)sampleRate));
-    }
-
-    // only update the play cursor pos if it's bigger than previous one,
-    // or if it's smaller and beyond a certain distance
-    if (newPlayCursorPos > playCursorPosition ||
-        std::abs(playCursorPosition - newPlayCursorPos) > MIN_SAMPLE_PLAY_CURSOR_BACKWARD_MOVEMENT)
-    {
-        playCursorPosition = newPlayCursorPos;
-    }
+    playCursor.submitNewPlayCursorPosition(samplePosition, sampleRate);
 }
 
 /**
