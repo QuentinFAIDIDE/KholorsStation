@@ -303,10 +303,12 @@ void DashboardView::resized()
 {
     auto fftBounds = getLocalBounds();
     auto trackListBounds = fftBounds.removeFromRight(TRACK_LIST_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
-    auto frequencyGridBounds = fftBounds.removeFromLeft(FREQUENCY_GRID_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
+    auto scalesArea = fftBounds.removeFromLeft(FREQUENCY_GRID_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
+    auto frequencyGridBounds = scalesArea.withTrimmedBottom(VOLUME_GRAPH_HEIGHT + TIME_GRAPHS_PADDING);
     auto timeGridBounds = fftBounds.removeFromBottom(TIME_GRID_HEIGHT);
     auto volumeBounds = fftBounds.removeFromBottom(VOLUME_GRAPH_HEIGHT);
     unpaintedArea3 = fftBounds.removeFromBottom(TIME_GRAPHS_PADDING);
+
     freqOverTimeGraph->setBounds(fftBounds);
     volumeOverTimeGraph->setBounds(volumeBounds);
     frequencyScale.setBounds(frequencyGridBounds);

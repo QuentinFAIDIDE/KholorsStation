@@ -124,12 +124,12 @@ void MainComponent::paint(juce::Graphics &g)
                              TOPBAR_BUTTONS_PADDING + TOPBAR_BUTTONS_PADDING);
 
     auto sliderWithPictogramsArea = topspace.removeFromRight(
-        SENSITIVITY_SLIDER_PICTOGRAM_WIDTH + TOPBAR_BUTTONS_PADDING + SENSITIVITY_SLIDER_WIDTH +
-        TOPBAR_BUTTONS_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
+        SENSITIVITY_SLIDER_PICTOGRAM_WIDTH + SENSITIVITY_SLIDER_PICTOGRAM_PADDING + SENSITIVITY_SLIDER_WIDTH +
+        SENSITIVITY_SLIDER_PICTOGRAM_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
 
-    if (sliderWithPictogramsArea.getWidth() >= SENSITIVITY_SLIDER_PICTOGRAM_WIDTH + TOPBAR_BUTTONS_PADDING +
-                                                   SENSITIVITY_SLIDER_WIDTH + TOPBAR_BUTTONS_PADDING +
-                                                   SENSITIVITY_SLIDER_PICTOGRAM_WIDTH)
+    if (sliderWithPictogramsArea.getWidth() >=
+        SENSITIVITY_SLIDER_PICTOGRAM_WIDTH + SENSITIVITY_SLIDER_PICTOGRAM_PADDING + SENSITIVITY_SLIDER_WIDTH +
+            SENSITIVITY_SLIDER_PICTOGRAM_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH)
     {
 
         auto leftSliderPicto = sliderWithPictogramsArea.removeFromLeft(SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
@@ -165,9 +165,9 @@ void MainComponent::resized()
         TOPBAR_RIGHT_PADDING + mainTitleWidth + middlePadding + subTitleWidth + versionPadding + versionWidth;
     buttonsArea.removeFromLeft(totalTextWidth);
 
-    if (buttonsArea.getWidth() <
-        (TOPBAR_BUTTONS_PADDING + TOPBAR_BUTTONS_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH + TOPBAR_BUTTONS_PADDING +
-         SENSITIVITY_SLIDER_WIDTH + TOPBAR_BUTTONS_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH))
+    if (buttonsArea.getWidth() < (TOPBAR_BUTTONS_PADDING + TOPBAR_BUTTONS_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH +
+                                  SENSITIVITY_SLIDER_PICTOGRAM_PADDING + SENSITIVITY_SLIDER_WIDTH +
+                                  SENSITIVITY_SLIDER_PICTOGRAM_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH))
     {
         volumeSensitivitySlider.setVisible(false);
     }
@@ -177,7 +177,7 @@ void MainComponent::resized()
 
         buttonsArea.removeFromRight(TOPBAR_BUTTONS_PADDING * 2);
         buttonsArea.removeFromRight(SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
-        buttonsArea.removeFromRight(TOPBAR_BUTTONS_PADDING);
+        buttonsArea.removeFromRight(SENSITIVITY_SLIDER_PICTOGRAM_PADDING);
         auto sensitivitySliderArea = buttonsArea.removeFromRight(SENSITIVITY_SLIDER_WIDTH);
         volumeSensitivitySlider.setBounds(sensitivitySliderArea);
     }
