@@ -10,6 +10,7 @@
 #include "StationApp/GUI/Graphs/FrequencyScale.h"
 #include "StationApp/GUI/Graphs/TimeScale.h"
 #include "StationApp/GUI/Graphs/VolumeOverTimeGraph.h"
+#include "StationApp/GUI/Graphs/VolumeScale.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "StationApp/GUI/TrackList.h"
 #include "StationApp/GUI/TrackSelectionTask.h"
@@ -28,7 +29,7 @@
 #define TIME_GRID_HEIGHT 65
 #define VOLUME_GRAPH_HEIGHT 170
 #define TRACK_LIST_WIDTH 220
-#define TIME_GRAPHS_PADDING 30
+#define TIME_GRAPHS_PADDING 20
 
 /**
  * @brief Describe a class which displays a timeline, and
@@ -124,6 +125,7 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
     int64_t viewScale;    /**< View scale in samples per pixels */
 
     FrequencyScale frequencyScale;
+    VolumeScale volumeScale;
     TimeScale timeScale;
 
     TrackList trackList;

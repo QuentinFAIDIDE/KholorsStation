@@ -68,7 +68,7 @@ void FrequencyScale::drawRotatedTitle(juce::Graphics &g)
     // nice trick from https://forum.juce.com/t/draw-rotated-text/14695/11
 
     juce::GlyphArrangement ga;
-    ga.addLineOfText(juce::Font(TITLE_PIXELS_HEIGHT), TRANS("Frequency").toUpperCase(), 0, 0);
+    ga.addLineOfText(juce::Font(AXIS_TITLE_PIXELS_HEIGHT), TRANS("Frequency").toUpperCase(), 0, 0);
     juce::Path p;
     ga.createPath(p);
 
@@ -79,7 +79,7 @@ void FrequencyScale::drawRotatedTitle(juce::Graphics &g)
             .rotated(3.0f * juce::MathConstants<float>::halfPi, pathBounds.getCentreX(), pathBounds.getCentreY())
             .translated(0, getHeight() * 0.5f));
 
-    p.applyTransform(juce::AffineTransform().translated(TITLE_PIXELS_FROM_LEFT - p.getBounds().getX(), 0));
+    p.applyTransform(juce::AffineTransform().translated(AXIS_TITLE_PIXELS_FROM_LEFT - p.getBounds().getX(), 0));
 
     g.fillPath(p);
 }
@@ -87,7 +87,7 @@ void FrequencyScale::drawRotatedTitle(juce::Graphics &g)
 void FrequencyScale::drawRotatedChannelNames(juce::Graphics &g)
 {
     juce::GlyphArrangement ga;
-    ga.addLineOfText(juce::Font(TITLE_PIXELS_HEIGHT), TRANS("Left Channel").toUpperCase(), 0, 0);
+    ga.addLineOfText(juce::Font(AXIS_TITLE_PIXELS_HEIGHT), TRANS("Left Channel").toUpperCase(), 0, 0);
     juce::Path p;
     ga.createPath(p);
     auto pathBounds = p.getBounds();
@@ -95,11 +95,11 @@ void FrequencyScale::drawRotatedChannelNames(juce::Graphics &g)
         juce::AffineTransform()
             .rotated(3.0f * juce::MathConstants<float>::halfPi, pathBounds.getCentreX(), pathBounds.getCentreY())
             .translated(0, getHeight() * 0.25f));
-    p.applyTransform(juce::AffineTransform().translated(TITLE_PIXELS_FROM_LEFT - p.getBounds().getX(), 0));
+    p.applyTransform(juce::AffineTransform().translated(AXIS_TITLE_PIXELS_FROM_LEFT - p.getBounds().getX(), 0));
     g.fillPath(p);
 
     ga.clear();
-    ga.addLineOfText(juce::Font(TITLE_PIXELS_HEIGHT), TRANS("Right Channel").toUpperCase(), 0, 0);
+    ga.addLineOfText(juce::Font(AXIS_TITLE_PIXELS_HEIGHT), TRANS("Right Channel").toUpperCase(), 0, 0);
     p.clear();
     ga.createPath(p);
     pathBounds = p.getBounds();
@@ -107,7 +107,7 @@ void FrequencyScale::drawRotatedChannelNames(juce::Graphics &g)
         juce::AffineTransform()
             .rotated(3.0f * juce::MathConstants<float>::halfPi, pathBounds.getCentreX(), pathBounds.getCentreY())
             .translated(0, getHeight() * 0.75f));
-    p.applyTransform(juce::AffineTransform().translated(TITLE_PIXELS_FROM_LEFT - p.getBounds().getX(), 0));
+    p.applyTransform(juce::AffineTransform().translated(AXIS_TITLE_PIXELS_FROM_LEFT - p.getBounds().getX(), 0));
     g.fillPath(p);
 }
 
