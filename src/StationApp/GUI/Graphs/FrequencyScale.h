@@ -4,8 +4,7 @@
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
-#define TITLE_PIXELS_FROM_LEFT 14
-#define TITLE_PIXELS_HEIGHT 16
+#define AXIS_TITLE_PIXELS_FROM_LEFT 14
 #define MAXIMUM_DRAWABLE_LABEL_POSITION_RATIO 0.93
 #define LABEL_HEIGHT 16
 #define LABEL_FONT_HEIGHT (KHOLORS_DEFAULT_FONT_SIZE - 2)

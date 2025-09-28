@@ -61,6 +61,7 @@ DashboardView::DashboardView(TrackInfoStore &tis, TaskingManager &tm)
     addAndMakeVisible(frequencyScale);
     addAndMakeVisible(timeScale);
     addAndMakeVisible(trackList);
+    addAndMakeVisible(volumeScale);
 
     startTimer(VIEW_MOVE_TIME_INTERVAL_MS);
 }
@@ -304,7 +305,8 @@ void DashboardView::resized()
     auto fftBounds = getLocalBounds();
     auto trackListBounds = fftBounds.removeFromRight(TRACK_LIST_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
     auto scalesArea = fftBounds.removeFromLeft(FREQUENCY_GRID_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
-    auto frequencyGridBounds = scalesArea.withTrimmedBottom(VOLUME_GRAPH_HEIGHT + TIME_GRAPHS_PADDING);
+    auto volumeGridBounds = scalesArea.removeFromBottom(VOLUME_GRAPH_HEIGHT);
+    auto frequencyGridBounds = scalesArea.withTrimmedBottom(TIME_GRAPHS_PADDING);
     auto timeGridBounds = fftBounds.removeFromBottom(TIME_GRID_HEIGHT);
     auto volumeBounds = fftBounds.removeFromBottom(VOLUME_GRAPH_HEIGHT);
     unpaintedArea3 = fftBounds.removeFromBottom(TIME_GRAPHS_PADDING);
@@ -312,6 +314,7 @@ void DashboardView::resized()
     freqOverTimeGraph->setBounds(fftBounds);
     volumeOverTimeGraph->setBounds(volumeBounds);
     frequencyScale.setBounds(frequencyGridBounds);
+    volumeScale.setBounds(volumeGridBounds);
     timeScale.setBounds(timeGridBounds);
     trackList.setBounds(trackListBounds);
 

@@ -42,7 +42,7 @@ void TimeScale::paint(juce::Graphics &g)
 
     drawTicks(g, currentViewPos, currentViewScale, currentBpm);
 
-    g.setFont(juce::Font(TITLE_PIXELS_HEIGHT));
+    g.setFont(juce::Font(AXIS_TITLE_PIXELS_HEIGHT));
     g.setColour(KHOLORS_COLOR_WHITE);
     g.drawText(TRANS("Project Time").toUpperCase(), getLocalBounds().withTrimmedBottom(TITLE_PIXELS_FROM_BOTTOM),
                juce::Justification::centredBottom, false);
