@@ -1,21 +1,12 @@
 #pragma once
 
-#include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/ProcessingTimerWaitgroup.h"
-#include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/ClearTrackInfoRange.h"
+#include "StationApp/GUI/Graphs/BaseOverTimeGraph.h"
 #include "StationApp/GUI/Graphs/FrequencyLinesDrawer.h"
-#include "StationApp/GUI/Graphs/GraphMouseCursor.h"
-#include "StationApp/GUI/Graphs/GraphPlayCursor.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
-#include "StationApp/OpenGL/BeatGridMesh.h"
 #include "StationApp/OpenGL/TexturedRectangle.h"
-#include "TaskManagement/TaskingManager.h"
-#include "juce_graphics/juce_graphics.h"
-#include "juce_opengl/juce_opengl.h"
-#include <cstdint>
-#include <memory>
 
 #define IMAGES_RING_BUFFER_SIZE 128
 // Dimensions of a one-second tile.
@@ -27,11 +18,11 @@
 
 #define FFT_POSITION_FORWARD_SAMPLE_SHIFT 1920
 
-class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
+class FftOverTimeGraph : public BaseOverTimeGraph
 {
   public:
-    FreqOverTimeGraph(TrackInfoStore &tis, NormalizedUnitTransformer &ft, NormalizedUnitTransformer &it);
-    ~FreqOverTimeGraph();
+    FftOverTimeGraph(TrackInfoStore &tis, NormalizedUnitTransformer &ft, NormalizedUnitTransformer &it);
+    ~FftOverTimeGraph();
 
     struct TrackSecondTile
     {
@@ -117,58 +108,11 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
         Emboss = 7,
     };
 
-    void paint(juce::Graphics &g) override;
-    void paintOverChildren(juce::Graphics &g) override;
-    void resized() override;
-
-    /**
-     * @brief Move the view so that the position at the component left
-     * matches the samplePosition (audio sample offset of the song).
-     *
-     * @param samplePosition audio sample position (audio sample offset of the song) to match
-     */
-    void updateViewPosition(uint32_t samplePosition);
-
-    /**
-     * @brief Scale the view
-     * @param samplesPerPixel number of audio samples per pixel to display in the viewer
-     */
-    void updateViewScale(uint32_t samplesPerPixel);
-
-    /**
-     * @brief Update the bpm.
-     *
-     * @param newBpm new bpm value to use to draw the grid
-     */
-    void updateBpm(float newBpm, TaskingManager *tm);
-
-    /**
-     * @brief Update the time signature of the beat grid.
-     *
-     * @param timeSignatureNumerator number at numerator of the time signature fraction.
-     */
-    void timeSignatureNumeratorUpdate(int timeSignatureNumerator);
-
     /**
      * @brief clears on screen data.
      * In this openGL version, queue clearing to be done by openGL Thread.
      */
-    void clearDisplayedFFTs();
-
-    /**
-     * @brief      Called when opengl context is created.
-     */
-    void newOpenGLContextCreated() override;
-
-    /**
-     * @brief      Renders openGL context
-     */
-    void renderOpenGL() override;
-
-    /**
-     * @brief      Called when opengl context is closed.
-     */
-    void openGLContextClosing() override;
+    void clear();
 
     /**
      * @brief Return a list of ranges where specific tracks have been
@@ -178,34 +122,13 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
     std::vector<ClearTrackInfoRange> getClearedTrackRanges();
 
     /**
-     * @brief Set the mouse cursor position on component, as it is intercepted
-     * by parent and is not received. We could let the mouse events through
-     * but we're with this patterN;
-     *
-     * @param onComponent is the mouse over this compoennt ?
-     * @param x mouse x
-     * @param y mouse y
-     */
-    void setMouseCursor(bool onComponent, int x, int y);
-
-    /**
      * @brief Setting the currently selected track highlighted on screen.
      *
      * @param selectedTrack Optional, being if something is selected the identifier of the track.
      */
     void setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm);
 
-    int64_t getPlayCursorPosition();
 
-    /**
-     * @brief Submit a new play cursor position to the drawing backend, which
-     * may or may not accept it. It will first be converted to a position in
-     * with a sample rate of VISUAL_SAMPLE_RATE.
-     *
-     * @param samplePosition sample position of the play cursor
-     * @param sampleRate sample rate in which the cursor position is given
-     */
-    void submitNewPlayCursorPosition(int64_t samplePosition, uint32_t sampleRate);
 
     /**
      * @brief Add the fft data inside the task struct to the currently displayed data.
@@ -247,44 +170,6 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
      * @return index of the new tile in the second-tile ring buffer
      */
     size_t createSecondTile(uint64_t trackIdentifier, int64_t secondTileIndex);
-
-    /**
-     * @brief Set a pixel inside an already existing tile.
-     * Called only from the OpenGL thread.
-     *
-     * @param tileRingBufferIndex index of the tile in the ring buffer of tiles
-     * @param x horizontal position in pixels
-     * @param y vertical position in pixels
-     * @param intensity intensity of the FFT at this position, between 0 and 1
-     */
-    void setTilePixelIntensity(size_t tileRingBufferIndex, int x, int y, float intensity);
-
-    /**
-     * @brief build the opengl shaders programs
-     *
-     * @return true shaders have been sucessfully built
-     * @return false shaders have failed to build
-     */
-    bool buildAllShaders();
-
-    /**
-     * @brief Build a specific shader program.
-     *
-     * @param sh the shader program to build into
-     * @param vertexShader text of the vertex shader
-     * @param fragmentShader text of the fragment shader
-     * @return true
-     * @return false
-     */
-    bool buildShader(std::unique_ptr<juce::OpenGLShaderProgram> &sh, std::string vertexShader,
-                     std::string fragmentShader);
-
-    /**
-     * @brief Recompute and send uniform (opengl variables) that are used
-     * by the shaders to draw background or FFT tiles.
-     * MUST BE CALLED FROM THE OPENGL THREAD.
-     */
-    void uploadShadersUniforms();
 
     /**
      * @brief Draws the provided FFT (there's only one) on the TrackSecondTile.
@@ -357,11 +242,6 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
     void applyQueuedColorUpdates();
 
     /**
-     * @brief Draw background beat grid. Called from OpenGL thread.
-     */
-    void drawGlBackgroundBeatgrid();
-
-    /**
      * @brief Draw FFT textures for visible tracks. Called from OpenGL thread.
      */
     void drawGlFftTextures();
@@ -386,19 +266,108 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
      */
     float *getFftPixelIntensitiesLine(std::shared_ptr<FftToDraw> fftData, float sampleRateRatio);
 
-    /**
-     * @brief Enable blending and clear openGL view with background color. Called from OpenGL thread.
-     */
-    void clearGlView();
-
     float computeAudioToVisualSampleRateRatio(uint32_t sampleRate);
 
-    TrackInfoStore &trackInfoStore;
+    /**
+     * @brief handle updates when the component is resized.
+     * Nore specifically, made to propagate the resize to the children.
+     */
+    void resizeChildrenComponents() override;
+
+    /**
+     * @brief Must implement to reset your openGL contex.
+     * Typically: backgroundGridShader.reset(new juce::OpenGLShaderProgram(openGLContext));
+     *
+     * @param openGLContext
+     */
+    void resetJuceOpenGLShaders(juce::OpenGLContext &openGLContext) override;
+
+    /**
+     * @brief Must implement to set the uniforms of your shaders when openGl context
+     * is initialized.
+     *
+     * Typical use:
+     *  texturedPositionedShader->use();
+     *  texturedPositionedShader->setUniform("sfftTexture", 0);
+     */
+    void setShadersUniformsAtOpenGlInit() override;
+
+    /**
+     * @brief Called on openGL context init. You must implement it to load
+     * your textures to the GPU. Typical use:
+     *
+     *  texturedPositionedShader->use();
+     *  for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+     *  {
+     *      if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
+     *      {
+     *          secondTilesRingBuffer[i].mesh->registerGlObjects();
+     *      }
+     *  }
+     *
+     */
+    void loadGlObjectsAtInit() override;
+
+    /**
+     * @brief Called at openGL init, you are supposed to
+     * implement it if you have shaders to implement,
+     * must return false if there was a failure.
+     * Typical implementation:
+     *
+     *     bool builtBackgroundShader =
+     *         buildShader(backgroundGridShader, gridBackgroundVertexShader, gridBackgroundFragmentShader);
+     *     if (!builtBackgroundShader)
+     *     {
+     *         std::cerr << "Failed to build grid shaders" << std::endl;
+     *         return false;
+     *     }
+     *
+     */
+    bool buildShadersAtInit() override;
+
+    /**
+     * @brief Implement to upload additional uniforms to the shaders you implenent.
+     * Typically:
+     *
+     *   texturedPositionedShader->use();
+     *   texturedPositionedShader->setUniform("viewPosition", (GLfloat)viewPosition);
+     *   texturedPositionedShader->setUniform("viewWidth", (GLfloat)(viewWidth * viewScale));
+     *   texturedPositionedShader->setUniform("convolutionId", (GLint)convolutionId);
+     *
+     */
+    void uploadAdditionalShadersUniforms() override;
+
+    /**
+     * @brief implement to perform actions in the openGL loop
+     * before any type of drawing or gl update is done.
+     * Typically, you consume your queue of update events.
+     *
+     */
+    void glLoopPreDraw() override;
+
+    /**
+     * @brief implement your openGL drawing logic here.
+     */
+    void glLoopDrawOverGrid() override;
+
+    /**
+     * @brief Here you should free the gl objects you have initialized.
+     * Example:
+     *
+     * for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+     * {
+     *     secondTilesRingBuffer[i].mesh->freeGlObjects();
+     * }
+     * texturedPositionedShader->release();
+     */
+    void deallocateOpenGlResources() override;
+
+    ////////////////////////////
+    // MEMBERS
+    ////////////////////////////
+
     NormalizedUnitTransformer &freqTransformer;
     NormalizedUnitTransformer &intensityTransformer;
-
-    GraphPlayCursor playCursor;   /**< Manages play cursor position and rendering */
-    GraphMouseCursor mouseCursor; /**< Manages mouse cursor crosshair rendering */
 
     int64_t tilesNonce;          /**< A nonce that is incremented when the tiles are updated */
     std::mutex imageAccessMutex; /**< Mutex to protect image access */
@@ -423,22 +392,9 @@ class FreqOverTimeGraph : public juce::Component, public juce::OpenGLRenderer
 
     int64_t lastDrawTilesNonce; /**< The last nonce tilesNonce drawn */
 
-    int timeSignature, lastAppliedTimeSignature;
-
     std::unique_ptr<juce::OpenGLShaderProgram> texturedPositionedShader; /**< shader to draw ffts */
-    std::unique_ptr<juce::OpenGLShaderProgram> backgroundGridShader;     /**< Shader to draw grids on background */
-    juce::OpenGLContext openGLContext;
 
-    BeatGridMesh timeSignatureGrid, topBeatGrid; /**< OpenGL Mesh for background */
-
-    std::atomic<bool> ignoreNewData; /**< after the openGL thread closes, prevent access to openGL resources */
-
-    int64_t viewPosition, viewScale, viewHeight, viewWidth; /*< read by gl thread to update uniforms and view */
-    GpuConvolutionId convolutionId;                         /**< Identifier of the GLSL convolution to apply with GPU */
-    float bpm;                         /**< values read by openGL thread to update uniforms and view */
-    std::mutex glThreadUniformsMutex;  /**< to lock modifications of position, scale or bpm */
-    int64_t glThreadUniformsNonce;     /**< to know if we need to update position and  */
-    int64_t lastUsedGlThreadUnifNonce; /**< the last nonce value when the uniforms got updated*/
+    GpuConvolutionId convolutionId; /**< Identifier of the GLSL convolution to apply with GPU */
 
     std::queue<std::shared_ptr<FftToDraw>>
         fftsToDrawQueue;        /**< queue of FFT to be drawn. Depends on the fftsToDrawLock */

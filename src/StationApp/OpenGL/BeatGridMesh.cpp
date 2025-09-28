@@ -1,6 +1,6 @@
 #include "BeatGridMesh.h"
 #include "StationApp/GUI/AudioConstants.h"
-#include "StationApp/OpenGL/GLInfoLogger.h"
+#include "OpenGLHelpers.h"
 #include <limits>
 #include <stdexcept>
 
@@ -57,7 +57,7 @@ void BeatGridMesh::registerGlObjects()
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &ebo);
 
-    printAllOpenGlError();
+    OpenGLHelpers::printAllOpenGlError();
 
     glBindVertexArray(vao);
 
@@ -72,7 +72,7 @@ void BeatGridMesh::registerGlObjects()
 
     // register the vertex attribute format
     Vertex::registerVertexFormat();
-    printAllOpenGlError();
+    OpenGLHelpers::printAllOpenGlError();
 
     // register the texture
     glGenTextures(1, &tbo);
@@ -87,7 +87,7 @@ void BeatGridMesh::registerGlObjects()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, KHOLORS_BACKGROUND_GRID_TEXTURE_WIDTH,
                  KHOLORS_BACKGROUND_GRID_TEXTURE_HEIGHT, 0, GL_RGBA, GL_FLOAT, texture.data());
 
-    printAllOpenGlError();
+    OpenGLHelpers::printAllOpenGlError();
 }
 
 void BeatGridMesh::drawGlObjects()
@@ -179,7 +179,7 @@ void BeatGridMesh::updateGridPosition(int64_t viewPosition, int64_t viewScale, i
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, (long)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
-    printAllOpenGlError();
+    OpenGLHelpers::printAllOpenGlError();
 }
 
 void BeatGridMesh::setVisible(bool visible)
@@ -220,6 +220,6 @@ void BeatGridMesh::setVisible(bool visible)
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, (long)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
-        printAllOpenGlError();
+        OpenGLHelpers::printAllOpenGlError();
     }
 }

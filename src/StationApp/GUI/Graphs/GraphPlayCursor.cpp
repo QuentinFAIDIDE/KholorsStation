@@ -14,7 +14,8 @@ GraphPlayCursor::~GraphPlayCursor()
 {
 }
 
-void GraphPlayCursor::paint(juce::Graphics &g, const juce::Rectangle<int> &bounds, int64_t viewPosition, int64_t viewScale)
+void GraphPlayCursor::paint(juce::Graphics &g, const juce::Rectangle<int> &bounds, int64_t viewPosition,
+                            int64_t viewScale)
 {
     int playCursorStartPixel = 0;
     {

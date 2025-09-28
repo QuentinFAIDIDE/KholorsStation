@@ -1,7 +1,6 @@
 #include "SolidRectangle.h"
-
 #include "GUIToolkit/Consts.h"
-#include "StationApp/OpenGL/GLInfoLogger.h"
+#include "OpenGLHelpers.h"
 #include "juce_opengl/juce_opengl.h"
 #include <spdlog/spdlog.h>
 
@@ -62,7 +61,7 @@ void SolidRectangle::registerGlObjects()
                  GL_STATIC_DRAW);
 
     Vertex::registerVertexFormat();
-    printAllOpenGlError();
+    OpenGLHelpers::printAllOpenGlError();
 }
 
 void SolidRectangle::drawGlObjects()

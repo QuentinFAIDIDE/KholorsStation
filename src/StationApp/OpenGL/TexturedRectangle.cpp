@@ -1,6 +1,7 @@
 #include "TexturedRectangle.h"
-#include "StationApp/OpenGL/GLInfoLogger.h"
+#include "OpenGLHelpers.h"
 #include "juce_opengl/opengl/juce_gl.h"
+#include "spdlog/spdlog.h"
 
 TexturedRectangle::TexturedRectangle(int64_t width, int64_t height, juce::Colour col)
     : textureWidth(width), textureHeight(height)
@@ -56,7 +57,7 @@ void TexturedRectangle::registerGlObjects()
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &ebo);
 
-    printAllOpenGlError();
+    OpenGLHelpers::printAllOpenGlError();
 
     glBindVertexArray(vao);
 
@@ -71,7 +72,7 @@ void TexturedRectangle::registerGlObjects()
 
     // register the vertex attribute format
     Vertex::registerVertexFormat();
-    printAllOpenGlError();
+    OpenGLHelpers::printAllOpenGlError();
 
     // register the texture
     glGenTextures(1, &tbo);
@@ -86,7 +87,7 @@ void TexturedRectangle::registerGlObjects()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_FLOAT,
                  texture.data());
 
-    printAllOpenGlError();
+    OpenGLHelpers::printAllOpenGlError();
 
     // after everything was uplaoded we can reset the nonce
     int64_t newNonce = textureNonce;
@@ -134,7 +135,7 @@ void TexturedRectangle::changeColor(juce::Colour newColor)
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, (long)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
-    printAllOpenGlError();
+    OpenGLHelpers::printAllOpenGlError();
 }
 
 void TexturedRectangle::setPosition(int64_t viewPositionSamples, int64_t width, uint64_t trackIdentifier)
@@ -161,7 +162,7 @@ void TexturedRectangle::setPosition(int64_t viewPositionSamples, int64_t width, 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, (long)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
-    printAllOpenGlError();
+    OpenGLHelpers::printAllOpenGlError();
 }
 
 void TexturedRectangle::setPixelAt(int x, int y, float intensity)
