@@ -3,9 +3,7 @@
 #include "juce_core/juce_core.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
-#define KHOLORS_DOC_URL "https://kholors-doc.artifaktnd.com/"
-
-HelpButton::HelpButton() : juce::TextButton("Help", "Open online user manual")
+HelpButton::HelpButton() : juce::TextButton("Help", "Open tip list")
 {
 }
 
