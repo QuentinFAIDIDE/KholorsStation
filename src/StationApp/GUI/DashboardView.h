@@ -6,7 +6,7 @@
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/Audio/VolumeSensitivityTask.h"
 #include "StationApp/GUI/ClearTask.h"
-#include "StationApp/GUI/Graphs/FreqOverTimeGraph.h"
+#include "StationApp/GUI/Graphs/FftOverTimeGraph.h"
 #include "StationApp/GUI/Graphs/FrequencyScale.h"
 #include "StationApp/GUI/Graphs/TimeScale.h"
 #include "StationApp/GUI/Graphs/VolumeOverTimeGraph.h"
@@ -107,7 +107,7 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
 
     NormalizedUnitTransformer frequencyTransformer;           /**< Transformer for the frequency displayed */
     NormalizedUnitTransformer intensityTransformer;           /**< Transformer for the intensity displayed */
-    std::shared_ptr<FreqOverTimeGraph> freqOverTimeGraph;     /**< Juce component that draws FFTs on screen */
+    std::shared_ptr<FftOverTimeGraph> freqOverTimeGraph;      /**< Juce component that draws FFTs on screen */
     std::shared_ptr<VolumeOverTimeGraph> volumeOverTimeGraph; /**< Juce component that draws volumes on screen */
     TrackInfoStore &trackInfoStore;         /**< Store track names and color for FftDrawingBackend to access */
     int64_t lastMouseDragX, lastMouseDragY; /**< Last position of the mouse cursor at last drag iteration */

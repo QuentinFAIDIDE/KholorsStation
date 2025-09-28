@@ -1,7 +1,5 @@
 #include "RadialGradientRectangle.h"
-
-#include "StationApp/OpenGL/GLInfoLogger.h"
-
+#include "OpenGLHelpers.h"
 #include <spdlog/spdlog.h>
 
 using namespace juce::gl;
@@ -115,7 +113,7 @@ void RadialGradientRectangle::registerGlObjects()
                  GL_STATIC_DRAW);
 
     Vertex::registerVertexFormat();
-    printAllOpenGlError();
+    OpenGLHelpers::printAllOpenGlError();
 }
 
 void RadialGradientRectangle::drawGlObjects()

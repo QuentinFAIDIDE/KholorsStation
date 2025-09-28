@@ -1,12 +1,21 @@
-#pragma once
-
-#include <juce_gui_extra/juce_gui_extra.h>
-#include <juce_opengl/juce_opengl.h>
+#include "OpenGLHelpers.h"
 #include <spdlog/spdlog.h>
 
-// helper from this kind sir:
-// https://forum.juce.com/t/just-a-quick-gl-info-logger-func-for-any-of-you/32082/2
-inline void logOpenGLInfoCallback(juce::OpenGLContext &)
+void OpenGLHelpers::clearGlView(const juce::Colour& backgroundColor)
+{
+    enableBlending();
+    juce::gl::glClearColor(backgroundColor.getFloatRed(), backgroundColor.getFloatGreen(),
+                           backgroundColor.getFloatBlue(), 1.0f);
+    juce::gl::glClear(juce::gl::GL_COLOR_BUFFER_BIT);
+}
+
+void OpenGLHelpers::enableBlending()
+{
+    juce::gl::glEnable(juce::gl::GL_BLEND);
+    juce::gl::glBlendFunc(juce::gl::GL_SRC_ALPHA, juce::gl::GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void OpenGLHelpers::logOpenGLInfo(juce::OpenGLContext&)
 {
     int major = 0, minor = 0;
     juce::gl::glGetIntegerv(juce::gl::GL_MAJOR_VERSION, &major);
@@ -25,25 +34,21 @@ inline void logOpenGLInfoCallback(juce::OpenGLContext &)
     spdlog::debug(stats.toStdString());
 }
 
-inline void logOpenGLErrorCallback(GLenum, GLenum type, GLuint, GLenum severity, GLsizei, const GLchar *message,
-                                   const void *)
+void OpenGLHelpers::logOpenGLErrorCallback(GLenum, GLenum type, GLuint, GLenum severity, GLsizei, const GLchar *message, const void *)
 {
-    // as instructed in: https://www.khronos.org/opengl/wiki/OpenGL_Error
-    // NOTE: errors are defined in juce_gl.h.
-    // NOTE: it shouldn't disturb the legacy openGL error stack
     char s[1024];
     snprintf(s, 1024, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
              (type == juce::gl::GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
     spdlog::error(std::string(s));
 }
 
-inline void enableOpenGLErrorLogging()
+void OpenGLHelpers::enableOpenGLErrorLogging()
 {
     juce::gl::glEnable(juce::gl::GL_DEBUG_OUTPUT);
     juce::gl::glDebugMessageCallback(logOpenGLErrorCallback, nullptr);
 }
 
-inline void printAllOpenGlError()
+void OpenGLHelpers::printAllOpenGlError()
 {
     GLenum err;
     while ((err = juce::gl::glGetError()) != juce::gl::GL_NO_ERROR)

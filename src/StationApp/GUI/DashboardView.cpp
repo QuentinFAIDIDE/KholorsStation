@@ -9,7 +9,7 @@
 #include "StationApp/Audio/VolumeSensitivityTask.h"
 #include "StationApp/GUI/AudioConstants.h"
 #include "StationApp/GUI/ClearTask.h"
-#include "StationApp/GUI/Graphs/FreqOverTimeGraph.h"
+#include "StationApp/GUI/Graphs/FftOverTimeGraph.h"
 #include "StationApp/GUI/Graphs/FrequencyScale.h"
 #include "StationApp/GUI/Graphs/VolumeOverTimeGraph.h"
 #include "StationApp/GUI/MouseCursorInfoTask.h"
@@ -37,7 +37,7 @@ DashboardView::DashboardView(TrackInfoStore &tis, TaskingManager &tm)
 
     setOpaque(true);
 
-    freqOverTimeGraph = std::make_shared<FreqOverTimeGraph>(trackInfoStore, frequencyTransformer, intensityTransformer);
+    freqOverTimeGraph = std::make_shared<FftOverTimeGraph>(trackInfoStore, frequencyTransformer, intensityTransformer);
     addAndMakeVisible(freqOverTimeGraph.get());
 
     volumeOverTimeGraph = std::make_shared<VolumeOverTimeGraph>(trackInfoStore);
@@ -209,7 +209,7 @@ bool DashboardView::handleNewFftDataTask(std::shared_ptr<NewFftDataTask> task)
             }
             if ((currentTime - lastFftDrawTimeMsCopy) > MAX_IDLE_MS_TIME_BEFORE_CLEAR)
             {
-                freqOverTimeGraph->clearDisplayedFFTs();
+                freqOverTimeGraph->clear();
                 trackList.clear();
                 volumeOverTimeGraph->clear();
             }
@@ -284,7 +284,7 @@ bool DashboardView::handleTrackSelectionTask(std::shared_ptr<TrackSelectionTask>
 
 bool DashboardView::handleClearTask(std::shared_ptr<ClearTask> task)
 {
-    freqOverTimeGraph->clearDisplayedFFTs();
+    freqOverTimeGraph->clear();
     volumeOverTimeGraph->clear();
     trackList.clear();
     task->setCompleted(true);
