@@ -10,6 +10,7 @@
 #include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/Audio/TimeSignatureUpdateTask.h"
 #include "StationApp/Audio/TrackInfoUpdateTask.h"
+#include "StationApp/GUI/AudioConstants.h"
 #include "TaskManagement/TaskingManager.h"
 #include <memory>
 #include <mutex>
@@ -52,10 +53,13 @@ void AudioDataWorker::processAudioSegment(std::shared_ptr<AudioTransport::AudioS
     }
 
     float volume = audioBuffer->getRMSLevel(0, 0, audioSegment->noAudioSamples);
-    auto volumeUpdateTask = std::make_shared<NewTrackVolumeDataTask>(
-        audioSegment->trackIdentifier, audioSegment->noChannels, audioSegment->channel,
-        audioSegment->segmentStartSample, audioSegment->noAudioSamples, volume);
-    taskingManager.broadcastTask(volumeUpdateTask);
+    if (volume > MIN_SHOWABLE_RMS_VOLUME)
+    {
+        auto volumeUpdateTask = std::make_shared<NewTrackVolumeDataTask>(
+            audioSegment->trackIdentifier, audioSegment->noChannels, audioSegment->channel,
+            audioSegment->segmentStartSample, audioSegment->noAudioSamples, volume, audioSegment->sampleRate);
+        taskingManager.broadcastTask(volumeUpdateTask);
+    }
 
     int numFFTs = fftProcessor.getNumFftFromNumSamples(audioSegment->noAudioSamples);
     auto shortTimeFFTs = fftProcessor.performFft(audioBuffer);

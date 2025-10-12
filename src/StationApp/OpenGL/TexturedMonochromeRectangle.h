@@ -14,14 +14,14 @@
 #define TEXTURE_PIXEL_FLOAT_LEN 4
 
 /**
- * @brief An opengl mesh for a rectangle without texture.
+ * @brief An opengl mesh for a rectangle with a monocolour texture.
  * This object should only be used within the OpenGL renderer thread.
  */
-class TexturedRectangle : public GlMesh
+class TexturedMonochromeRectangle : public GlMesh
 {
   public:
-    TexturedRectangle(int64_t width, int64_t height, juce::Colour col);
-    ~TexturedRectangle();
+    TexturedMonochromeRectangle(int64_t width, int64_t height, juce::Colour col);
+    ~TexturedMonochromeRectangle();
 
     void registerGlObjects() override;
     void drawGlObjects() override;

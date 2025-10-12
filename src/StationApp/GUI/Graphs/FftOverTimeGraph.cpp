@@ -1,6 +1,7 @@
 #include "FftOverTimeGraph.h"
 #include "StationApp/GUI/AudioConstants.h"
 #include "StationApp/GUI/Graphs/FrequencyLinesDrawer.h"
+#include "StationApp/GUI/Graphs/SamplePositionUtils.h"
 #include "StationApp/OpenGL/OpenGlShaders.h"
 #include "StationApp/OpenGL/ShaderHelpers.h"
 #include "spdlog/spdlog.h"
@@ -59,15 +60,9 @@ void FftOverTimeGraph::displayNewFftData(std::shared_ptr<NewFftDataTask> fftData
         // compute its position and tile index
         int64_t startSample = fftData->segmentStartSample + ((int64_t)i * fftSampleWidth);
         int64_t endSample = startSample + fftSampleWidth;
-        if (fftData->sampleRate != VISUAL_SAMPLE_RATE)
-        {
-            float sampleRateRatio = float(VISUAL_SAMPLE_RATE) / float(fftData->sampleRate);
-            startSample = float(startSample) * sampleRateRatio;
-            endSample = float(endSample) * sampleRateRatio;
-        }
-        // in order to align the FFTs to the grid we shift forward by a predefined number of samples
-        startSample += FFT_POSITION_FORWARD_SAMPLE_SHIFT;
-        endSample += FFT_POSITION_FORWARD_SAMPLE_SHIFT;
+
+        SamplePositionUtils::toVisualSampleRate(startSample, endSample, fftData->sampleRate);
+        SamplePositionUtils::shiftToAlignWithOrigin(startSample, endSample);
 
         int64_t secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
         int64_t secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
@@ -107,8 +102,8 @@ void FftOverTimeGraph::displayNewFftData(std::shared_ptr<NewFftDataTask> fftData
                 }
             }
             procTimeWg->add();
-            drawFftOnTile(fftData->trackIdentifier, j, tileStartSample, tileEndSample, fftSize, fftDataPointer,
-                          channelIndex, fftData->sampleRate, fftData->getTaskingManager(), procTimeWg);
+            queueFftForDrawing(fftData->trackIdentifier, j, tileStartSample, tileEndSample, fftSize, fftDataPointer,
+                               channelIndex, fftData->sampleRate, fftData->getTaskingManager(), procTimeWg);
         }
     }
 }
@@ -219,9 +214,9 @@ size_t FftOverTimeGraph::createSecondTile(uint64_t trackIdentifier, int64_t seco
     return newTileIndex;
 }
 
-void FftOverTimeGraph::drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end,
-                                     int fftSize, float *data, int channel, uint32_t sampleRate, TaskingManager *tm,
-                                     std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
+void FftOverTimeGraph::queueFftForDrawing(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end,
+                                          int fftSize, float *data, int channel, uint32_t sampleRate,
+                                          TaskingManager *tm, std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
 {
     auto newFftToDraw = getIdleFftToDrawStruct();
 

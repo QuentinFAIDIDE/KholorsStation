@@ -1,9 +1,9 @@
-#include "TexturedRectangle.h"
+#include "TexturedMonochromeRectangle.h"
 #include "OpenGLHelpers.h"
 #include "juce_opengl/opengl/juce_gl.h"
 #include "spdlog/spdlog.h"
 
-TexturedRectangle::TexturedRectangle(int64_t width, int64_t height, juce::Colour col)
+TexturedMonochromeRectangle::TexturedMonochromeRectangle(int64_t width, int64_t height, juce::Colour col)
     : textureWidth(width), textureHeight(height)
 {
     vertices.reserve(4);
@@ -44,11 +44,11 @@ TexturedRectangle::TexturedRectangle(int64_t width, int64_t height, juce::Colour
     std::fill(texture.begin(), texture.end(), 0.0f);
 }
 
-TexturedRectangle::~TexturedRectangle()
+TexturedMonochromeRectangle::~TexturedMonochromeRectangle()
 {
 }
 
-void TexturedRectangle::registerGlObjects()
+void TexturedMonochromeRectangle::registerGlObjects()
 {
     spdlog::debug("Registering an OpenGL textured mesh");
 
@@ -94,7 +94,7 @@ void TexturedRectangle::registerGlObjects()
     lastUploadedTextureNonce = newNonce;
 }
 
-void TexturedRectangle::drawGlObjects()
+void TexturedMonochromeRectangle::drawGlObjects()
 {
     glActiveTexture(GL_TEXTURE0); // <- might only be necessary on some GPUs
     glBindTexture(GL_TEXTURE_2D, tbo);
@@ -104,7 +104,7 @@ void TexturedRectangle::drawGlObjects()
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void TexturedRectangle::freeGlObjects()
+void TexturedMonochromeRectangle::freeGlObjects()
 {
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
@@ -112,7 +112,7 @@ void TexturedRectangle::freeGlObjects()
     glDeleteTextures(1, &tbo);
 }
 
-void TexturedRectangle::refreshGpuTextureIfChanged()
+void TexturedMonochromeRectangle::refreshGpuTextureIfChanged()
 {
     if (textureNonce != lastUploadedTextureNonce)
     {
@@ -123,7 +123,7 @@ void TexturedRectangle::refreshGpuTextureIfChanged()
     }
 }
 
-void TexturedRectangle::changeColor(juce::Colour newColor)
+void TexturedMonochromeRectangle::changeColor(juce::Colour newColor)
 {
     for (size_t i = 0; i < 4; i++)
     {
@@ -138,7 +138,7 @@ void TexturedRectangle::changeColor(juce::Colour newColor)
     OpenGLHelpers::printAllOpenGlError();
 }
 
-void TexturedRectangle::setPosition(int64_t viewPositionSamples, int64_t width, uint64_t trackIdentifier)
+void TexturedMonochromeRectangle::setPosition(int64_t viewPositionSamples, int64_t width, uint64_t trackIdentifier)
 {
     uint64_t maxUint64 = 0;
     maxUint64 -= 1;
@@ -165,7 +165,7 @@ void TexturedRectangle::setPosition(int64_t viewPositionSamples, int64_t width, 
     OpenGLHelpers::printAllOpenGlError();
 }
 
-void TexturedRectangle::setPixelAt(int x, int y, float intensity)
+void TexturedMonochromeRectangle::setPixelAt(int x, int y, float intensity)
 {
     float icorr = intensity;
     if (icorr < 0.0f)
@@ -182,7 +182,7 @@ void TexturedRectangle::setPixelAt(int x, int y, float intensity)
     textureNonce++;
 }
 
-void TexturedRectangle::setRepeatedVerticalHalfLine(int channel, size_t startX, size_t endX, float *intensities)
+void TexturedMonochromeRectangle::setRepeatedVerticalHalfLine(int channel, size_t startX, size_t endX, float *intensities)
 {
     size_t widthX = TEXTURE_PIXEL_FLOAT_LEN * (1 + (endX - startX));
 
@@ -226,7 +226,7 @@ void TexturedRectangle::setRepeatedVerticalHalfLine(int channel, size_t startX, 
     textureNonce++;
 }
 
-void TexturedRectangle::clearAllData()
+void TexturedMonochromeRectangle::clearAllData()
 {
     std::fill(texture.begin(), texture.end(), 0.0f);
     textureNonce++;

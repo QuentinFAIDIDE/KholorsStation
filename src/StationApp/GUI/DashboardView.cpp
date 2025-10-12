@@ -188,9 +188,8 @@ void DashboardView::propagateClearedFft()
     {
         trackList.clearTrackFromRange(tracksClearedInMainView[i].trackIdentifier,
                                       tracksClearedInMainView[i].startSample, tracksClearedInMainView[i].length);
-        volumeOverTimeGraph->clearTrackFromRange(tracksClearedInMainView[i].trackIdentifier,
-                                                 tracksClearedInMainView[i].startSample,
-                                                 tracksClearedInMainView[i].length);
+        volumeOverTimeGraph->clearTracksFromRange(tracksClearedInMainView[i].startSample,
+                                                  tracksClearedInMainView[i].length);
     }
 }
 
@@ -239,6 +238,13 @@ bool DashboardView::handleNewFftDataTask(std::shared_ptr<NewFftDataTask> task)
     auto reuseResultArrayTask = std::make_shared<FftResultVectorReuseTask>(task->fftData);
     taskingManager.broadcastNestedTaskNow(reuseResultArrayTask);
 
+    task->setCompleted(true);
+    return false;
+}
+
+bool DashboardView::handleNewVolumeDataTask(std::shared_ptr<NewTrackVolumeDataTask> task)
+{
+    volumeOverTimeGraph->displayNewVolumeData(task);
     task->setCompleted(true);
     return false;
 }
@@ -369,6 +375,10 @@ bool DashboardView::taskHandler(std::shared_ptr<Task> task)
     if (auto newFftDataTask = std::dynamic_pointer_cast<NewFftDataTask>(task))
         if (!newFftDataTask->isCompleted() && !newFftDataTask->hasFailed())
             return handleNewFftDataTask(newFftDataTask);
+
+    if (auto newTrackVolumeDataTask = std::dynamic_pointer_cast<NewTrackVolumeDataTask>(task))
+        if (!newTrackVolumeDataTask->isCompleted() && !newTrackVolumeDataTask->hasFailed())
+            return handleNewVolumeDataTask(newTrackVolumeDataTask);
 
     if (auto colorUpdateTask = std::dynamic_pointer_cast<TrackColorUpdateTask>(task))
         return handleTrackColorUpdateTask(colorUpdateTask);

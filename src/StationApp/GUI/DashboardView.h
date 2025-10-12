@@ -96,6 +96,7 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
     void propagateClearedFft();
 
     bool handleNewFftDataTask(std::shared_ptr<NewFftDataTask> task);
+    bool handleNewVolumeDataTask(std::shared_ptr<NewTrackVolumeDataTask> task);
     bool handleTrackColorUpdateTask(std::shared_ptr<TrackColorUpdateTask> task);
     bool handleBpmUpdateTask(std::shared_ptr<BpmUpdateTask> task);
     bool handleTimeSignatureUpdateTask(std::shared_ptr<TimeSignatureUpdateTask> task);
