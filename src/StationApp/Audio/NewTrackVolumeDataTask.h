@@ -14,7 +14,8 @@ class NewTrackVolumeDataTask : public SilentTask
 {
   public:
     NewTrackVolumeDataTask(uint64_t _trackIdentifier, uint32_t _numChannels, uint32_t _channelIndex,
-                           uint32_t _segmentStartSample, uint64_t _segmentSampleLength, float _volume)
+                           uint32_t _segmentStartSample, uint64_t _segmentSampleLength, float _volume,
+                           uint64_t _sampleRate)
     {
         trackIdentifier = _trackIdentifier;
         totalNoChannels = _numChannels;
@@ -22,6 +23,7 @@ class NewTrackVolumeDataTask : public SilentTask
         segmentStartSample = _segmentStartSample;
         segmentSampleLength = _segmentSampleLength;
         volume = _volume;
+        sampleRate = _sampleRate;
     }
 
     /**
@@ -36,6 +38,7 @@ class NewTrackVolumeDataTask : public SilentTask
                                 {"track_identifier", trackIdentifier},
                                 {"total_no_channels", totalNoChannels},
                                 {"channel_index", channelIndex},
+                                {"sample_rate", sampleRate},
                                 {"segment_start_sample", segmentStartSample},
                                 {"segment_sample_length", segmentSampleLength},
                                 {"recordable_in_history", recordableInHistory},
@@ -48,5 +51,6 @@ class NewTrackVolumeDataTask : public SilentTask
     uint32_t channelIndex;        /**< Index of this specific channel data */
     uint32_t segmentStartSample;  /**< Start sample of this segment */
     uint64_t segmentSampleLength; /**< Length of the segment in samples */
+    uint64_t sampleRate;
     float volume;
 };

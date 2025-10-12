@@ -16,8 +16,6 @@
 #define SECOND_TILE_WIDTH 64
 #define SECOND_TILE_HEIGHT 512
 
-#define FFT_POSITION_FORWARD_SAMPLE_SHIFT 1920
-
 class FftOverTimeGraph : public BaseOverTimeGraph
 {
   public:
@@ -128,8 +126,6 @@ class FftOverTimeGraph : public BaseOverTimeGraph
      */
     void setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm);
 
-
-
     /**
      * @brief Add the fft data inside the task struct to the currently displayed data.
      *
@@ -188,9 +184,9 @@ class FftOverTimeGraph : public BaseOverTimeGraph
      * @param tm a tasking manager (used to check for shutdown and preevent deadlock with emssage thread)
      * @param procTimeWg a waitgroup to be used to notify when work is done, no need to call add, parent already did
      */
-    void drawFftOnTile(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
-                       float *data, int channel, uint32_t sampleRate, TaskingManager *tm,
-                       std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg);
+    void queueFftForDrawing(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end, int fftSize,
+                            float *data, int channel, uint32_t sampleRate, TaskingManager *tm,
+                            std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg);
 
     /**
      * @brief Called by the openGL thread to draw an fft isnide a GPU texture tile.
@@ -378,6 +374,7 @@ class FftOverTimeGraph : public BaseOverTimeGraph
 
     TmpNormalizedUnitTransformer tmpFreqTransformer, tmpIntensityTransformer;
 
+    // TODO: rely on an ordered map for drawing instead ?
     std::list<std::pair<uint64_t, std::list<size_t>>>
         trackTilesInDrawingOrder; /**< list of ordered tracks with their tiles lists used to construct
                                      trackTilesDrawOrder */
@@ -386,6 +383,8 @@ class FftOverTimeGraph : public BaseOverTimeGraph
 
     std::vector<TrackSecondTile> secondTilesRingBuffer; /**< Array of tiles that represent one second of track signal */
     size_t secondTileNextIndex; /**< Index of the next tile to create in the secondTilesRingBuffer */
+
+    // TODO: create a custom hash for this pair and use unordered_map
     std::map<std::pair<uint64_t, int64_t>, size_t>
         tileIndexByTrackIdAndPosition; /**< Index of tiles in secondTilesRingBuffer per track id and second tile index
                                         std::pair(track_id, tile_index) */
@@ -405,7 +404,7 @@ class FftOverTimeGraph : public BaseOverTimeGraph
     std::mutex openGlThreadColorsMutex; /**< Locking color updates queues and color map for the openGL thread */
     std::queue<std::pair<uint64_t, juce::Colour>>
         colorUpdatesToApply; /**< track colors to be applied by openGL thread, need the lock */
-    std::map<uint64_t, juce::Colour> knownTrackColors; /**< track colors known to the openGL thread */
+    std::unordered_map<uint64_t, juce::Colour> knownTrackColors; /**< track colors known to the openGL thread */
 
     bool needToResetTiles;      /**< true when the openGL thread is expected to clear all tiles */
     std::mutex tilesResetMutex; /**< mutex to protect acces to clearAllTiles */
