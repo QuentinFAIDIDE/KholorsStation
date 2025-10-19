@@ -6,7 +6,7 @@
 #include "StationApp/GUI/Graphs/BaseOverTimeGraph.h"
 #include "StationApp/GUI/Graphs/FrequencyLinesDrawer.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
-#include "StationApp/OpenGL/TexturedRectangle.h"
+#include "StationApp/OpenGL/TexturedMonochromeRectangle.h"
 
 #define IMAGES_RING_BUFFER_SIZE 128
 // Dimensions of a one-second tile.
@@ -26,10 +26,11 @@ class FftOverTimeGraph : public BaseOverTimeGraph
     {
         TrackSecondTile()
         {
-            mesh = std::make_shared<TexturedRectangle>(SECOND_TILE_WIDTH, SECOND_TILE_HEIGHT, KHOLORS_COLOR_WHITE);
+            mesh = std::make_shared<TexturedMonochromeRectangle>(SECOND_TILE_WIDTH, SECOND_TILE_HEIGHT,
+                                                                 KHOLORS_COLOR_WHITE);
             tileIndexPosition = -1;
         }
-        std::shared_ptr<TexturedRectangle> mesh;
+        std::shared_ptr<TexturedMonochromeRectangle> mesh;
         uint64_t trackIdentifer;   /**< Identifier of the track this tile is for */
         int64_t samplePosition;    /**< Position of the tile in samples */
         int64_t tileIndexPosition; /**< Position of the tile in second-tile index */
@@ -110,7 +111,7 @@ class FftOverTimeGraph : public BaseOverTimeGraph
      * @brief clears on screen data.
      * In this openGL version, queue clearing to be done by openGL Thread.
      */
-    void clear();
+    void clear() override;
 
     /**
      * @brief Return a list of ranges where specific tracks have been
