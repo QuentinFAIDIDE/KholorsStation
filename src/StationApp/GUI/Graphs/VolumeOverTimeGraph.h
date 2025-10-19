@@ -2,7 +2,8 @@
 
 #include "StationApp/Audio/NewTrackVolumeDataTask.h"
 #include "StationApp/GUI/Graphs/BaseOverTimeGraph.h"
-#include "StationApp/OpenGL/TexturedMonochromeRectangle.h"
+#include "StationApp/OpenGL/TexturedMulticoloredRectangle.h"
+#include "spdlog/spdlog.h"
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -75,7 +76,11 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
             : trackVolumesBuffer(8 * 4 * BARS_PER_TILE * MAX_NUM_TRACKS_PER_TILE),
               trackVolumesPool(&trackVolumesBuffer), trackVolumes(&trackVolumesPool)
         {
-            mesh = std::make_shared<TexturedMonochromeRectangle>(TILE_PIXEL_WIDTH, TILE_PIXEL_HEIGHT, KHOLORS_COLOR_WHITE);
+            mesh = std::make_shared<TexturedMulticoloredRectangle>(TILE_PIXEL_WIDTH, TILE_PIXEL_HEIGHT);
+            if (mesh == nullptr)
+            {
+                spdlog::error("Unable to init TexturedMulticoloredRectangle");
+            }
             tileIndexPosition = -1;
             samplePosition = -1;
             maxHeightRatio = 0.0f;
@@ -83,7 +88,7 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
 
         // TODO: reimplement a different kind of mesh that has colors and no track id (along with a new shader)
 
-        std::shared_ptr<TexturedMonochromeRectangle> mesh;
+        std::shared_ptr<TexturedMulticoloredRectangle> mesh;
         int64_t samplePosition;                                  /**< Position of the tile in samples */
         int64_t tileIndexPosition;                               /**< Position of the tile in second-tile index */
         float maxHeightRatio;                                    /**< Maximum height at which stacked volumes peak */
@@ -215,6 +220,8 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
 
     // MEMBERS BELOW
 
+    std::unique_ptr<juce::OpenGLShaderProgram> texturedPositionedShader; /**< shader to draw volume bars */
+
     std::mutex volumeUpdateQueueMutex;
     std::queue<TrackVolumeData> volumeUpdateQueue; /** UI thread queues volume drawing for openGL thread to process */
     std::queue<TrackVolumeData> volumeUpdateReadQueue; /** swapped under lock with main queue for processing */
@@ -225,10 +232,13 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
     std::queue<int64_t> tileRemovalReadQueue;         /** swapped under lock with main queue for processing */
     std::unordered_set<int64_t> tilesToRemoveReadSet; /** swapped under lock with main set for processing */
 
-    SecondTile secondTilesRingBuffer[MAX_NUM_TILES];         /**< ring buffer of second-tiles to draw on */
+    std::array<std::shared_ptr<SecondTile>, MAX_NUM_TILES>
+        secondTilesRingBuffer;                               /**< ring buffer of second-tiles to draw on */
     std::unordered_map<int64_t, size_t> secondTilesIndexMap; /**< map of second-tile index to ring buffer index */
     std::queue<size_t> freeSecondTilesIndexes;               /**< index of second tiles that are currently unused */
     std::unordered_set<size_t> secondTilesToDraw; /**< these tiles had new volumes but the texture was not drawn */
+
+    int64_t glIterCount = 0; /**< incremented at each openGL loop iteration, used to periodically perform actions */
 
     std::unordered_map<uint64_t, juce::Colour> trackColors;
 };
