@@ -157,7 +157,7 @@ void VolumeOverTimeGraph::resetJuceOpenGLShaders(juce::OpenGLContext &openGLCont
 void VolumeOverTimeGraph::setShadersUniformsAtOpenGlInit()
 {
     texturedPositionedShader->use();
-    texturedPositionedShader->setUniform("sfftTexture", 0);
+    texturedPositionedShader->setUniform("volumeBarsTexture", 0);
 }
 
 void VolumeOverTimeGraph::loadGlObjectsAtInit()
@@ -256,6 +256,7 @@ size_t VolumeOverTimeGraph::getOrCreateSecondTile(int64_t secondTileIndex)
     secondTilesRingBuffer[freeIndex]->tileIndexPosition = secondTileIndex;
     secondTilesRingBuffer[freeIndex]->maxHeightRatio = 1.0f;
     secondTilesRingBuffer[freeIndex]->trackVolumes.clear();
+    secondTilesRingBuffer[freeIndex]->mesh->setPosition(secondTileIndex * VISUAL_SAMPLE_RATE);
     secondTilesRingBuffer[freeIndex]->mesh->clearAllData();
     secondTilesIndexMap[secondTileIndex] = freeIndex;
 
@@ -342,6 +343,14 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
     {
         SecondTile &tile = *secondTilesRingBuffer[tileIndex];
         tile.mesh->clearAllData();
+
+        for (size_t i = 0; i < TILE_PIXEL_HEIGHT; i++)
+        {
+            for (size_t j = 0; j < 10; j++)
+            {
+                tile.mesh->setPixelAt(j, i, 1.0f, 0.0f, 0.0f, 0.5f);
+            }
+        }
 
         for (const auto &trackData : tile.trackVolumes)
         {
