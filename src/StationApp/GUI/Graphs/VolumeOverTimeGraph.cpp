@@ -317,10 +317,8 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
     // in pixels, then lastStackedValueTop[2] = 30, and the next drawn
     // stacked bar for bar 3 will start being drawn 30 pixels away fron center.
 
-    std::array<char, BARS_PER_TILE> lastStackedValueTop;
-    std::array<char, BARS_PER_TILE> lastStackedValueBottom;
-    lastStackedValueTop.fill(0);
-    lastStackedValueBottom.fill(0);
+    std::array<int, BARS_PER_TILE> lastStackedValueTop;
+    std::array<int, BARS_PER_TILE> lastStackedValueBottom;
 
     // We use a system of coordinates where the (0, 0) is in the (left, upper) corner.
 
@@ -328,6 +326,9 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
     {
         SecondTile &tile = *secondTilesRingBuffer[tileIndex];
         tile.mesh->clearAllData();
+
+        lastStackedValueTop.fill(0);
+        lastStackedValueBottom.fill(0);
 
         for (const auto &trackData : tile.trackVolumes)
         {
