@@ -85,7 +85,6 @@ void VolumeOverTimeGraph::displayNewVolumeData(std::shared_ptr<NewTrackVolumeDat
     int64_t endSample = startSample + (sectionSampleWidth - 1);
 
     SamplePositionUtils::toVisualSampleRate(startSample, endSample, (int64_t)volumeData->sampleRate);
-    SamplePositionUtils::shiftToAlignWithOrigin(startSample, endSample);
 
     int64_t secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
     int64_t secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
@@ -358,26 +357,19 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
                     if (barPixelHeight > 0)
                     {
                         int barYStart = (TILE_PIXEL_HEIGHT / 2) - lastStackedValueTop[i];
+                        if (barYStart < 0)
+                        {
+                            // we skip this track bar if it goes over drawable limits
+                            continue;
+                        }
                         int barYStop = barYStart - (barPixelHeight - 1);
                         if (barYStop < 0)
                         {
-                            barYStop = 0;
+                            // we skip this track bar if it goes over drawable limits
+                            continue;
                         }
                         lastStackedValueTop[i] += barPixelHeight;
                         tile.mesh->setRectangle(barX, barYStop, barWidth, barPixelHeight, r, g, b, a);
-                    }
-                }
-
-                // right channel (drawn in bottom half)
-                if (trackData.second[BARS_PER_TILE + i] > MIN_SHOWABLE_RMS_VOLUME)
-                {
-                    int barPixelHeight = (int)((float)(MAX_SECOND_TILE_TRACK_PIXEL_SIZE) *
-                                               (trackData.second[BARS_PER_TILE + i] / MAX_SHOWABLE_RMS_VOLUME));
-                    if (barPixelHeight > 0)
-                    {
-                        int barYStart = (TILE_PIXEL_HEIGHT / 2) + lastStackedValueBottom[i];
-                        lastStackedValueBottom[i] += barPixelHeight;
-                        tile.mesh->setRectangle(barX, barYStart, barWidth, barPixelHeight, r, g, b, a);
                     }
                 }
             }

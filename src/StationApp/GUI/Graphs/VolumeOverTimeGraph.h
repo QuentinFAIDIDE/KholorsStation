@@ -44,7 +44,10 @@
 #define MAX_NUM_TRACKS_PER_TILE 32
 
 // Maximum pixel height of one track within a bar of stacked volumes.
-#define MAX_SECOND_TILE_TRACK_PIXEL_SIZE ((float)(TILE_PIXEL_HEIGHT / 2) / MAX_NUM_TRACKS_PER_TILE)
+// There is an issue though, there is too little pixel precision if we allow
+// each of the 32 track to fire at max height. Therefore we only consider possible
+// that a subset of them can fire at maximum and we will truncate whathever would draw futher.
+#define MAX_SECOND_TILE_TRACK_PIXEL_SIZE ((float)(TILE_PIXEL_HEIGHT / 2) / (MAX_NUM_TRACKS_PER_TILE >> 2))
 
 // Maximum RMS value when stacking all RMS intensity bars from all 32 channels
 #define MAX_TOTAL_TILE_BAR_RMS_VALUE ((float)(MAX_NUM_TRACKS_PER_TILE) * MAX_SHOWABLE_RMS_VOLUME)
