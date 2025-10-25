@@ -292,31 +292,17 @@ void VolumeOverTimeGraph::addVolumeOnTile(size_t tileIndex, TrackVolumeData &vol
 
     if (chan == 0 || chan == 2)
     {
-        for (size_t i = 0; i < BARS_PER_TILE; i++)
+        for (size_t i = firstBarIndex; i <= lastBarIndex; i++)
         {
-            if (i >= firstBarIndex && i <= lastBarIndex)
-            {
-                trackData[i] = volumeToSet;
-            }
-            else
-            {
-                trackData[i] = 0.0f;
-            }
+            trackData[i] = volumeToSet;
         }
     }
 
     if (chan == 1 || chan == 2)
     {
-        for (size_t i = 0; i < BARS_PER_TILE; i++)
+        for (size_t i = firstBarIndex; i <= lastBarIndex; i++)
         {
-            if (i >= firstBarIndex && i <= lastBarIndex)
-            {
-                trackData[BARS_PER_TILE + i] = volumeToSet;
-            }
-            else
-            {
-                trackData[BARS_PER_TILE + i] = 0.0f;
-            }
+            trackData[BARS_PER_TILE + i] = volumeToSet;
         }
     }
     secondTilesToDraw.insert(tileIndex);
@@ -344,14 +330,6 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
         SecondTile &tile = *secondTilesRingBuffer[tileIndex];
         tile.mesh->clearAllData();
 
-        for (size_t i = 0; i < TILE_PIXEL_HEIGHT; i++)
-        {
-            for (size_t j = 0; j < 10; j++)
-            {
-                tile.mesh->setPixelAt(j, i, 1.0f, 0.0f, 0.0f, 0.5f);
-            }
-        }
-
         for (const auto &trackData : tile.trackVolumes)
         {
 
@@ -377,10 +355,17 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
                 {
                     int barPixelHeight = (int)((float)(MAX_SECOND_TILE_TRACK_PIXEL_SIZE) *
                                                (trackData.second[i] / MAX_SHOWABLE_RMS_VOLUME));
-                    int barYStart = (TILE_PIXEL_HEIGHT / 2) - lastStackedValueTop[i];
-                    int barYStop = barYStart - (barPixelHeight - 1);
-                    lastStackedValueTop[i] += barPixelHeight;
-                    tile.mesh->setRectangle(barX, barYStop, barWidth, barPixelHeight, r, g, b, a);
+                    if (barPixelHeight > 0)
+                    {
+                        int barYStart = (TILE_PIXEL_HEIGHT / 2) - lastStackedValueTop[i];
+                        int barYStop = barYStart - (barPixelHeight - 1);
+                        if (barYStop < 0)
+                        {
+                            barYStop = 0;
+                        }
+                        lastStackedValueTop[i] += barPixelHeight;
+                        tile.mesh->setRectangle(barX, barYStop, barWidth, barPixelHeight, r, g, b, a);
+                    }
                 }
 
                 // right channel (drawn in bottom half)
@@ -388,9 +373,12 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
                 {
                     int barPixelHeight = (int)((float)(MAX_SECOND_TILE_TRACK_PIXEL_SIZE) *
                                                (trackData.second[BARS_PER_TILE + i] / MAX_SHOWABLE_RMS_VOLUME));
-                    int barYStart = (TILE_PIXEL_HEIGHT / 2) + lastStackedValueBottom[i];
-                    lastStackedValueBottom[i] += barPixelHeight;
-                    tile.mesh->setRectangle(barX, barYStart, barWidth, barPixelHeight, r, g, b, a);
+                    if (barPixelHeight > 0)
+                    {
+                        int barYStart = (TILE_PIXEL_HEIGHT / 2) + lastStackedValueBottom[i];
+                        lastStackedValueBottom[i] += barPixelHeight;
+                        tile.mesh->setRectangle(barX, barYStart, barWidth, barPixelHeight, r, g, b, a);
+                    }
                 }
             }
         }
