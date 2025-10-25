@@ -1,5 +1,6 @@
 #include "AudioDataWorker.h"
 #include "AudioTransport/AudioSegment.h"
+#include "AudioTransport/Constants.h"
 #include "AudioTransport/DawInfo.h"
 #include "AudioTransport/SyncServer.h"
 #include "AudioTransport/TrackInfo.h"
@@ -52,12 +53,15 @@ void AudioDataWorker::processAudioSegment(std::shared_ptr<AudioTransport::AudioS
         audioBuffer->setSample(0, (int)i, audioSegment->audioSamples[i]);
     }
 
-    float volume = audioBuffer->getRMSLevel(0, 0, audioSegment->noAudioSamples);
-    if (volume > MIN_SHOWABLE_RMS_VOLUME)
+    size_t numSubdivs = audioSegment->noAudioSamples / VOLUME_SEGMENTS_BLOCK_SIZE;
+    for (size_t i = 0; i < numSubdivs; i++)
     {
+        size_t subdivShiftSamples = i * VOLUME_SEGMENTS_BLOCK_SIZE;
+        float subVolume = audioBuffer->getRMSLevel(0, subdivShiftSamples, VOLUME_SEGMENTS_BLOCK_SIZE);
         auto volumeUpdateTask = std::make_shared<NewTrackVolumeDataTask>(
             audioSegment->trackIdentifier, audioSegment->noChannels, audioSegment->channel,
-            audioSegment->segmentStartSample, audioSegment->noAudioSamples, volume, audioSegment->sampleRate);
+            audioSegment->segmentStartSample + subdivShiftSamples, VOLUME_SEGMENTS_BLOCK_SIZE, subVolume,
+            audioSegment->sampleRate);
         taskingManager.broadcastTask(volumeUpdateTask);
     }
 
