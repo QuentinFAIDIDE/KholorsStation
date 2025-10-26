@@ -222,3 +222,9 @@ void BaseOverTimeGraph::submitNewPlayCursorPosition(int64_t samplePosition, uint
 {
     playCursor.submitNewPlayCursorPosition(samplePosition, sampleRate);
 }
+
+void BaseOverTimeGraph::markUniformsAsStale()
+{
+    std::lock_guard lock(glThreadUniformsMutex);
+    glThreadUniformsNonce++;
+}

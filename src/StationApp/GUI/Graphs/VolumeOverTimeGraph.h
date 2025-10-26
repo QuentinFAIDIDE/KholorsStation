@@ -52,6 +52,11 @@
 // Maximum RMS value when stacking all RMS intensity bars from all 32 channels
 #define MAX_TOTAL_TILE_BAR_RMS_VALUE ((float)(MAX_NUM_TRACKS_PER_TILE) * MAX_SHOWABLE_RMS_VOLUME)
 
+#define ZOOM_FACTOR_UPDATE_INTERVAL_MS 10
+#define ZOOM_FACTOR_UPDATE_INCREMENT 0.025f
+#define ZOOMOUT_BOOST_FACTOR 30.0f
+#define RECENT_CLEAR_ZOOMIN_BOOST_TIME_MS 1500
+
 class VolumeOverTimeGraph : public BaseOverTimeGraph
 {
   public:
@@ -254,6 +259,10 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
     int64_t glIterCount = 0; /**< incremented at each openGL loop iteration, used to periodically perform actions */
 
     std::atomic<bool> shouldClear;
+
+    int64_t lastZoomFactorUpdateTimeMs;
+    int64_t lastClearTimeMs;
+    float lastZoomFactor;
 
     std::unordered_map<uint64_t, juce::Colour> trackColors;
 };

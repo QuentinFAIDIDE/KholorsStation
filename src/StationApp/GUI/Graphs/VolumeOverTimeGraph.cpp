@@ -13,6 +13,9 @@
 
 VolumeOverTimeGraph::VolumeOverTimeGraph(TrackInfoStore &tis) : BaseOverTimeGraph(tis)
 {
+    lastZoomFactorUpdateTimeMs = 0;
+    lastClearTimeMs = juce::Time::currentTimeMillis();
+    lastZoomFactor = 1.0;
     shouldClear = false;
     for (size_t i = 0; i < MAX_NUM_TILES; i++)
     {
@@ -192,7 +195,49 @@ bool VolumeOverTimeGraph::buildShadersAtInit()
 
 void VolumeOverTimeGraph::uploadAdditionalShadersUniforms()
 {
-    float zoomFactor = (float)(TILE_PIXEL_HEIGHT >> 1) / (float)getMaxPixelDistDrawnInView();
+
+    float zoomFactor;
+    if (glIterCount % 5 == 0)
+    {
+        int64_t currentTime = juce::Time::currentTimeMillis();
+        if (currentTime - lastZoomFactorUpdateTimeMs > ZOOM_FACTOR_UPDATE_INTERVAL_MS)
+        {
+            float desiredZoomFactor = (float)(TILE_PIXEL_HEIGHT >> 1) / (float)getMaxPixelDistDrawnInView();
+            float dist = desiredZoomFactor - lastZoomFactor;
+            float distSign = dist < 0 ? -1 : 1;
+            float increment;
+            if (distSign < 0)
+            {
+                // we reduce zooming
+                increment = -(std::min(std::abs(dist), ZOOM_FACTOR_UPDATE_INCREMENT * ZOOMOUT_BOOST_FACTOR));
+            }
+            else
+            {
+                // we increase zooming
+                if ((currentTime - lastClearTimeMs) < RECENT_CLEAR_ZOOMIN_BOOST_TIME_MS)
+                {
+                    increment = +(std::min(std::abs(dist), ZOOM_FACTOR_UPDATE_INCREMENT * ZOOMOUT_BOOST_FACTOR));
+                }
+                else
+                {
+                    increment = +(std::min(std::abs(dist), ZOOM_FACTOR_UPDATE_INCREMENT));
+                }
+            }
+
+            zoomFactor = lastZoomFactor + increment;
+
+            lastZoomFactorUpdateTimeMs = currentTime;
+            lastZoomFactor = zoomFactor;
+        }
+        else
+        {
+            zoomFactor = lastZoomFactor;
+        }
+    }
+    else
+    {
+        zoomFactor = lastZoomFactor;
+    }
 
     texturedPositionedShader->use();
     texturedPositionedShader->setUniform("viewPosition", (GLfloat)getViewPositionLockFree());
@@ -259,6 +304,8 @@ void VolumeOverTimeGraph::deleteTilesQueuedForDeletion()
             tileRemovalReadQueue.pop();
         }
         tilesToRemoveReadSet.clear();
+
+        lastClearTimeMs = juce::Time::currentTimeMillis();
     }
     else
     {
@@ -511,6 +558,17 @@ void VolumeOverTimeGraph::drawGlMeshes()
 
 void VolumeOverTimeGraph::glLoopPreDraw()
 {
+    // PERF: avoid markUniformsAsStale at every frame. We currently do it
+    // because when the view does not scroll, the desired
+    // zooming is not uploaded due to glUniformNonce not being
+    // updated when this happens (it is when dashboard obj updates viewPosition and such).
+    // The way to go would be to factor out the ideal zoom level
+    // computation into this main opengl loop, and only call markUniformsAsStale
+    // if the actual value needs adjustment.
+    // Although as view constantly scrolls and these uniforms are just very
+    // little data, I decided to leave that for later.
+    markUniformsAsStale();
+
     deleteTilesQueuedForDeletion();
     drawQueuedVolumesToTextures();
     applyQueuedColorUpdates();
