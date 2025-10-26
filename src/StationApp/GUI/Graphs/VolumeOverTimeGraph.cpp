@@ -373,6 +373,31 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
                         tile.mesh->setRectangle(barX, barYStop, barWidth, barPixelHeight, r, g, b, a);
                     }
                 }
+
+                if (trackData.second[BARS_PER_TILE + i] > MIN_SHOWABLE_RMS_VOLUME)
+                {
+                    int barPixelHeight = (int)((float)(MAX_SECOND_TILE_TRACK_PIXEL_SIZE) *
+                                               (trackData.second[BARS_PER_TILE + i] / MAX_SHOWABLE_RMS_VOLUME));
+                    if (barPixelHeight > 0)
+                    {
+                        int barYStart = (TILE_PIXEL_HEIGHT / 2) + lastStackedValueBottom[i];
+                        if (barYStart >= TILE_PIXEL_HEIGHT)
+                        {
+                            // we skip this track bar if it goes over drawable limits
+                            continue;
+                        }
+                        int barYStop = barYStart + barPixelHeight - 1;
+                        if (barYStop >= TILE_PIXEL_HEIGHT)
+                        {
+                            // we skip this track bar if it goes over drawable limits
+                            continue;
+                        }
+                        lastStackedValueBottom[i] += barPixelHeight;
+                        tile.mesh->setRectangle(barX, barYStart, barWidth, barPixelHeight, r, g, b, a);
+                    }
+                }
+
+                // TODO: keep track of the tile"s highest pixel from center
             }
         }
     }
