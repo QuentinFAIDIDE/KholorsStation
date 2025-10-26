@@ -150,6 +150,11 @@ class BaseOverTimeGraph : public juce::Component, juce::OpenGLRenderer
         return viewWidth;
     }
 
+    /**
+     * @brief Mark uniforms as stale to force update on next render.
+     */
+    void markUniformsAsStale();
+
   private:
     juce::Colour backgroundColor;
 
