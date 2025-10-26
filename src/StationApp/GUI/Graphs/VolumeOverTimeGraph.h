@@ -106,6 +106,8 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
      */
     void clearTracksFromRange(int64_t startSample, int64_t length);
 
+    void clear() override;
+
     /**
      * @brief Set the color of a track.
      */
@@ -242,6 +244,8 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
     std::unordered_set<size_t> secondTilesToDraw; /**< these tiles had new volumes but the texture was not drawn */
 
     int64_t glIterCount = 0; /**< incremented at each openGL loop iteration, used to periodically perform actions */
+
+    std::atomic<bool> shouldClear;
 
     std::unordered_map<uint64_t, juce::Colour> trackColors;
 };
