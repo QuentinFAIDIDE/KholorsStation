@@ -12,6 +12,7 @@
 
 VolumeOverTimeGraph::VolumeOverTimeGraph(TrackInfoStore &tis) : BaseOverTimeGraph(tis)
 {
+    shouldClear = false;
     for (size_t i = 0; i < MAX_NUM_TILES; i++)
     {
         secondTilesRingBuffer[i] = std::make_shared<SecondTile>();
@@ -43,6 +44,11 @@ void VolumeOverTimeGraph::clearTracksFromRange(int64_t startSample, int64_t leng
         }
         queueTileRemoval(j);
     }
+}
+
+void VolumeOverTimeGraph::clear()
+{
+    shouldClear = true;
 }
 
 void VolumeOverTimeGraph::queueTileRemoval(int64_t tileIndex)
@@ -198,18 +204,38 @@ void VolumeOverTimeGraph::deleteTilesQueuedForDeletion()
         std::swap(tileRemovalQueue, tileRemovalReadQueue);
         std::swap(tilesToRemoveSet, tilesToRemoveReadSet);
     }
-    while (tileRemovalReadQueue.size() > 0)
+    if (shouldClear)
     {
-        int64_t tileIndex = tileRemovalReadQueue.front();
-        tileRemovalReadQueue.pop();
-        tilesToRemoveReadSet.erase(tileIndex);
-
-        auto tileIdentifier = secondTilesIndexMap.find(tileIndex);
-        if (tileIdentifier != secondTilesIndexMap.end())
+        shouldClear = false;
+        for (const auto &entry : secondTilesIndexMap)
         {
-            secondTilesIndexMap.erase(tileIdentifier);
-            secondTilesRingBuffer[tileIdentifier->second]->tileIndexPosition = -1;
-            freeSecondTilesIndexes.push(tileIdentifier->second);
+            size_t tileIndex = entry.second;
+            secondTilesRingBuffer[tileIndex]->tileIndexPosition = -1;
+            freeSecondTilesIndexes.push(tileIndex);
+        }
+        secondTilesIndexMap.clear();
+
+        while (!tileRemovalReadQueue.empty())
+        {
+            tileRemovalReadQueue.pop();
+        }
+        tilesToRemoveReadSet.clear();
+    }
+    else
+    {
+        while (tileRemovalReadQueue.size() > 0)
+        {
+            int64_t tileIndex = tileRemovalReadQueue.front();
+            tileRemovalReadQueue.pop();
+            tilesToRemoveReadSet.erase(tileIndex);
+
+            auto tileIdentifier = secondTilesIndexMap.find(tileIndex);
+            if (tileIdentifier != secondTilesIndexMap.end())
+            {
+                secondTilesIndexMap.erase(tileIdentifier);
+                secondTilesRingBuffer[tileIdentifier->second]->tileIndexPosition = -1;
+                freeSecondTilesIndexes.push(tileIdentifier->second);
+            }
         }
     }
 }
