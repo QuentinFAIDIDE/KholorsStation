@@ -3,6 +3,7 @@
 #include "StationApp/GUI/Graphs/SamplePositionUtils.h"
 #include "StationApp/OpenGL/OpenGlShaders.h"
 #include "StationApp/OpenGL/ShaderHelpers.h"
+#include "juce_opengl/opengl/juce_gl.h"
 #include "spdlog/spdlog.h"
 #include <array>
 #include <cstddef>
@@ -191,10 +192,48 @@ bool VolumeOverTimeGraph::buildShadersAtInit()
 
 void VolumeOverTimeGraph::uploadAdditionalShadersUniforms()
 {
+    float zoomFactor = (float)(TILE_PIXEL_HEIGHT >> 1) / (float)getMaxPixelDistDrawnInView();
+
     texturedPositionedShader->use();
     texturedPositionedShader->setUniform("viewPosition", (GLfloat)getViewPositionLockFree());
     texturedPositionedShader->setUniform("viewWidth", (GLfloat)(getViewWidthLockFree() * getViewScaleLockFree()));
     texturedPositionedShader->setUniform("convolutionId", (GLint)0);
+    texturedPositionedShader->setUniform("zoomFactor", (GLfloat)zoomFactor);
+}
+
+int64_t VolumeOverTimeGraph::getMaxPixelDistDrawnInView()
+{
+    int64_t sectionSampleWidth = getViewWidthLockFree() * getViewScaleLockFree();
+    int64_t startSample = getViewPositionLockFree();
+    int64_t endSample = startSample + (sectionSampleWidth - 1);
+
+    int64_t secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
+    int64_t secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
+
+    int64_t maxDistFromCenter = 0;
+
+    for (int64_t j = secondTileIndexStartSample; j <= secondTileIndexEndSample; j++)
+    {
+        if (j < 0)
+        {
+            continue;
+        }
+
+        auto existingTile = secondTilesIndexMap.find(j);
+        if (existingTile != secondTilesIndexMap.end())
+        {
+            maxDistFromCenter = std::max(maxDistFromCenter, secondTilesRingBuffer[existingTile->second]->maxDrawnPixel);
+        }
+    }
+
+    if (maxDistFromCenter == 0)
+    {
+        return TILE_PIXEL_HEIGHT >> 1;
+    }
+    else
+    {
+        return maxDistFromCenter;
+    }
 }
 
 void VolumeOverTimeGraph::deleteTilesQueuedForDeletion()
@@ -279,7 +318,7 @@ size_t VolumeOverTimeGraph::getOrCreateSecondTile(int64_t secondTileIndex)
     }
 
     secondTilesRingBuffer[freeIndex]->tileIndexPosition = secondTileIndex;
-    secondTilesRingBuffer[freeIndex]->maxHeightRatio = 1.0f;
+    secondTilesRingBuffer[freeIndex]->maxDrawnPixel = 0;
     secondTilesRingBuffer[freeIndex]->trackVolumes.clear();
     secondTilesRingBuffer[freeIndex]->mesh->setPosition(secondTileIndex * VISUAL_SAMPLE_RATE);
     secondTilesRingBuffer[freeIndex]->mesh->clearAllData();
@@ -356,6 +395,8 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
         lastStackedValueTop.fill(0);
         lastStackedValueBottom.fill(0);
 
+        tile.maxDrawnPixel = 0;
+
         for (const auto &trackData : tile.trackVolumes)
         {
 
@@ -425,6 +466,12 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
 
                 // TODO: keep track of the tile"s highest pixel from center
             }
+        }
+
+        for (size_t i = 0; i < BARS_PER_TILE; i++)
+        {
+            int64_t maxStackedValue = std::max(lastStackedValueTop[i], lastStackedValueBottom[i]);
+            tile.maxDrawnPixel = std::max(tile.maxDrawnPixel, maxStackedValue);
         }
     }
     secondTilesToDraw.clear();
