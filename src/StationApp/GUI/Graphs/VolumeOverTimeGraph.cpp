@@ -17,6 +17,7 @@ VolumeOverTimeGraph::VolumeOverTimeGraph(TrackInfoStore &tis) : BaseOverTimeGrap
     lastClearTimeMs = juce::Time::currentTimeMillis();
     lastZoomFactor = 1.0;
     shouldClear = false;
+    shouldRedrawTiles = false;
     for (size_t i = 0; i < MAX_NUM_TILES; i++)
     {
         secondTilesRingBuffer[i] = std::make_shared<SecondTile>();
@@ -75,7 +76,10 @@ void VolumeOverTimeGraph::queueTileRemoval(int64_t tileIndex)
 
 void VolumeOverTimeGraph::setTrackColor(uint64_t trackIdentifier, juce::Colour col)
 {
-    // TODO: Implement track color setting functionality
+    // PERF: It would be good to cache color and update our local cache. This way
+    // we rely less on foreign track info object that takes a lock.
+    // In that case we would update the cache here.
+    shouldRedrawTiles = true;
 }
 
 void VolumeOverTimeGraph::setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm)
@@ -568,6 +572,17 @@ void VolumeOverTimeGraph::glLoopPreDraw()
     // Although as view constantly scrolls and these uniforms are just very
     // little data, I decided to leave that for later.
     markUniformsAsStale();
+
+    // This is triggered when a color update was received for a track.
+    // In that case we redraw all tiles as we pick colors from the color store.
+    if (shouldRedrawTiles)
+    {
+        shouldRedrawTiles = false;
+        for (const auto &entry : secondTilesIndexMap)
+        {
+            secondTilesToDraw.insert(entry.second);
+        }
+    }
 
     deleteTilesQueuedForDeletion();
     drawQueuedVolumesToTextures();

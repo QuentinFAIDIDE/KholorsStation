@@ -259,6 +259,7 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
     int64_t glIterCount = 0; /**< incremented at each openGL loop iteration, used to periodically perform actions */
 
     std::atomic<bool> shouldClear;
+    std::atomic<bool> shouldRedrawTiles;
 
     int64_t lastZoomFactorUpdateTimeMs;
     int64_t lastClearTimeMs;
