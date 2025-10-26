@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <nlohmann/json.hpp>
 
 #include "TaskManagement/Task.h"
