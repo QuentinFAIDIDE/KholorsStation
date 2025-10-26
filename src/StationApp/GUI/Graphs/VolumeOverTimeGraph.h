@@ -32,7 +32,7 @@
 // is in practice two times that number of tiles.
 #define BARS_PER_TILE 128
 
-#define TILE_PIXEL_HEIGHT 1024
+#define TILE_PIXEL_HEIGHT 2048
 #define TILE_PIXEL_WIDTH BARS_PER_TILE
 
 // How many audio samples in visual sample rate one bar contains.
@@ -86,15 +86,15 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
             }
             tileIndexPosition = -1;
             samplePosition = -1;
-            maxHeightRatio = 0.0f;
+            maxDrawnPixel = 0;
         }
 
         // TODO: reimplement a different kind of mesh that has colors and no track id (along with a new shader)
 
         std::shared_ptr<TexturedMulticoloredRectangle> mesh;
-        int64_t samplePosition;                                  /**< Position of the tile in samples */
-        int64_t tileIndexPosition;                               /**< Position of the tile in second-tile index */
-        float maxHeightRatio;                                    /**< Maximum height at which stacked volumes peak */
+        int64_t samplePosition;    /**< Position of the tile in samples */
+        int64_t tileIndexPosition; /**< Position of the tile in second-tile index */
+        int64_t maxDrawnPixel;     /**< Pixel distance of the furthest drawn pixel from center*/
         std::pmr::monotonic_buffer_resource trackVolumesBuffer;  /**< preallocated mem for pool */
         std::pmr::unsynchronized_pool_resource trackVolumesPool; /**< pool for track volumes */
         std::pmr::map<uint64_t, std::array<float, BARS_PER_TILE * 2>>
@@ -222,6 +222,14 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
      * texturedPositionedShader->release();
      */
     void deallocateOpenGlResources() override;
+
+    /**
+     * @brief Iterates over tiles on screen and taxe the max
+     * of their maxDrawnPixel value.
+     * This effectively returns the biggest pixel distance from the
+     * horizontal center line of the volumes that are drawn.
+     */
+    int64_t getMaxPixelDistDrawnInView();
 
     // MEMBERS BELOW
 
