@@ -23,6 +23,9 @@
 // requests (UI Thread writes / OpenGL thread reads)
 #define MAX_QUEUED_TILE_REMOVAL 256
 
+// default number of tiles of volumes allocated
+#define DEFAULT_NUM_TILES 16
+
 // number of one-second tiles allocated in memory
 #define MAX_NUM_TILES 256
 
@@ -250,8 +253,7 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
     std::queue<int64_t> tileRemovalReadQueue;         /** swapped under lock with main queue for processing */
     std::unordered_set<int64_t> tilesToRemoveReadSet; /** swapped under lock with main set for processing */
 
-    std::array<std::shared_ptr<SecondTile>, MAX_NUM_TILES>
-        secondTilesRingBuffer;                               /**< ring buffer of second-tiles to draw on */
+    std::vector<std::shared_ptr<SecondTile>> secondTilesRingBuffer; /**< ring buffer of second-tiles to draw on */
     std::unordered_map<int64_t, size_t> secondTilesIndexMap; /**< map of second-tile index to ring buffer index */
     std::queue<size_t> freeSecondTilesIndexes;               /**< index of second tiles that are currently unused */
     std::unordered_set<size_t> secondTilesToDraw; /**< these tiles had new volumes but the texture was not drawn */
