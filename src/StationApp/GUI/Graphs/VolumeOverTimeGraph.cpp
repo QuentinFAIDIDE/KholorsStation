@@ -18,9 +18,9 @@ VolumeOverTimeGraph::VolumeOverTimeGraph(TrackInfoStore &tis) : BaseOverTimeGrap
     lastZoomFactor = 1.0;
     shouldClear = false;
     shouldRedrawTiles = false;
-    for (size_t i = 0; i < MAX_NUM_TILES; i++)
+    for (size_t i = 0; i < DEFAULT_NUM_TILES; i++)
     {
-        secondTilesRingBuffer[i] = std::make_shared<SecondTile>();
+        secondTilesRingBuffer.push_back(std::make_shared<SecondTile>());
         freeSecondTilesIndexes.push(i);
     }
 }
@@ -364,8 +364,16 @@ size_t VolumeOverTimeGraph::getOrCreateSecondTile(int64_t secondTileIndex)
     }
     else
     {
-        spdlog::error("VolumeOverTimeGraph::getOrCreateSecondTile: ran out of free SecondTile");
-        throw std::runtime_error("VolumeOverTimeGraph::getOrCreateSecondTile: ran out of free SecondTile");
+        if (secondTilesRingBuffer.size() < MAX_NUM_TILES)
+        {
+            secondTilesRingBuffer.push_back(std::make_shared<SecondTile>(this));
+            freeIndex = secondTilesRingBuffer.size() - 1;
+        }
+        else
+        {
+            spdlog::error("VolumeOverTimeGraph::getOrCreateSecondTile: ran out of free SecondTile");
+            throw std::runtime_error("VolumeOverTimeGraph::getOrCreateSecondTile: ran out of free SecondTile");
+        }
     }
 
     secondTilesRingBuffer[freeIndex]->tileIndexPosition = secondTileIndex;
