@@ -366,7 +366,7 @@ size_t VolumeOverTimeGraph::getOrCreateSecondTile(int64_t secondTileIndex)
     {
         if (secondTilesRingBuffer.size() < MAX_NUM_TILES)
         {
-            secondTilesRingBuffer.push_back(std::make_shared<SecondTile>(this));
+            secondTilesRingBuffer.push_back(std::make_shared<SecondTile>());
             freeIndex = secondTilesRingBuffer.size() - 1;
         }
         else
