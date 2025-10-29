@@ -177,7 +177,7 @@ void VolumeOverTimeGraph::loadGlObjectsAtInit()
 {
     // load tiles textures
     texturedPositionedShader->use();
-    for (size_t i = 0; i < MAX_NUM_TILES; i++)
+    for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
     {
         secondTilesRingBuffer[i]->mesh->registerGlObjects();
     }
@@ -364,7 +364,7 @@ size_t VolumeOverTimeGraph::getOrCreateSecondTile(int64_t secondTileIndex)
     }
     else
     {
-        if (secondTilesRingBuffer.size() < MAX_NUM_TILES)
+        if (secondTilesRingBuffer.size() <= MAX_NUM_TILES)
         {
             secondTilesRingBuffer.push_back(std::make_shared<SecondTile>());
             freeIndex = secondTilesRingBuffer.size() - 1;
@@ -381,6 +381,7 @@ size_t VolumeOverTimeGraph::getOrCreateSecondTile(int64_t secondTileIndex)
     secondTilesRingBuffer[freeIndex]->trackVolumes.clear();
     secondTilesRingBuffer[freeIndex]->mesh->setPosition(secondTileIndex * VISUAL_SAMPLE_RATE);
     secondTilesRingBuffer[freeIndex]->mesh->clearAllData();
+    secondTilesRingBuffer[freeIndex]->mesh->refreshGpuTextureIfChanged();
     secondTilesIndexMap[secondTileIndex] = freeIndex;
 
     return freeIndex;
@@ -605,7 +606,7 @@ void VolumeOverTimeGraph::glLoopDrawOverGrid()
 
 void VolumeOverTimeGraph::deallocateOpenGlResources()
 {
-    for (size_t i = 0; i < MAX_NUM_TILES; i++)
+    for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
     {
         secondTilesRingBuffer[i]->mesh->freeGlObjects();
     }
