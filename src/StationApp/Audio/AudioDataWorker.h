@@ -3,6 +3,7 @@
 #include "AudioTransport/AudioSegment.h"
 #include "AudioTransport/SyncServer.h"
 #include "StationApp/Audio/FftRunner.h"
+#include "StationApp/Maths/NormalizedBijectiveProjection.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
 #include <memory>
@@ -45,4 +46,5 @@ class AudioDataWorker : public TaskListener
     AudioTransport::SyncServer &audioDataServer;    /**< Audio server to read audio data from */
     FftRunner fftProcessor;                         /**< Multi threaded FFT processor */
     std::atomic<float> processingTimerDelayMs;      /**< last average audio segment processing delay */
+    Log10Projection volumeProjection;               /**< projects volumes from linear to dB-like */
 };

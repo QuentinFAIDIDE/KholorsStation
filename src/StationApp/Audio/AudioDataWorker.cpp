@@ -11,7 +11,6 @@
 #include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/Audio/TimeSignatureUpdateTask.h"
 #include "StationApp/Audio/TrackInfoUpdateTask.h"
-#include "StationApp/GUI/AudioConstants.h"
 #include "TaskManagement/TaskingManager.h"
 #include <memory>
 #include <mutex>
@@ -21,7 +20,7 @@
 #define NUM_AUDIO_WORKER_THREADS 2
 
 AudioDataWorker::AudioDataWorker(AudioTransport::SyncServer &server, TaskingManager &tm)
-    : shouldStop(false), taskingManager(tm), audioDataServer(server), processingTimerDelayMs(0)
+    : shouldStop(false), taskingManager(tm), audioDataServer(server), processingTimerDelayMs(0), volumeProjection(0.1)
 {
     // create the worker threads
     for (size_t i = 0; i < NUM_AUDIO_WORKER_THREADS; i++)
@@ -58,6 +57,7 @@ void AudioDataWorker::processAudioSegment(std::shared_ptr<AudioTransport::AudioS
     {
         size_t subdivShiftSamples = i * VOLUME_SEGMENTS_BLOCK_SIZE;
         float subVolume = audioBuffer->getRMSLevel(0, subdivShiftSamples, VOLUME_SEGMENTS_BLOCK_SIZE);
+        subVolume = volumeProjection.projectIn(subVolume);
         auto volumeUpdateTask = std::make_shared<NewTrackVolumeDataTask>(
             audioSegment->trackIdentifier, audioSegment->noChannels, audioSegment->channel,
             audioSegment->segmentStartSample + subdivShiftSamples, VOLUME_SEGMENTS_BLOCK_SIZE, subVolume,
