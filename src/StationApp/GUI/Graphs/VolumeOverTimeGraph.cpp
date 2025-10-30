@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <optional>
 
 VolumeOverTimeGraph::VolumeOverTimeGraph(TrackInfoStore &tis) : BaseOverTimeGraph(tis)
 {
@@ -82,9 +83,18 @@ void VolumeOverTimeGraph::setTrackColor(uint64_t trackIdentifier, juce::Colour c
     shouldRedrawTiles = true;
 }
 
-void VolumeOverTimeGraph::setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm)
+void VolumeOverTimeGraph::setSelectedTrack(std::optional<uint64_t> trackToSelect, TaskingManager *tm)
 {
-    // TODO: Implement track selection functionality
+    {
+        std::lock_guard lock(selectedTrackMutex);
+        bool existenceDiffers = trackToSelect.has_value() != selectedTrack.has_value();
+        if (existenceDiffers ||
+            (!existenceDiffers && trackToSelect.has_value() && trackToSelect.value() != selectedTrack.value()))
+        {
+            selectedTrack = trackToSelect;
+            shouldRedrawTiles = true;
+        }
+    }
 }
 
 void VolumeOverTimeGraph::displayNewVolumeData(std::shared_ptr<NewTrackVolumeDataTask> volumeData)
@@ -445,6 +455,12 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
     std::array<int, BARS_PER_TILE> lastStackedValueTop;
     std::array<int, BARS_PER_TILE> lastStackedValueBottom;
 
+    std::optional<uint64_t> localSelectedTrack;
+    {
+        std::lock_guard lock(selectedTrackMutex);
+        localSelectedTrack = selectedTrack;
+    }
+
     // We use a system of coordinates where the (0, 0) is in the (left, upper) corner.
 
     for (const auto &tileIndex : secondTilesToDraw)
@@ -470,6 +486,10 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
                 r = ((float)(col->red) / 255.0f);
                 g = ((float)(col->green) / 255.0f);
                 b = ((float)(col->blue) / 255.0f);
+            }
+            if (localSelectedTrack.has_value() && localSelectedTrack.value() != trackData.first)
+            {
+                a = 0.2;
             }
 
             for (size_t i = 0; i < BARS_PER_TILE; i++)

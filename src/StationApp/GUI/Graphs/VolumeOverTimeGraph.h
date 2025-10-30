@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <memory>
 #include <memory_resource>
+#include <optional>
 #include <queue>
 #include <unordered_map>
 #include <unordered_set>
@@ -262,6 +263,9 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
 
     std::atomic<bool> shouldClear;
     std::atomic<bool> shouldRedrawTiles;
+
+    std::optional<uint64_t> selectedTrack;
+    std::mutex selectedTrackMutex;
 
     int64_t lastZoomFactorUpdateTimeMs;
     int64_t lastClearTimeMs;
