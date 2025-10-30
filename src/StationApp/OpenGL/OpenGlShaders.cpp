@@ -71,6 +71,7 @@ in vec2 TexCoord;
 
 uniform sampler2D sfftTexture;
 uniform int convolutionId;
+uniform bool isDimmed;
 
 // Define kernels
 #define identity mat3(0, 0, 0, 0, 1, 0, 0, 0, 0)
@@ -141,6 +142,9 @@ void main()
     if (convolutionId == 0)
     {
         float intensity = texture(sfftTexture, TexCoord).a;
+        if (isDimmed) {
+            intensity = intensity*0.04;
+        }
         FragColor = vec4(ourColor.x, ourColor.y, ourColor.z, intensity);
     }
     else
@@ -170,6 +174,9 @@ void main()
               break;
         }
         float intensity = convolution(convolutionMat, sfftTexture, TexCoord);
+        if (isDimmed) {
+            intensity = intensity*0.04;
+        }
         FragColor = vec4(ourColor.x, ourColor.y, ourColor.z, intensity);
     }
 }
