@@ -419,10 +419,17 @@ void FftOverTimeGraph::drawGlFftTextures()
 
     for (size_t i = 0; i < trackTilesDrawOrder.size(); i++)
     {
-        if (secondTilesRingBuffer[trackTilesDrawOrder[i]].tileIndexPosition >= 0 &&
-            (selection == std::nullopt ||
-             selection.value() == secondTilesRingBuffer[trackTilesDrawOrder[i]].trackIdentifer))
+        if (secondTilesRingBuffer[trackTilesDrawOrder[i]].tileIndexPosition >= 0)
         {
+            if (selection == std::nullopt ||
+                selection.value() == secondTilesRingBuffer[trackTilesDrawOrder[i]].trackIdentifer)
+            {
+                texturedPositionedShader->setUniform("isDimmed", 0);
+            }
+            else
+            {
+                texturedPositionedShader->setUniform("isDimmed", 1);
+            }
             secondTilesRingBuffer[trackTilesDrawOrder[i]].mesh->drawGlObjects();
         }
     }
@@ -511,6 +518,7 @@ void FftOverTimeGraph::setShadersUniformsAtOpenGlInit()
 {
     texturedPositionedShader->use();
     texturedPositionedShader->setUniform("sfftTexture", 0);
+    texturedPositionedShader->setUniform("isDimmed", false);
 }
 
 void FftOverTimeGraph::loadGlObjectsAtInit()

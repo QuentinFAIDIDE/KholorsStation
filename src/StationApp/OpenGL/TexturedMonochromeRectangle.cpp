@@ -182,7 +182,8 @@ void TexturedMonochromeRectangle::setPixelAt(int x, int y, float intensity)
     textureNonce++;
 }
 
-void TexturedMonochromeRectangle::setRepeatedVerticalHalfLine(int channel, size_t startX, size_t endX, float *intensities)
+void TexturedMonochromeRectangle::setRepeatedVerticalHalfLine(int channel, size_t startX, size_t endX,
+                                                              float *intensities)
 {
     size_t widthX = TEXTURE_PIXEL_FLOAT_LEN * (1 + (endX - startX));
 
