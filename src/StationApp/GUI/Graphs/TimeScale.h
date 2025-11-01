@@ -1,12 +1,17 @@
 #pragma once
 
 #include "juce_gui_basics/juce_gui_basics.h"
+#include <mutex>
+#include <string>
+#include <unordered_map>
 
 #define TICK_TOP_PADDING 5
 #define TICK_LABEL_MARGIN 4
 #define TICK_LABEL_WIDTH 30
 
 #define TITLE_PIXELS_FROM_BOTTOM 12
+
+#define MAXIMUM_GLYPH_CACHE_SIZE 512
 
 /**
  * @brief A component that draws beat bars
@@ -30,4 +35,5 @@ class TimeScale : public juce::Component
     std::mutex mutex;
     int64_t viewPosition, viewScale;
     float bpm;
+    std::unordered_map<std::string, juce::GlyphArrangement> glyphCache;
 };

@@ -1,8 +1,10 @@
 #include "TimeScale.h"
 #include "GUIToolkit/Consts.h"
 #include "StationApp/GUI/AudioConstants.h"
+#include "juce_graphics/juce_graphics.h"
 #include <mutex>
 #include <string>
+#include <unordered_map>
 
 TimeScale::TimeScale()
 {
@@ -90,11 +92,30 @@ void TimeScale::drawTickLevel(juce::Graphics &g, int height, int width, juce::Co
             int quarterIndex = firstBarIndex + i;
             int barIndex = (quarterIndex / 4) + 1;
             int quarterInBar = 1 + (quarterIndex % 4);
-            std::string barIndexText = std::to_string(barIndex) + "." + std::to_string(quarterInBar);
+            const std::string barIndexText = std::to_string(barIndex) + "." + std::to_string(quarterInBar);
             g.setColour(KHOLORS_COLOR_WHITE.withAlpha(0.75f));
             textBox.setX(currentTickPos - (TICK_LABEL_WIDTH >> 1));
-            g.drawText(barIndexText, textBox, juce::Justification::centred, false);
+
+            // Use cached glyph arrangement for maximum performance
+
+            // we create the glyph if its not in the cache
+            auto desiredGlypth = glyphCache.find(barIndexText);
+            if (desiredGlypth == glyphCache.end())
+            {
+                // clear entire glyph cache is its full (cheap to repopulate)
+                if (glyphCache.size() > MAXIMUM_GLYPH_CACHE_SIZE)
+                {
+                    glyphCache.clear();
+                }
+                else
+                {
+                    glyphCache[barIndexText].addLineOfText(g.getCurrentFont(), barIndexText, 0, 0);
+                }
+            }
+            int xTranslation = textBox.getX() + textBox.getY() / 2;
+            glyphCache[barIndexText].draw(g, juce::AffineTransform::translation(xTranslation, textBox.getCentreY()));
         }
+
         g.setColour(color);
         g.fillRect(tickShape.withX(currentTickPos - (width >> 1)));
         i++;
