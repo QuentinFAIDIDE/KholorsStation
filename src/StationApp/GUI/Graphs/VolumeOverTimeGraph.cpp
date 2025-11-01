@@ -378,6 +378,7 @@ size_t VolumeOverTimeGraph::getOrCreateSecondTile(int64_t secondTileIndex)
         {
             secondTilesRingBuffer.push_back(std::make_shared<SecondTile>());
             freeIndex = secondTilesRingBuffer.size() - 1;
+            secondTilesRingBuffer[freeIndex]->mesh->registerGlObjects();
         }
         else
         {
