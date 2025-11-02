@@ -109,9 +109,9 @@ mat3 region3x3(sampler2D sampler, vec2 uv)
     mat3 mRegion;
     
     mRegion = mat3(
-        region[0][3], region[1][3], region[2][3],
-        region[3][3], region[4][3], region[5][3],
-        region[6][3], region[7][3], region[8][3]
+        region[0].r, region[1].r, region[2].r,
+        region[3].r, region[4].r, region[5].r,
+        region[6].r, region[7].r, region[8].r
     );
     
     return mRegion;
@@ -141,7 +141,7 @@ void main()
 {
     if (convolutionId == 0)
     {
-        float intensity = texture(sfftTexture, TexCoord).a;
+        float intensity = texture(sfftTexture, TexCoord).r;
         if (isDimmed) {
             intensity = intensity*0.04;
         }
