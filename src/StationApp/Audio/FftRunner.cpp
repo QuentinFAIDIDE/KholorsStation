@@ -2,6 +2,7 @@
 #include "fft.h"
 #include "fft_internal.h"
 #include <chrono>
+#include <cmath>
 #include <cstring>
 #include <memory>
 #include <mutex>
@@ -17,7 +18,9 @@ FftRunner::FftRunner() : exiting(false)
         std::pow(10.0f, MIN_DB / 10.0f) / (HANN_AMPLITUDE_CORRECTION_FACTOR * HANN_AMPLITUDE_CORRECTION_FACTOR);
     highIntensityBounds = 1.0f / (HANN_AMPLITUDE_CORRECTION_FACTOR * HANN_AMPLITUDE_CORRECTION_FACTOR);
 
-    noItensityF = float(FFT_INPUT_NO_INTENSITIES);
+    invNoIntensityF = 1.0f / float(FFT_INPUT_NO_INTENSITIES);
+
+    precomputedHannAmplitudeCorrectionShift = 20.0f * std::log10(HANN_AMPLITUDE_CORRECTION_FACTOR);
 
     // preallocate jobs data structures
     for (int i = 0; i < FFT_PREALLOCATED_JOB_STRUCTS; i++)
@@ -343,8 +346,36 @@ void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, mufft_plan_1d *pla
     // apply the hanning windowing function
     inPtr = in;
     float *hannPtr = hannWindowTable.data();
-    for (size_t i = 0; i < FFT_INPUT_NO_INTENSITIES; ++i)
+    for (size_t i = 0; i < FFT_INPUT_NO_INTENSITIES >> 3; ++i)
     {
+        *inPtr = (*hannPtr) * (*inPtr);
+        inPtr++;
+        hannPtr++;
+
+        *inPtr = (*hannPtr) * (*inPtr);
+        inPtr++;
+        hannPtr++;
+
+        *inPtr = (*hannPtr) * (*inPtr);
+        inPtr++;
+        hannPtr++;
+
+        *inPtr = (*hannPtr) * (*inPtr);
+        inPtr++;
+        hannPtr++;
+
+        *inPtr = (*hannPtr) * (*inPtr);
+        inPtr++;
+        hannPtr++;
+
+        *inPtr = (*hannPtr) * (*inPtr);
+        inPtr++;
+        hannPtr++;
+
+        *inPtr = (*hannPtr) * (*inPtr);
+        inPtr++;
+        hannPtr++;
+
         *inPtr = (*hannPtr) * (*inPtr);
         inPtr++;
         hannPtr++;
@@ -360,23 +391,23 @@ void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, mufft_plan_1d *pla
     {
         // Read and normalize output complex.
         // Note that zero padding is not accounted for.
-        re = out[i].real / noItensityF;
-        im = out[i].imag / noItensityF;
+        re = out[i].real * invNoIntensityF;
+        im = out[i].imag * invNoIntensityF;
         // absolute value of the complex number
         dist = (re * re) + (im * im);
         if (dist <= lowIntensityBounds)
         {
             *outPtr = MIN_DB;
         }
-        else if (dist >= highIntensityBounds)
+        else if (dist < highIntensityBounds)
         {
-            *outPtr = 0.0f;
+            *outPtr = (10.0f * std::log10(dist)) + precomputedHannAmplitudeCorrectionShift;
         }
         else
         {
-            *outPtr = std::sqrt(dist) * HANN_AMPLITUDE_CORRECTION_FACTOR;
-            *outPtr = 20.0f * std::log10(*outPtr);
+            *outPtr = 0.0f;
         }
+
         outPtr++;
     }
 

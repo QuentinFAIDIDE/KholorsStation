@@ -140,5 +140,7 @@ class FftRunner
 
     float lowIntensityBounds; /**< if an intensity is lower than this, no need to perform conversion to db */
     float highIntensityBounds;
-    float noItensityF;
+    float invNoIntensityF;
+
+    float precomputedHannAmplitudeCorrectionShift;
 };
