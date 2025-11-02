@@ -29,10 +29,13 @@ void TimeScale::setBpm(float nbpm)
     bpm = nbpm;
 }
 
+void TimeScale::resized()
+{
+    width = getLocalBounds().getWidth();
+}
+
 void TimeScale::paint(juce::Graphics &g)
 {
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
-
     int64_t currentViewPos, currentViewScale;
     float currentBpm;
     {
@@ -42,12 +45,8 @@ void TimeScale::paint(juce::Graphics &g)
         currentViewScale = viewScale;
     }
 
+    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
     drawTicks(g, currentViewPos, currentViewScale, currentBpm);
-
-    g.setFont(juce::Font(AXIS_TITLE_PIXELS_HEIGHT));
-    g.setColour(KHOLORS_COLOR_WHITE);
-    g.drawText(TRANS("Project Time").toUpperCase(), getLocalBounds().withTrimmedBottom(TITLE_PIXELS_FROM_BOTTOM),
-               juce::Justification::centredBottom, false);
 }
 
 void TimeScale::drawTicks(juce::Graphics &g, int64_t currentViewPosition, int64_t currentViewScale, float currentBpm)
@@ -75,12 +74,16 @@ void TimeScale::drawTicks(juce::Graphics &g, int64_t currentViewPosition, int64_
     drawTickLevel(g, 4, 2, KHOLORS_COLOR_WHITE.withAlpha(0.0f), grid1PixelWidth, grid1PixelShift, -1);
 }
 
+juce::Rectangle<int> TimeScale::getTickTextArea(int height) const
+{
+    auto tickShape = getLocalBounds().removeFromTop(height + TICK_TOP_PADDING).withTrimmedTop(TICK_TOP_PADDING);
+    return tickShape.translated(0, tickShape.getHeight() + TICK_LABEL_MARGIN);
+}
+
 void TimeScale::drawTickLevel(juce::Graphics &g, int height, int width, juce::Colour color, float pixelStepWidth,
                               int pixelStepShift, int firstBarIndex)
 {
-    auto tickShape =
-        getLocalBounds().removeFromTop(height + TICK_TOP_PADDING).withWidth(width).withTrimmedTop(TICK_TOP_PADDING);
-    auto textBox = tickShape.translated(0, tickShape.getHeight() + TICK_LABEL_MARGIN);
+    auto textBox = getTickTextArea(height).withWidth(width);
     textBox.setWidth(TICK_LABEL_WIDTH);
 
     int currentTickPos = pixelStepShift;
@@ -116,8 +119,6 @@ void TimeScale::drawTickLevel(juce::Graphics &g, int height, int width, juce::Co
             glyphCache[barIndexText].draw(g, juce::AffineTransform::translation(xTranslation, textBox.getCentreY()));
         }
 
-        g.setColour(color);
-        g.fillRect(tickShape.withX(currentTickPos - (width >> 1)));
         i++;
         currentTickPos = pixelStepShift + (int)(float(i) * pixelStepWidth);
     }

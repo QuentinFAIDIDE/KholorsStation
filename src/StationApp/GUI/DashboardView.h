@@ -16,6 +16,7 @@
 #include "StationApp/GUI/TrackSelectionTask.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
+#include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
 #define MAX_SCALE_SAMPLE_PER_PIXEL 400
@@ -26,8 +27,8 @@
 #define MAX_TIME_WITHOUT_TRACK_LIST_PAINT_MS 150
 #define VIEW_MOVE_TIME_INTERVAL_MS 15
 #define FREQUENCY_GRID_WIDTH 90
-#define TIME_GRID_HEIGHT 65
-#define VOLUME_GRAPH_HEIGHT 230
+#define TIME_GRID_HEIGHT 55
+#define VOLUME_GRAPH_HEIGHT 220
 #define TRACK_LIST_WIDTH 220
 #define TIME_GRAPHS_PADDING 20
 
@@ -133,6 +134,8 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
 
     juce::Rectangle<int> unpaintedArea1, unpaintedArea2,
         unpaintedArea3; /**< Area left unpainted that FreqView needs to paint */
+
+    juce::Rectangle<int> timeTicksAxisNameArea;
 
     int lastFftMousePosX;
     int lastFftMousePosY;

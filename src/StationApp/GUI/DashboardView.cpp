@@ -1,4 +1,5 @@
 #include "DashboardView.h"
+#include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/BpmUpdateTask.h"
 #include "StationApp/Audio/FftResultVectorReuseTask.h"
 #include "StationApp/Audio/NewFftDataTask.h"
@@ -76,6 +77,13 @@ void DashboardView::paint(juce::Graphics &g)
     g.fillRect(unpaintedArea1);
     g.fillRect(unpaintedArea2);
     g.fillRect(unpaintedArea3);
+    g.fillRect(timeTicksAxisNameArea);
+
+    // draw the bottom axis name
+    g.setFont(juce::Font(AXIS_TITLE_PIXELS_HEIGHT));
+    g.setColour(KHOLORS_COLOR_WHITE);
+    g.drawText(TRANS("Project Time").toUpperCase(), timeTicksAxisNameArea.withTrimmedBottom(TITLE_PIXELS_FROM_BOTTOM),
+               juce::Justification::centredBottom, false);
 }
 
 void DashboardView::paintOverChildren(juce::Graphics &g)
@@ -311,18 +319,21 @@ void DashboardView::resized()
     auto fftBounds = getLocalBounds();
     auto trackListBounds = fftBounds.removeFromRight(TRACK_LIST_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
     auto scalesArea = fftBounds.removeFromLeft(FREQUENCY_GRID_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
-    auto volumeGridBounds = scalesArea.removeFromBottom(VOLUME_GRAPH_HEIGHT);
-    auto frequencyGridBounds = scalesArea.withTrimmedBottom(TIME_GRAPHS_PADDING);
     auto timeGridBounds = fftBounds.removeFromBottom(TIME_GRID_HEIGHT);
     auto volumeBounds = fftBounds.removeFromBottom(VOLUME_GRAPH_HEIGHT);
     unpaintedArea3 = fftBounds.removeFromBottom(TIME_GRAPHS_PADDING);
+
+    auto volumeGridBounds = scalesArea.removeFromBottom(VOLUME_GRAPH_HEIGHT);
+    auto frequencyGridBounds = scalesArea.withTrimmedBottom(TIME_GRAPHS_PADDING);
 
     freqOverTimeGraph->setBounds(fftBounds);
     volumeOverTimeGraph->setBounds(volumeBounds);
     frequencyScale.setBounds(frequencyGridBounds);
     volumeScale.setBounds(volumeGridBounds);
-    timeScale.setBounds(timeGridBounds);
+    timeScale.setBounds(timeGridBounds.removeFromTop(KHOLORS_DEFAULT_FONT_SIZE));
     trackList.setBounds(trackListBounds);
+
+    timeTicksAxisNameArea = timeGridBounds;
 
     trackList.setFreqViewWidth(fftBounds.getWidth());
 

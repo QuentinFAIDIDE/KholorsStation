@@ -25,13 +25,16 @@ class TimeScale : public juce::Component
     void setViewScale(int64_t viewScale);
     void setBpm(float bpm);
 
+    void resized() override;
     void paint(juce::Graphics &g) override;
 
   private:
     void drawTicks(juce::Graphics &g, int64_t currentViewPosition, int64_t currentViewScale, float currentBpm);
     void drawTickLevel(juce::Graphics &g, int height, int width, juce::Colour color, float pixelStepWidth,
                        int pixelStepShift, int firstBarIndex);
+    juce::Rectangle<int> getTickTextArea(int height) const;
 
+    int width, lastPaintedWidth;
     std::mutex mutex;
     int64_t viewPosition, viewScale;
     float bpm;
