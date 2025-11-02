@@ -1,19 +1,21 @@
 #include "StationApp/GUI/Graphs/GraphBorders.h"
 #include "GUIToolkit/Consts.h"
 #include "juce_graphics/juce_graphics.h"
-#include <unordered_map>
 
 #define FREQVIEW_ROUNDED_CORNERS_WIDTH 7
 #define FREQVIEW_BORDER_WIDTH 3
 
-static std::unordered_map<uint64_t, juce::Image> borderCache;
+GraphBorders::~GraphBorders()
+{
+    borderCache.clear();
+}
 
-static uint64_t getBorderCacheKey(juce::Rectangle<int> bounds, bool drawMiddleLine)
+uint64_t GraphBorders::getBorderCacheKey(juce::Rectangle<int> bounds, bool drawMiddleLine)
 {
     return ((uint64_t)bounds.getWidth() << 32) | ((uint64_t)bounds.getHeight() << 16) | (drawMiddleLine ? 1 : 0);
 }
 
-void drawGraphBorders(juce::Graphics &g, juce::Rectangle<int> bounds, bool drawMiddleLine)
+void GraphBorders::draw(juce::Graphics &g, juce::Rectangle<int> bounds, bool drawMiddleLine)
 {
     uint64_t cacheKey = getBorderCacheKey(bounds, drawMiddleLine);
 
