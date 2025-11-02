@@ -385,7 +385,13 @@ class FftOverTimeGraph : public BaseOverTimeGraph
     std::vector<TrackSecondTile> secondTilesRingBuffer; /**< Array of tiles that represent one second of track signal */
     size_t secondTileNextIndex; /**< Index of the next tile to create in the secondTilesRingBuffer */
 
-    std::map<std::pair<uint64_t, int64_t>, size_t>
+    struct PairHash {
+        size_t operator()(const std::pair<uint64_t, int64_t>& p) const {
+            return std::hash<uint64_t>{}(p.first) ^ (std::hash<int64_t>{}(p.second) << 1);
+        }
+    };
+
+    std::unordered_map<std::pair<uint64_t, int64_t>, size_t, PairHash>
         tileIndexByTrackIdAndPosition; /**< Index of tiles in secondTilesRingBuffer per track id and second tile index
                                         std::pair(track_id, tile_index) */
 
