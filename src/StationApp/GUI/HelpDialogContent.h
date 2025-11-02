@@ -27,7 +27,8 @@ class HelpDialogContent : public juce::Component
     juce::Rectangle<int> precisionTipPos;
     juce::Rectangle<int> freqTipPos;
     juce::Rectangle<int> volumeTipPos;
-    juce::Rectangle<int> issuesTipPos;
+    juce::Rectangle<int> explainTipPos;
+    juce::Rectangle<int> explainTipPos2;
 
     juce::Font font;
 
