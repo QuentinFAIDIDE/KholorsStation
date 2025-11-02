@@ -9,8 +9,8 @@ TexturedMonochromeRectangle::TexturedMonochromeRectangle(int64_t width, int64_t 
     vertices.reserve(4);
 
     halfTextureHeight = (size_t)(textureHeight >> 1);
-    rowWidth = TEXTURE_PIXEL_FLOAT_LEN * (size_t)textureWidth;
-    sideStrafeStep = TEXTURE_PIXEL_FLOAT_LEN * 2 * (size_t)textureWidth;
+    rowWidth = (size_t)textureWidth;
+    sideStrafeStep = 2 * (size_t)textureWidth;
 
     // TODO: set proper position
 
@@ -40,7 +40,7 @@ TexturedMonochromeRectangle::TexturedMonochromeRectangle(int64_t width, int64_t 
     triangleIds.push_back(1);
     triangleIds.push_back(2);
 
-    texture.resize((size_t)(width * height * TEXTURE_PIXEL_FLOAT_LEN));
+    texture.resize((size_t)(width * height));
     std::fill(texture.begin(), texture.end(), 0.0f);
 }
 
@@ -84,8 +84,7 @@ void TexturedMonochromeRectangle::registerGlObjects()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // send the texture to the gpu
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_FLOAT,
-                 texture.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, textureWidth, textureHeight, 0, GL_RED, GL_FLOAT, texture.data());
 
     OpenGLHelpers::printAllOpenGlError();
 
@@ -118,7 +117,7 @@ void TexturedMonochromeRectangle::refreshGpuTextureIfChanged()
     {
         lastUploadedTextureNonce = textureNonce;
         glBindTexture(GL_TEXTURE_2D, tbo);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth, textureHeight, GL_RGBA, GL_FLOAT, texture.data());
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth, textureHeight, GL_RED, GL_FLOAT, texture.data());
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 }
@@ -176,23 +175,21 @@ void TexturedMonochromeRectangle::setPixelAt(int x, int y, float intensity)
     {
         icorr = 1.0f;
     }
-    size_t openGlTexelIndex = (size_t)((y * textureWidth) + x);
-    // NOTE: we only modify the alpha value (last of the four float)
-    texture[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = icorr;
+    texture[(size_t)((size_t)((y * textureWidth) + x))] = icorr;
     textureNonce++;
 }
 
 void TexturedMonochromeRectangle::setRepeatedVerticalHalfLine(int channel, size_t startX, size_t endX,
                                                               float *intensities)
 {
-    size_t widthX = TEXTURE_PIXEL_FLOAT_LEN * (1 + (endX - startX));
+    size_t widthX = (1 + (endX - startX));
 
     // we start to draw in dst at the top x pixel
     // we start to read from src at the last (highest frequency) intensity
     float *srcIntensityPtr = intensities + (halfTextureHeight - 1);
-    float *dstTexelPtr = texture.data() + ((startX * TEXTURE_PIXEL_FLOAT_LEN) + 3);
+    float *dstTexelPtr = texture.data() + startX;
 
-    sideStrafe = TEXTURE_PIXEL_FLOAT_LEN * ((size_t)textureHeight - 1) * (size_t)textureWidth;
+    sideStrafe = ((size_t)textureHeight - 1) * (size_t)textureWidth;
 
     for (size_t i = 0; i < halfTextureHeight; i++)
     {
@@ -201,7 +198,7 @@ void TexturedMonochromeRectangle::setRepeatedVerticalHalfLine(int channel, size_
             for (size_t x = startX; x <= endX; x++)
             {
                 *dstTexelPtr = *srcIntensityPtr;
-                dstTexelPtr += TEXTURE_PIXEL_FLOAT_LEN;
+                dstTexelPtr += 1;
             }
             dstTexelPtr -= widthX;
         }
@@ -213,7 +210,7 @@ void TexturedMonochromeRectangle::setRepeatedVerticalHalfLine(int channel, size_
             for (size_t x = startX; x <= endX; x++)
             {
                 *dstTexelPtr = *srcIntensityPtr;
-                dstTexelPtr += TEXTURE_PIXEL_FLOAT_LEN;
+                dstTexelPtr += 1;
             }
             dstTexelPtr -= widthX;
 
