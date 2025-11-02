@@ -467,7 +467,6 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
     for (const auto &tileIndex : secondTilesToDraw)
     {
         SecondTile &tile = *secondTilesRingBuffer[tileIndex];
-        tile.mesh->clearAllData();
 
         lastStackedValueTop.fill(0);
         lastStackedValueBottom.fill(0);
@@ -544,15 +543,31 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
                         tile.mesh->setRectangle(barX, barYStart, barWidth, barPixelHeight, r, g, b, a);
                     }
                 }
-
-                // TODO: keep track of the tile"s highest pixel from center
             }
         }
 
         for (size_t i = 0; i < BARS_PER_TILE; i++)
         {
+            // count the max
             int64_t maxStackedValue = std::max(lastStackedValueTop[i], lastStackedValueBottom[i]);
             tile.maxDrawnPixel = std::max(tile.maxDrawnPixel, maxStackedValue);
+
+            // overwrite the remaining space on top of the bars
+            int barX = i * TILE_BAR_PIXEL_WIDTH;
+            int barWidth = TILE_BAR_PIXEL_WIDTH;
+            // draw the top alpha region
+            int barHeight = (TILE_PIXEL_HEIGHT / 2) - lastStackedValueTop[i];
+            if (barHeight > 0)
+            {
+                tile.mesh->setRectangle(barX, 0, barWidth, barHeight, 0, 0, 0, 0);
+            }
+            // draw the bottom alpha region
+            int barYStart = (TILE_PIXEL_HEIGHT / 2) + lastStackedValueBottom[i];
+            barHeight = TILE_PIXEL_HEIGHT - barYStart;
+            if (barHeight > 0)
+            {
+                tile.mesh->setRectangle(barX, barYStart, barWidth, barHeight, 0, 0, 0, 0);
+            }
         }
     }
     secondTilesToDraw.clear();
