@@ -138,13 +138,21 @@ void TexturedMulticoloredRectangle::setPosition(int64_t viewPositionSamples)
 void TexturedMulticoloredRectangle::setRectangle(int x, int y, int width, int height, float r, float g, float b,
                                                  float a)
 {
+    size_t openGlTexelIndex;
+    float *textureData = texture.data();
+
     for (int i = 0; i < width; i++)
     {
         for (int j = 0; j < height; j++)
         {
-            setPixelAt(x + i, y + j, r, g, b, a);
+            openGlTexelIndex = (size_t)(((y + j) * textureWidth) + (x + i));
+            textureData[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN))] = r;
+            textureData[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 1)] = g;
+            textureData[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 2)] = b;
+            textureData[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = a;
         }
     }
+    textureNonce++;
 }
 
 void TexturedMulticoloredRectangle::setPixelAt(int x, int y, float r, float g, float b, float a)
