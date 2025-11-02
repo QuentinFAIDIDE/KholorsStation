@@ -36,7 +36,7 @@
 // is in practice two times that number of tiles.
 #define BARS_PER_TILE 128
 
-#define TILE_PIXEL_HEIGHT 2048
+#define TILE_PIXEL_HEIGHT 512
 #define TILE_PIXEL_WIDTH BARS_PER_TILE
 
 // How many audio samples in visual sample rate one bar contains.
