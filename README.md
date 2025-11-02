@@ -2,16 +2,16 @@
 
 Achieving a perfect mxidown is hard, and there is no silver bullet. Juggling with multiple analyzer windows is a pain, and it's hard to see how different tracks are interacting with each other.
 
-**Kholors** solves this by giving you a single, comprehensive view of your entire mix's frequency spectrum, inside a window separate from your DAW that you can run on an adjscent screen or desktop. It helps you visually identify frequency clashes, tame resonant peaks, and ultimately make more informed EQ and mixing decisions to achieve a cleaner, more professional sound.
+**Kholors** solves this by giving you a single, comprehensive view of your entire mix's frequency spectrum and volume levels over time, inside a window separate from your DAW that you can run on an adjacent screen or desktop. It helps you visually identify frequency clashes, volume imbalances, tame resonant peaks, and ultimately make more informed EQ and mixing decisions to achieve a cleaner, more professional sound.
 
 It's composed of two parts:
 
 - **`Kholors Station`**: A standalone desktop application that provides the main visualization.
 - **`Kholors Sink`**: A lightweight VST3 plugin that you add to tracks in your DAW.
 
-The `Sink` plugin sends audio, track names, and even your DAW's track colors to the `Station`. The result is a color-coded spectrogram where you can see exactly what's happening in your mix, track by track.
+The `Sink` plugin sends audio, track names, and even your DAW's track colors to the `Station`. The result is dual color-coded visualizations showing both frequency spectrum and volume levels over time, where you can see exactly what's happening in your mix, track by track.
 
-[![Watch the video](res/kholors.png)](https://youtu.be/9gL8FKBfXtc)
+![Screenshot](docs/screenshot.jpg)
 
 > **⚠️ EARLY ALPHA WARNING:** This project is in its early stages and has not been widely tested. It may be unstable or incompatible with your DAW. Please report any issues you encounter.
 
