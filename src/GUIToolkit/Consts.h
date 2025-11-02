@@ -1,6 +1,6 @@
 #pragma once
 
-#define KHOLORS_COLOR_BACKGROUND juce::Colour(0, 17, 43)
+#define KHOLORS_COLOR_BACKGROUND juce::Colour(3, 5, 22)
 #define KHOLORS_COLOR_TEXT KHOLORS_COLOR_WHITE
 #define KHOLORS_COLOR_TEXT_DARKER juce::Colour(179, 179, 179)
 #define KHOLORS_COLOR_SEPARATOR_LINE juce::Colour(80, 80, 80)
