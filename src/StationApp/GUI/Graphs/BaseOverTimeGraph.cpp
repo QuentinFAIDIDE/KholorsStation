@@ -45,7 +45,7 @@ void BaseOverTimeGraph::paint(juce::Graphics &g)
 
 void BaseOverTimeGraph::paintOverChildren(juce::Graphics &g)
 {
-    drawGraphBorders(g, getLocalBounds(), true);
+    graphBorders.draw(g, getLocalBounds(), true);
 }
 
 void BaseOverTimeGraph::resized()

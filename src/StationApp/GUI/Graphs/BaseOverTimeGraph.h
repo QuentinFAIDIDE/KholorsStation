@@ -3,6 +3,7 @@
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/GUI/Graphs/GraphMouseCursor.h"
 #include "StationApp/GUI/Graphs/GraphPlayCursor.h"
+#include "StationApp/GUI/Graphs/GraphBorders.h"
 #include "StationApp/OpenGL/BeatGridMesh.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include "juce_opengl/juce_opengl.h"
@@ -90,6 +91,7 @@ class BaseOverTimeGraph : public juce::Component, juce::OpenGLRenderer
     TrackInfoStore &trackInfoStore;
     GraphPlayCursor playCursor;   /**< Manages play cursor position and rendering */
     GraphMouseCursor mouseCursor; /**< Manages mouse cursor crosshair rendering */
+    GraphBorders graphBorders;    /**< Manages cached border rendering */
 
     /**
      * @brief Check if new data should be ignored (e.g., during OpenGL context shutdown).
