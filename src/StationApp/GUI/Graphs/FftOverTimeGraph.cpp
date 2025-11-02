@@ -475,6 +475,8 @@ float *FftOverTimeGraph::getFftPixelIntensitiesLine(std::shared_ptr<FftToDraw> f
     fftIntensitiesBuffer.reserve(halfTileHeight);
     float *baseIntensitiesPointer = fftIntensitiesBuffer.data();
     float *nextIntensityToWrite = baseIntensitiesPointer;
+    float *fftDataPointer = fftData->fftData.data();
+    size_t fftDataSize = fftData->fftData.size();
 
     float vposFloat = 0.0f;
     for (size_t verticalPos = 0; verticalPos < halfTileHeight; verticalPos++)
@@ -482,9 +484,7 @@ float *FftOverTimeGraph::getFftPixelIntensitiesLine(std::shared_ptr<FftToDraw> f
         size_t frequencyBinIndex = rateAdjustedNoFreqBins * tmpFreqTransformer.transformInv(vposFloat);
         vposFloat += verticalPosStrafe;
 
-        float intensityDb = (frequencyBinIndex < 0 || frequencyBinIndex >= fftData->fftData.size())
-                                ? MIN_DB
-                                : fftData->fftData[frequencyBinIndex];
+        float intensityDb = (frequencyBinIndex >= fftDataSize) ? MIN_DB : fftDataPointer[frequencyBinIndex];
 
         float intensityNormalized = (-MIN_DB + intensityDb) / (-MIN_DB);
         *nextIntensityToWrite++ = tmpIntensityTransformer.transform(intensityNormalized);
