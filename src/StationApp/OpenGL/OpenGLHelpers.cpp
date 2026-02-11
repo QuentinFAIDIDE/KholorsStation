@@ -1,7 +1,8 @@
 #include "OpenGLHelpers.h"
+#include "juce_opengl/opengl/juce_gl.h"
 #include <spdlog/spdlog.h>
 
-void OpenGLHelpers::clearGlView(const juce::Colour& backgroundColor)
+void OpenGLHelpers::clearGlView(const juce::Colour &backgroundColor)
 {
     enableBlending();
     juce::gl::glClearColor(backgroundColor.getFloatRed(), backgroundColor.getFloatGreen(),
@@ -15,7 +16,7 @@ void OpenGLHelpers::enableBlending()
     juce::gl::glBlendFunc(juce::gl::GL_SRC_ALPHA, juce::gl::GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void OpenGLHelpers::logOpenGLInfo(juce::OpenGLContext&)
+void OpenGLHelpers::logOpenGLInfo(juce::OpenGLContext &)
 {
     int major = 0, minor = 0;
     juce::gl::glGetIntegerv(juce::gl::GL_MAJOR_VERSION, &major);
@@ -34,12 +35,25 @@ void OpenGLHelpers::logOpenGLInfo(juce::OpenGLContext&)
     spdlog::debug(stats.toStdString());
 }
 
-void OpenGLHelpers::logOpenGLErrorCallback(GLenum, GLenum type, GLuint, GLenum severity, GLsizei, const GLchar *message, const void *)
+void OpenGLHelpers::logOpenGLErrorCallback(GLenum, GLenum type, GLuint, GLenum severity, GLsizei, const GLchar *message,
+                                           const void *)
 {
     char s[1024];
     snprintf(s, 1024, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
              (type == juce::gl::GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
-    spdlog::error(std::string(s));
+
+    switch (severity)
+    {
+    case juce::gl::GL_DEBUG_SEVERITY_HIGH:
+        spdlog::error(std::string(s));
+        break;
+    case juce::gl::GL_DEBUG_SEVERITY_MEDIUM:
+        spdlog::warn(std::string(s));
+        break;
+    default:
+        spdlog::debug(std::string(s));
+        break;
+    }
 }
 
 void OpenGLHelpers::enableOpenGLErrorLogging()
