@@ -1,4 +1,4 @@
 {
   "dependencies": ["nlohmann-json"],
-  "builtin-baseline": "d07689ef165f033de5c0710e4f67c193a85373e1"
+  "builtin-baseline": "66c0373dc7fca549e5803087b9487edfe3aca0a1"
 }
