@@ -12,6 +12,7 @@
 #include "StationApp/GUI/ClearTask.h"
 #include "StationApp/GUI/Graphs/FftOverTimeGraph.h"
 #include "StationApp/GUI/Graphs/FrequencyScale.h"
+#include "StationApp/GUI/Graphs/SamplePositionUtils.h"
 #include "StationApp/GUI/Graphs/VolumeOverTimeGraph.h"
 #include "StationApp/GUI/MouseCursorInfoTask.h"
 #include "StationApp/GUI/TrackList.h"
@@ -35,6 +36,7 @@ DashboardView::DashboardView(TrackInfoStore &tis, TaskingManager &tm)
     lastFftMousePosY = 0;
     lastCursorShowStatus = false;
     isViewMoving = false;
+    lastFftDrawTimeMs = 0;
 
     setOpaque(true);
 
@@ -196,8 +198,9 @@ void DashboardView::propagateClearedFft()
     {
         trackList.clearTrackFromRange(tracksClearedInMainView[i].trackIdentifier,
                                       tracksClearedInMainView[i].startSample, tracksClearedInMainView[i].length);
-        volumeOverTimeGraph->clearTracksFromRange(tracksClearedInMainView[i].startSample,
-                                                  tracksClearedInMainView[i].length);
+        volumeOverTimeGraph->clearTrackFromRange(tracksClearedInMainView[i].trackIdentifier,
+                                                 tracksClearedInMainView[i].startSample,
+                                                 tracksClearedInMainView[i].length);
     }
 }
 
@@ -215,8 +218,15 @@ bool DashboardView::handleNewFftDataTask(std::shared_ptr<NewFftDataTask> task)
                 std::lock_guard lock(lastFftDrawTimeMutex);
                 lastFftDrawTimeMsCopy = lastFftDrawTimeMs;
             }
-            if ((currentTime - lastFftDrawTimeMsCopy) > MAX_IDLE_MS_TIME_BEFORE_CLEAR)
+            int64_t visualStartSample = task->segmentStartSample;
+            int64_t visualEndSample = visualStartSample + task->segmentSampleLength - 1;
+            SamplePositionUtils::toVisualSampleRate(visualStartSample, visualEndSample, task->sampleRate);
+            bool playbackRestarted = visualStartSample < freqOverTimeGraph->getPlayCursorPosition();
+
+            if ((currentTime - lastFftDrawTimeMsCopy) > MAX_IDLE_MS_TIME_BEFORE_CLEAR && playbackRestarted)
             {
+                spdlog::debug("Clearing visual history after a playback restart following {} ms without FFT data",
+                              currentTime - lastFftDrawTimeMsCopy);
                 freqOverTimeGraph->clear();
                 trackList.clear();
                 volumeOverTimeGraph->clear();

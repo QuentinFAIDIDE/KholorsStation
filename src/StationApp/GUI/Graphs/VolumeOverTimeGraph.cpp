@@ -30,11 +30,11 @@ VolumeOverTimeGraph::~VolumeOverTimeGraph()
 {
 }
 
-void VolumeOverTimeGraph::clearTracksFromRange(int64_t startSample, int64_t length)
+void VolumeOverTimeGraph::clearTrackFromRange(uint64_t trackIdentifier, int64_t startSample, int64_t length)
 {
     if (length < 1)
     {
-        throw std::runtime_error("VolumeOverTimeGraph::clearTracksFromRange: length < 1");
+        throw std::runtime_error("VolumeOverTimeGraph::clearTrackFromRange: length < 1");
     }
 
     int64_t endSample = startSample + (length - 1);
@@ -48,7 +48,7 @@ void VolumeOverTimeGraph::clearTracksFromRange(int64_t startSample, int64_t leng
         {
             continue;
         }
-        queueTileRemoval(j);
+        queueTileRemoval(trackIdentifier, j);
     }
 }
 
@@ -57,22 +57,16 @@ void VolumeOverTimeGraph::clear()
     shouldClear = true;
 }
 
-void VolumeOverTimeGraph::queueTileRemoval(int64_t tileIndex)
+void VolumeOverTimeGraph::queueTileRemoval(uint64_t trackIdentifier, int64_t tileIndex)
 {
     std::lock_guard lock(tileRemovalQueueMutex);
-
-    if (tilesToRemoveSet.find(tileIndex) != tilesToRemoveSet.end())
-    {
-        return;
-    }
 
     if (tileRemovalQueue.size() > MAX_QUEUED_TILE_REMOVAL)
     {
         spdlog::warn("VolumeOverTimeGraph::queueTileRemoval: tileRemovalQueue.size() > MAX_QUEUED_TILE_REMOVAL");
         tileRemovalQueue.pop();
     }
-    tileRemovalQueue.push(tileIndex);
-    tilesToRemoveSet.insert(tileIndex);
+    tileRemovalQueue.push({trackIdentifier, tileIndex});
 }
 
 void VolumeOverTimeGraph::setTrackColor(uint64_t trackIdentifier, juce::Colour col)
@@ -300,7 +294,6 @@ void VolumeOverTimeGraph::deleteTilesQueuedForDeletion()
     {
         std::lock_guard lock(tileRemovalQueueMutex);
         std::swap(tileRemovalQueue, tileRemovalReadQueue);
-        std::swap(tilesToRemoveSet, tilesToRemoveReadSet);
     }
     if (shouldClear)
     {
@@ -317,24 +310,34 @@ void VolumeOverTimeGraph::deleteTilesQueuedForDeletion()
         {
             tileRemovalReadQueue.pop();
         }
-        tilesToRemoveReadSet.clear();
-
         lastClearTimeMs = juce::Time::currentTimeMillis();
     }
     else
     {
         while (tileRemovalReadQueue.size() > 0)
         {
-            int64_t tileIndex = tileRemovalReadQueue.front();
+            TrackTileRemoval removal = tileRemovalReadQueue.front();
             tileRemovalReadQueue.pop();
-            tilesToRemoveReadSet.erase(tileIndex);
 
-            auto tileIdentifier = secondTilesIndexMap.find(tileIndex);
+            auto tileIdentifier = secondTilesIndexMap.find(removal.tileIndex);
             if (tileIdentifier != secondTilesIndexMap.end())
             {
-                secondTilesIndexMap.erase(tileIdentifier);
-                secondTilesRingBuffer[tileIdentifier->second]->tileIndexPosition = -1;
-                freeSecondTilesIndexes.push(tileIdentifier->second);
+                size_t ringBufferIndex = tileIdentifier->second;
+                SecondTile &tile = *secondTilesRingBuffer[ringBufferIndex];
+                if (tile.trackVolumes.erase(removal.trackIdentifier) > 0)
+                {
+                    if (tile.trackVolumes.empty())
+                    {
+                        secondTilesIndexMap.erase(tileIdentifier);
+                        tile.tileIndexPosition = -1;
+                        secondTilesToDraw.erase(ringBufferIndex);
+                        freeSecondTilesIndexes.push(ringBufferIndex);
+                    }
+                    else
+                    {
+                        secondTilesToDraw.insert(ringBufferIndex);
+                    }
+                }
             }
         }
     }
