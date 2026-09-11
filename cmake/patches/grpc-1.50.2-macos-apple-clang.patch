@@ -1,0 +1,23 @@
+diff --git a/src/core/lib/promise/detail/basic_seq.h b/src/core/lib/promise/detail/basic_seq.h
+index 6e1d7af..497f6c4 100644
+--- a/src/core/lib/promise/detail/basic_seq.h
++++ b/src/core/lib/promise/detail/basic_seq.h
+@@ -496,6 +496,6 @@ class BasicSeqIter {
+           cur_ = next;
+           state_.~State();
+           Construct(&state_,
+-                    Traits::template CallSeqFactory(f_, *cur_, std::move(arg)));
++                    Traits::template CallSeqFactory<>(f_, *cur_, std::move(arg)));
+           return PollNonEmpty();
+         });
+   }
+diff --git a/third_party/zlib/zutil.h b/third_party/zlib/zutil.h
+index 8cc5f86..5fead6f 100644
+--- a/third_party/zlib/zutil.h
++++ b/third_party/zlib/zutil.h
+@@ -140,4 +140,4 @@
+-#if defined(MACOS) || defined(TARGET_OS_MAC)
++#if !defined(__APPLE__) && (defined(MACOS) || defined(TARGET_OS_MAC))
+ #  define OS_CODE  7
+ #  ifndef Z_SOLO
+ #    if defined(__MWERKS__) && __dest_os != __be_os && __dest_os != __win32_os

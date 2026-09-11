@@ -80,8 +80,8 @@ void AudioPluginAudioProcessorEditor::drawHeader(juce::Graphics &g)
     auto logoArea = topHeaderArea.removeFromRight(LOGO_WIDTH);
     sharedSvgs->artifaktNdLogo->drawWithin(g, logoArea.toFloat(), juce::RectanglePlacement::centred, 1.0f);
 
-    int mainTitleWidth = sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("KHOLORS II");
-    int subTitleWidth = sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("SINK");
+    int mainTitleWidth = juce::GlyphArrangement::getStringWidthInt(sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT), "KHOLORS II");
+    int subTitleWidth = juce::GlyphArrangement::getStringWidthInt(sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT), "SINK");
     int totalWidth = mainTitleWidth + middlePadding + subTitleWidth;
 
     auto titleArea = topHeaderArea.removeFromLeft(totalWidth);

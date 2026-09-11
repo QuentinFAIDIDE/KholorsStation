@@ -77,9 +77,9 @@ void MainComponent::paint(juce::Graphics &g)
     int middlePadding = 6;
     int versionPadding = 3;
 
-    int mainTitleWidth = sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("KHOLORS");
-    int subTitleWidth = sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("STATION");
-    int versionWidth = sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT).getStringWidth(GIT_DESCRIBE_VERSION);
+    int mainTitleWidth = juce::GlyphArrangement::getStringWidthInt(sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT), "KHOLORS");
+    int subTitleWidth = juce::GlyphArrangement::getStringWidthInt(sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT), "STATION");
+    int versionWidth = juce::GlyphArrangement::getStringWidthInt(sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT), GIT_DESCRIBE_VERSION);
 
     int totalWidth = mainTitleWidth + middlePadding + subTitleWidth + versionPadding + versionWidth;
 
@@ -158,9 +158,9 @@ void MainComponent::resized()
 
     int middlePadding = 6;
     int versionPadding = 3;
-    int mainTitleWidth = sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("KHOLORS");
-    int subTitleWidth = sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT).getStringWidth("STATION");
-    int versionWidth = sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT).getStringWidth(GIT_DESCRIBE_VERSION);
+    int mainTitleWidth = juce::GlyphArrangement::getStringWidthInt(sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT), "KHOLORS");
+    int subTitleWidth = juce::GlyphArrangement::getStringWidthInt(sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT), "STATION");
+    int versionWidth = juce::GlyphArrangement::getStringWidthInt(sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT), GIT_DESCRIBE_VERSION);
     int totalTextWidth =
         TOPBAR_RIGHT_PADDING + mainTitleWidth + middlePadding + subTitleWidth + versionPadding + versionWidth;
     buttonsArea.removeFromLeft(totalTextWidth);

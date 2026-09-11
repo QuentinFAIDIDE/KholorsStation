@@ -84,7 +84,7 @@ void KholorsLookAndFeel::getIdealPopupMenuItemSize(const juce::String &text, boo
     }
 
     auto font = getPopupMenuFont();
-    int textWidth = font.getStringWidth(text);
+    int textWidth = juce::GlyphArrangement::getStringWidthInt(font, text);
     idealWidth = textWidth + MENU_ITEM_SIDE_PADDING;
     idealHeight = MENU_ITEM_HEIGHT;
 }
@@ -93,7 +93,7 @@ int KholorsLookAndFeel::getTabButtonBestWidth(juce::TabBarButton &tbb, int)
 {
     auto font = juce::Font(KHOLORS_DEFAULT_FONT_SIZE);
     int i = tbb.getIndex();
-    return font.getStringWidth(tbb.getTabbedButtonBar().getTabNames()[i]) + KHOLORS_TAB_BUTTONS_INNER_PADDING;
+    return juce::GlyphArrangement::getStringWidthInt(font, tbb.getTabbedButtonBar().getTabNames()[i]) + KHOLORS_TAB_BUTTONS_INNER_PADDING;
 }
 
 void KholorsLookAndFeel::drawTabbedButtonBarBackground(juce::TabbedButtonBar &, juce::Graphics &g)
