@@ -83,8 +83,8 @@ class TexturedMonochromeRectangle : public GlMesh
   private:
     int64_t textureWidth, textureHeight; /**< Dimensions of texture */
     std::vector<float> texture;          /**< Raw intensities to use as texture */
-    int64_t textureNonce;                /**< A number changed everytime the texture gets modified */
-    int64_t lastUploadedTextureNonce;    /**< Last nonce where the texture was uploaded to GPU */
+    int64_t textureNonce = 0;             /**< A number changed everytime the texture gets modified */
+    int64_t lastUploadedTextureNonce = 0; /**< Last nonce where the texture was uploaded to GPU */
 
     std::vector<Vertex> vertices;          /**< List of vertices with position, texture pos, and color */
     std::vector<unsigned int> triangleIds; /**< List of vertice ids to draw each triangle */

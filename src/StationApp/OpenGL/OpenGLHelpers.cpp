@@ -58,6 +58,14 @@ void OpenGLHelpers::logOpenGLErrorCallback(GLenum, GLenum type, GLuint, GLenum s
 
 void OpenGLHelpers::enableOpenGLErrorLogging()
 {
+    // macOS exposes OpenGL 4.1 but does not provide the optional debug-output
+    // callback. Calling its unresolved entry point crashes the render thread.
+    if (juce::gl::glDebugMessageCallback == nullptr)
+    {
+        spdlog::debug("OpenGL debug-output callback is unavailable");
+        return;
+    }
+
     juce::gl::glEnable(juce::gl::GL_DEBUG_OUTPUT);
     juce::gl::glDebugMessageCallback(logOpenGLErrorCallback, nullptr);
 }
