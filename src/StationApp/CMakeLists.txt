@@ -93,3 +93,14 @@ target_link_libraries(
           muFFT
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
+
+# JUCE leaves the development app bundle unsigned.  Sign the completed bundle
+# so a CMake-installed staging tree remains valid while release signing stays
+# the responsibility of MAC-008.
+if(APPLE)
+  add_custom_command(
+    TARGET StationApp
+    POST_BUILD
+    COMMAND codesign --force --sign - "$<TARGET_BUNDLE_DIR:StationApp>"
+    VERBATIM)
+endif()
