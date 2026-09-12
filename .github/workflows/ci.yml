@@ -62,8 +62,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./build
-          key: ${{ runner.os }}-build-cache-3-${{ hashFiles('**/CmakeLists.txt') }}
-          restore-keys: ${{ runner.os }}-build-cache-3-${{ hashFiles('**/CmakeLists.txt') }}
+          key: ${{ runner.os }}-build-cache-3-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-3-${{ hashFiles('**/CMakeLists.txt') }}
       - name: Configure
         run: |
           mkdir -p build
@@ -99,11 +99,41 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./build
-          key: ${{ runner.os }}-build-cache-win-3-${{ hashFiles('**/CmakeLists.txt') }}
-          restore-keys: ${{ runner.os }}-build-cache-win-3-${{ hashFiles('**/CmakeLists.txt') }}
+          key: ${{ runner.os }}-build-cache-win-3-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-win-3-${{ hashFiles('**/CMakeLists.txt') }}
       - name: Configure
         run: cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo .
       - name: Build
         run: |
           cmake --build build --parallel 4 --config RelWithDebInfo --target StationApp
           cmake --build build --parallel 4 --config RelWithDebInfo --target SinkPlugin_VST3
+
+  build-macos:
+    name: Build and Test on macOS
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "3.29.5"
+          ninjaVersion: "1.12.1"
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
+      - name: Cache build directory
+        id: cache-build
+        uses: actions/cache@v4
+        with:
+          path: ./build
+          key: ${{ runner.os }}-build-cache-macos-3-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-macos-3-${{ hashFiles('**/CMakeLists.txt') }}
+      - name: Configure
+        run: cmake --preset macos-arm64-release
+      - name: Build
+        run: cmake --build --preset macos-arm64-release --parallel 4
+      - name: Test
+        run: ctest --test-dir build/macos-arm64-release -E "example"

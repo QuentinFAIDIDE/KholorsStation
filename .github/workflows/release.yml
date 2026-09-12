@@ -28,8 +28,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./build
-          key: ${{ runner.os }}-build-cache-3-${{ hashFiles('**/CmakeLists.txt') }}
-          restore-keys: ${{ runner.os }}-build-cache-3-${{ hashFiles('**/CmakeLists.txt') }}
+          key: ${{ runner.os }}-build-cache-3-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-3-${{ hashFiles('**/CMakeLists.txt') }}
       - name: Configure
         run: |
           mkdir -p build
@@ -112,8 +112,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./build
-          key: ${{ runner.os }}-build-cache-win-3-${{ hashFiles('**/CmakeLists.txt') }}
-          restore-keys: ${{ runner.os }}-build-cache-win-3-${{ hashFiles('**/CmakeLists.txt') }}
+          key: ${{ runner.os }}-build-cache-win-3-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-win-3-${{ hashFiles('**/CMakeLists.txt') }}
       - name: Configure
         run: cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo .
       - name: Build
@@ -137,3 +137,44 @@ jobs:
           files: |
             res/KholorsStation*.exe
             Kholors*.pdb
+
+  build-macos:
+    name: Build artifacts on macOS
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "3.29.5"
+          ninjaVersion: "1.12.1"
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          create-symlink: true
+      - name: Cache build directory
+        id: cache-build
+        uses: actions/cache@v4
+        with:
+          path: ./build
+          key: ${{ runner.os }}-build-cache-macos-3-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-macos-3-${{ hashFiles('**/CMakeLists.txt') }}
+      - name: Configure
+        run: cmake --preset macos-arm64-release
+      - name: Build
+        run: cmake --build --preset macos-arm64-release --parallel 4
+      - name: Package
+        run: |
+          set -euo pipefail
+          rm -rf build/macos-arm64-release/package-root
+          cmake --install build/macos-arm64-release --prefix "$PWD/build/macos-arm64-release/package-root"
+          ditto -c -k --sequesterRsrc build/macos-arm64-release/package-root kholors_macos_${{ github.ref_name }}.zip
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          token: ${{ secrets.PAT }}
+          files: |
+            kholors_macos_*.zip

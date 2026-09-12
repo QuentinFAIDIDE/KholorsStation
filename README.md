@@ -155,9 +155,10 @@ third-party dependencies on the first configure.
 Three presets are available:
 
 - `macos-arm64-debug` — unoptimized, for development.
-- `macos-arm64-relwithdebinfo` — optimized with debug info, matching what CI
-  produces.
-- `macos-arm64-release` — fully optimized, no debug info.
+- `macos-arm64-relwithdebinfo` — optimized with debug info, for profiling or
+  debugging an optimized build.
+- `macos-arm64-release` — fully optimized, no debug info. This is what CI
+  builds and what the released macOS artifacts are made from.
 
 Pick whichever suits your workflow:
 
