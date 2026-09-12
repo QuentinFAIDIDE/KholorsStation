@@ -40,12 +40,21 @@
       }
     },
     {
-      "name": "macos-arm64-release",
+      "name": "macos-arm64-relwithdebinfo",
       "displayName": "macOS (Apple Silicon, RelWithDebInfo)",
+      "inherits": "macos-arm64-base",
+      "binaryDir": "${sourceDir}/build/macos-arm64-relwithdebinfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "macos-arm64-release",
+      "displayName": "macOS (Apple Silicon, Release)",
       "inherits": "macos-arm64-base",
       "binaryDir": "${sourceDir}/build/macos-arm64-release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     }
   ],
@@ -53,6 +62,10 @@
     {
       "name": "macos-arm64-debug",
       "configurePreset": "macos-arm64-debug"
+    },
+    {
+      "name": "macos-arm64-relwithdebinfo",
+      "configurePreset": "macos-arm64-relwithdebinfo"
     },
     {
       "name": "macos-arm64-release",

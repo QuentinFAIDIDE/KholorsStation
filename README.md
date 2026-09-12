@@ -152,21 +152,28 @@ ninja
 newer, Ninja, and Git. No vcpkg setup is required: CMake downloads the pinned
 third-party dependencies on the first configure.
 
-Two presets are available: `macos-arm64-debug` (unoptimized, for development)
-and `macos-arm64-release` (`RelWithDebInfo`, matching what CI produces). Pick
-whichever suits your workflow:
+Three presets are available:
+
+- `macos-arm64-debug` — unoptimized, for development.
+- `macos-arm64-relwithdebinfo` — optimized with debug info, matching what CI
+  produces.
+- `macos-arm64-release` — fully optimized, no debug info.
+
+Pick whichever suits your workflow:
 
 ```bash
 cmake --preset macos-arm64-debug
 cmake --build --preset macos-arm64-debug
 ```
 
-In CLion, open the repository and select the **macos-arm64-debug** or
-**macos-arm64-release** CMake profile. The Station application is emitted at
+In CLion, open the repository and select the **macos-arm64-debug**,
+**macos-arm64-relwithdebinfo**, or **macos-arm64-release** CMake profile. The
+Station application is emitted at
 `build/macos-arm64-debug/src/StationApp/StationApp_artefacts/Debug/KholorsStation.app`
-(swap `macos-arm64-debug`/`Debug` for `macos-arm64-release`/`RelWithDebInfo`
-if you built the release preset). The Sink builds as both a VST3 bundle and
-an Audio Unit component under
+(swap the `macos-arm64-debug` path segment and `Debug` folder name for
+`macos-arm64-relwithdebinfo`/`RelWithDebInfo` or
+`macos-arm64-release`/`Release` if you built one of those presets instead).
+The Sink builds as both a VST3 bundle and an Audio Unit component under
 `build/macos-arm64-debug/src/SinkPlugin/SinkPlugin_artefacts/Debug/`.
 
 For a staging directory suitable for packaging, run:
