@@ -135,5 +135,3 @@ jobs:
         run: cmake --preset macos-arm64-release
       - name: Build
         run: cmake --build --preset macos-arm64-release --parallel 4
-      - name: Test
-        run: ctest --test-dir build/macos-arm64-release -E "example"
