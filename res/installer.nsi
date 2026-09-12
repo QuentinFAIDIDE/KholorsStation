@@ -41,7 +41,6 @@ Section "MainSection" SEC01
    SetOutPath "$VstInstDir\KholorsSink.vst3"
    File /nonfatal /a /r "..\build\src\SinkPlugin\SinkPlugin_artefacts\RelWithDebInfo\VST3\KholorsSink.vst3\" #note back slash at the end
 
-   CreateShortCut "$SMSTARTUP\KholorsStation.lnk" "$INSTDIR\KholorsStation.exe" "" "$INSTDIR\KholorsStation.exe,0"
    CreateShortCut "$SMPROGRAMS\ArtifaktNd\KholorsStation.lnk" "$INSTDIR\KholorsStation.exe" "" "$INSTDIR\kholors.ico" 0
 
    WriteUninstaller "$INSTDIR\${APP_NAME}-${APP_VERSION}-Uninstall.exe"
@@ -51,7 +50,6 @@ Section "Uninstall"
    Delete "$INSTDIR\KholorsStation.exe"
    Delete "$INSTDIR\kholors.ico"
    Delete "$SMPROGRAMS\ArtifaktNd\KholorsStation.lnk"
-   Delete "$SMSTARTUP\KholorsStation.lnk"
    Delete "$INSTDIR\${APP_NAME}-${APP_VERSION}-Uninstall.exe"
    RMDir /r "$VstInstDir\KholorsSink.vst3"
    RMDir "$INSTDIR"
