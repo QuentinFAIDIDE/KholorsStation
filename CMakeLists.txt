@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
 
-# gRPC v1.50.2 vendors c-ares 1.17.2, whose CMakeLists.txt declares support
-# for CMake 3.1.  CMake 4 no longer accepts that policy baseline unless the
-# parent explicitly supplies a compatible minimum.  Keep this in the project,
-# rather than only in a preset, so direct IDE configurations work too.
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING
     "Minimum CMake policy version accepted by bundled dependencies")
 
@@ -39,18 +35,17 @@ enable_testing()
 
 include(FetchContent)
 
-# Keep FetchContent state with its CMake build tree.  Separate configurations
-# (for example the macOS preset and a CLion profile) can then configure or
-# refresh dependencies independently without replacing each other's sources.
+# Moving fetchcontent fetching folder there prevents conflits
+# in configurations refreshing each-other's code
+# (ex: CLion + macOs cmake preset)
 set(FETCHCONTENT_BASE_DIR
     "${CMAKE_BINARY_DIR}/_deps"
     CACHE PATH "External dependencies path for this build tree." FORCE)
 
-# Use an installed package when one is available (for example through vcpkg),
-# but keep a fresh checkout buildable on every supported platform without a
-# package-manager-specific CMake invocation.
+# for platforms without a package manager, we fallback to source download
 find_package(nlohmann_json 3.9.1 QUIET)
 if(NOT nlohmann_json_FOUND)
+  message(STATUS "nlohmann_json not found on system, fetching sources instead")
   FetchContent_Declare(
     nlohmann_json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
@@ -63,10 +58,6 @@ option(RE2_BUILD_TESTING OFF)
 option(gRPC_BUILD_TESTS OFF)
 option(ZLIB_BUILD_EXAMPLES OFF)
 
-# Juce lib setup
-# JUCE 8 supports the macOS 15 SDK.  JUCE 7.0.9 calls APIs that Apple has
-# removed from that SDK, preventing even CMake's helper executable from
-# compiling on current macOS installations.
 set(LIB_JUCE_TAG "8.0.15")
 # Xcode: Disable automatic build scheme generation globally. Instead, we
 # explicitely specify which targets require schemes.
@@ -119,8 +110,6 @@ FetchContent_MakeAvailable(spdlog)
 set_target_properties(spdlog PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Fetchcontent for muFFT
-# muFFT's legacy option() only respects this setting when it is a cache value.
-# Keep FFTW optional so a clean macOS checkout does not require Homebrew FFTW.
 set(MUFFT_ENABLE_FFTW OFF CACHE BOOL "Build muFFT with FFTW support" FORCE)
 FetchContent_Declare(
   muFFT

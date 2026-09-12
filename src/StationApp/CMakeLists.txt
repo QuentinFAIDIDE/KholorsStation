@@ -94,9 +94,7 @@ target_link_libraries(
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
 
-# JUCE leaves the development app bundle unsigned.  Sign the completed bundle
-# so a CMake-installed staging tree remains valid while release signing stays
-# the responsibility of MAC-008.
+# signing even the dev build with an ad-hoc identity is necessary for it to be able to run on mac
 if(APPLE)
   add_custom_command(
     TARGET StationApp

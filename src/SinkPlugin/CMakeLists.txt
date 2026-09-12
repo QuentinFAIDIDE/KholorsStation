@@ -58,9 +58,7 @@ juce_add_plugin(
          # NOTE: Writing to the default install locations might require
          # administrator privileges on Windows.
 
-# JUCE creates VST3 moduleinfo.json after its bundle-signing check.  Re-sign
-# each completed development bundle so hosts receive a consistent ad-hoc
-# signature while release signing remains the responsibility of MAC-008.
+# ad-hoc dev build signing is required to run the plugin on mac
 if(APPLE)
   foreach(plugin_format IN ITEMS AU VST3)
     add_custom_command(
