@@ -86,16 +86,24 @@ FetchContent_MakeAvailable(juce)
 
 # gRPC lib download and setup
 set(ABSL_ENABLE_INSTALL ON)
+# The bundled patches only fix Apple-specific build issues (Abseil's
+# multi-arch copts and an Apple Clang promise/zlib incompatibility), so only
+# apply them on macOS. This also avoids Windows checkouts mangling the patch
+# files' line endings and failing `git apply`.
+set(GRPC_PATCH_COMMAND)
+if(APPLE)
+  set(GRPC_PATCH_COMMAND
+      ${CMAKE_COMMAND}
+      -DSOURCE_DIR=<SOURCE_DIR>
+      -DPATCH_FILE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/patches/grpc-1.50.2-abseil-macos-architectures.patch
+      -DSECOND_PATCH_FILE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/patches/grpc-1.50.2-macos-apple-clang.patch
+      -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/apply_patch_if_needed.cmake)
+endif()
 FetchContent_Declare(
   gRPC
   GIT_REPOSITORY https://github.com/grpc/grpc
   GIT_TAG v1.50.2
-  PATCH_COMMAND
-    ${CMAKE_COMMAND}
-    -DSOURCE_DIR=<SOURCE_DIR>
-    -DPATCH_FILE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/patches/grpc-1.50.2-abseil-macos-architectures.patch
-    -DSECOND_PATCH_FILE=${CMAKE_CURRENT_SOURCE_DIR}/cmake/patches/grpc-1.50.2-macos-apple-clang.patch
-    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/apply_patch_if_needed.cmake
+  PATCH_COMMAND ${GRPC_PATCH_COMMAND}
   EXCLUDE_FROM_ALL)
 FetchContent_MakeAvailable(gRPC)
 set(protobuf_MSVC_STATIC_RUNTIME ON)
