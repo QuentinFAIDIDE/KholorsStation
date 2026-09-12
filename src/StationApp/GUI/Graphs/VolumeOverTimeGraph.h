@@ -111,10 +111,9 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
     };
 
     /**
-     * @brief Clear one track's data on a specific range without removing other
-     * tracks that share the same volume tile.
+     * @brief Clear tracks data on a specific range.
      */
-    void clearTrackFromRange(uint64_t trackIdentifier, int64_t startSample, int64_t length);
+    void clearTracksFromRange(int64_t startSample, int64_t length);
 
     void clear() override;
 
@@ -133,13 +132,7 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
   private:
     void queueVolumeForDrawing(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t tileStartSample,
                                int64_t tileEndSample, float volume, int channelIndex);
-    struct TrackTileRemoval
-    {
-        uint64_t trackIdentifier;
-        int64_t tileIndex;
-    };
-
-    void queueTileRemoval(uint64_t trackIdentifier, int64_t tileIndex);
+    void queueTileRemoval(int64_t tileIndex);
 
     void deleteTilesQueuedForDeletion();
     void drawQueuedVolumesToTextures();
@@ -256,8 +249,10 @@ class VolumeOverTimeGraph : public BaseOverTimeGraph
     std::queue<TrackVolumeData> volumeUpdateReadQueue; /** swapped under lock with main queue for processing */
 
     std::mutex tileRemovalQueueMutex;
-    std::queue<TrackTileRemoval> tileRemovalQueue;     /** UI thread queues per-track tile removals for the OpenGL thread */
-    std::queue<TrackTileRemoval> tileRemovalReadQueue; /** swapped under lock with main queue for processing */
+    std::queue<int64_t> tileRemovalQueue;             /** UI threads queues tile removal for openGL thread to process */
+    std::unordered_set<int64_t> tilesToRemoveSet;     /** set to prevent queueing the same tile twice */
+    std::queue<int64_t> tileRemovalReadQueue;         /** swapped under lock with main queue for processing */
+    std::unordered_set<int64_t> tilesToRemoveReadSet; /** swapped under lock with main set for processing */
 
     std::vector<std::shared_ptr<SecondTile>> secondTilesRingBuffer; /**< ring buffer of second-tiles to draw on */
     std::unordered_map<int64_t, size_t> secondTilesIndexMap; /**< map of second-tile index to ring buffer index */
