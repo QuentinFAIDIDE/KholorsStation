@@ -93,3 +93,12 @@ target_link_libraries(
           muFFT
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
          juce::juce_recommended_warning_flags)
+
+# signing even the dev build with an ad-hoc identity is necessary for it to be able to run on mac
+if(APPLE)
+  add_custom_command(
+    TARGET StationApp
+    POST_BUILD
+    COMMAND codesign --force --sign - "$<TARGET_BUNDLE_DIR:StationApp>"
+    VERBATIM)
+endif()

@@ -1,7 +1,7 @@
 juce_add_plugin(
   SinkPlugin
   FORMATS
-  VST3 # The formats to build. Valid formats: Standalone Unity VST3 AU AUv3 AAX
+  VST3 AU # The formats to build. Valid formats: Standalone Unity VST3 AU AUv3 AAX
        # VST LV2. AU and AUv3 plugins will only be enabled when building on
        # macOS.
   PRODUCT_NAME
@@ -57,6 +57,18 @@ juce_add_plugin(
   FALSE) # Should the plugin be installed to a default location after building?
          # NOTE: Writing to the default install locations might require
          # administrator privileges on Windows.
+
+# ad-hoc dev build signing is required to run the plugin on mac
+if(APPLE)
+  foreach(plugin_format IN ITEMS AU VST3)
+    add_custom_command(
+      TARGET SinkPlugin_${plugin_format}
+      POST_BUILD
+      COMMAND codesign --force --sign -
+              "$<TARGET_BUNDLE_DIR:SinkPlugin_${plugin_format}>"
+      VERBATIM)
+  endforeach()
+endif()
 
 # Set the C++ language standard requirenment for the "shared code" library
 # target. Setting this to PUBLIC ensures that all dependent targets will inherit

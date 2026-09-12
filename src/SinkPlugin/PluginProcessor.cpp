@@ -256,15 +256,18 @@ void AudioPluginAudioProcessor::setStateInformation(const void *data, int sizeIn
 
 void AudioPluginAudioProcessor::updateTrackProperties(const juce::AudioProcessor::TrackProperties &properties)
 {
-    if (!properties.name.isEmpty())
+    if (properties.name && !properties.name->isEmpty())
     {
-        audioInfoForwarder.setCurrentTrackName(properties.name.toStdString());
+        audioInfoForwarder.setCurrentTrackName(properties.name->toStdString());
     }
 
-    if (properties.colour != juce::Colours::transparentBlack)
+    if (properties.colourARGB)
     {
-        audioInfoForwarder.setCurrentColor(
-            juce::Colour(properties.colour.getRed(), properties.colour.getGreen(), properties.colour.getBlue()));
+        const juce::Colour trackColour(*properties.colourARGB);
+        if (trackColour != juce::Colours::transparentBlack)
+        {
+            audioInfoForwarder.setCurrentColor(trackColour);
+        }
     }
 }
 

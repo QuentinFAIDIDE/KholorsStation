@@ -20,6 +20,9 @@ BaseOverTimeGraph::BaseOverTimeGraph(TrackInfoStore &tis)
     lastAppliedTimeSignature = 4;
     backgroundColor = KHOLORS_COLOR_BACKGROUND;
     openGLContext.setRenderer(this);
+    // The dashboard shaders use GLSL 3.30. Request a core profile that
+    // supports it instead of JUCE's default legacy context on macOS.
+    openGLContext.setOpenGLVersionRequired(juce::OpenGLContext::openGL4_1);
     openGLContext.attachTo(*this);
     mouseOnComponent = false;
     lastMouseX = 0;

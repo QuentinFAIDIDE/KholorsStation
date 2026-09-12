@@ -146,6 +146,56 @@ cd build
 ninja
 ```
 
+### macOS (Apple Silicon)
+
+**Prerequisites:** Xcode (including its command-line tools), CMake 3.22 or
+newer, Ninja, and Git. No vcpkg setup is required: CMake downloads the pinned
+third-party dependencies on the first configure.
+
+Three presets are available:
+
+- `macos-arm64-debug` — unoptimized, for development.
+- `macos-arm64-relwithdebinfo` — optimized with debug info, matching what CI
+  produces.
+- `macos-arm64-release` — fully optimized, no debug info.
+
+Pick whichever suits your workflow:
+
+```bash
+cmake --preset macos-arm64-debug
+cmake --build --preset macos-arm64-debug
+```
+
+In CLion, open the repository and select the **macos-arm64-debug**,
+**macos-arm64-relwithdebinfo**, or **macos-arm64-release** CMake profile. The
+Station application is emitted at
+`build/macos-arm64-debug/src/StationApp/StationApp_artefacts/Debug/KholorsStation.app`
+(swap the `macos-arm64-debug` path segment and `Debug` folder name for
+`macos-arm64-relwithdebinfo`/`RelWithDebInfo` or
+`macos-arm64-release`/`Release` if you built one of those presets instead).
+The Sink builds as both a VST3 bundle and an Audio Unit component under
+`build/macos-arm64-debug/src/SinkPlugin/SinkPlugin_artefacts/Debug/`.
+
+For a staging directory suitable for packaging, run:
+
+```bash
+cmake --install build/macos-arm64-debug --prefix "$PWD/package-root"
+```
+
+This places the app in `Applications`, the VST3 in
+`Library/Audio/Plug-Ins/VST3`, and the Audio Unit in
+`Library/Audio/Plug-Ins/Components` inside `package-root`.
+
+#### macOS release signing
+
+The commands above create development artifacts. Distributing Kholors Station
+and Kholors Sink outside a development machine requires signing the app, VST3,
+AU, and their nested code with a Developer ID certificate, then notarizing the
+final archive or installer and stapling Apple's ticket. Developer ID signing
+and notarization require an active paid membership in the Apple Developer
+Program. Do not store signing certificates, private keys, or notarization
+credentials in this repository.
+
 ### Updating GUI Binary Data
 
 If you modify assets in `res/`, you need to rebuild the binary data file that embeds them in the application. From the `build` directory:

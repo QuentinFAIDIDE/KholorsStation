@@ -175,11 +175,11 @@ void FrequencyScale::drawLabels(juce::Graphics &g, std::vector<LabelBox> &labs)
 
         // extract area to draw units
         std::string fullUnitText = " " + labs[i].unit;
-        int unitAreaWidth = unitFont.getStringWidth(fullUnitText);
+        int unitAreaWidth = juce::GlyphArrangement::getStringWidthInt(unitFont, fullUnitText);
         auto unitDrawArea = labs[i].bounds.withLeft(unitAreaWidth);
         auto valueDrawArea = labs[i].bounds.withTrimmedRight(unitAreaWidth);
 
-        int valueTextWidth = valueFont.getStringWidth(labs[i].text);
+        int valueTextWidth = juce::GlyphArrangement::getStringWidthInt(valueFont, labs[i].text);
         // ignore drawing if there is no horizontal space left for the text
         if (valueTextWidth >= valueDrawArea.getWidth())
         {

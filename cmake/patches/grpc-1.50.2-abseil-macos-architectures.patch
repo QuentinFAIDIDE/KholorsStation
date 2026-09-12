@@ -1,0 +1,21 @@
+diff --git a/third_party/abseil-cpp/absl/copts/AbseilConfigureCopts.cmake b/third_party/abseil-cpp/absl/copts/AbseilConfigureCopts.cmake
+index 57b6907..efeed9f 100644
+--- a/third_party/abseil-cpp/absl/copts/AbseilConfigureCopts.cmake
++++ b/third_party/abseil-cpp/absl/copts/AbseilConfigureCopts.cmake
+@@ -38,7 +38,15 @@ if(APPLE AND CMAKE_CXX_COMPILER_ID MATCHES [[Clang]])
+   # In both cases, the viable strategy is to pass all arguments at once, allowing
+   # the compiler to dispatch arch-specific arguments to a designated backend.
+   set(ABSL_RANDOM_RANDEN_COPTS "")
+-  foreach(_arch IN ITEMS "x86_64" "arm64")
++  set(_absl_randen_architectures "x86_64" "arm64")
++  if(CMAKE_OSX_ARCHITECTURES)
++    set(_absl_randen_architectures ${CMAKE_OSX_ARCHITECTURES})
++  endif()
++
++  foreach(_arch IN LISTS _absl_randen_architectures)
++    if(NOT _arch STREQUAL "x86_64" AND NOT _arch STREQUAL "arm64")
++      continue()
++    endif()
+     string(TOUPPER "${_arch}" _arch_uppercase)
+     string(REPLACE "X86_64" "X64" _arch_uppercase ${_arch_uppercase})
+     foreach(_flag IN LISTS ABSL_RANDOM_HWAES_${_arch_uppercase}_FLAGS)

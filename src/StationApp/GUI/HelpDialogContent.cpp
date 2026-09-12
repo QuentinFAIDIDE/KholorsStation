@@ -45,7 +45,7 @@ int HelpDialogContent::getMaxWidthFromTexts()
     int maxWidth = 0;
     for (size_t i = 0; i < tipsAndText.size(); i++)
     {
-        int width = font.getStringWidth(tipsAndText[i].second);
+        int width = juce::GlyphArrangement::getStringWidthInt(font, tipsAndText[i].second);
         if (width > maxWidth)
         {
             maxWidth = width;
