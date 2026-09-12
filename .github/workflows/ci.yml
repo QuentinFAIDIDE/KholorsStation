@@ -57,15 +57,13 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
-      - name: Cache build and libs directory
-        id: cache-build-libs
+      - name: Cache build directory
+        id: cache-build
         uses: actions/cache@v4
         with:
-          path: |
-            ./build
-            ./libs
-          key: ${{ runner.os }}-build-cache-2-${{ hashFiles('**/CmakeLists.txt') }}
-          restore-keys: ${{ runner.os }}-build-cache-2-${{ hashFiles('**/CmakeLists.txt') }}
+          path: ./build
+          key: ${{ runner.os }}-build-cache-3-${{ hashFiles('**/CmakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-3-${{ hashFiles('**/CmakeLists.txt') }}
       - name: Configure
         run: |
           mkdir -p build
@@ -96,15 +94,13 @@ jobs:
           cmakeVersion: "3.29.5"
           ninjaVersion: "1.12.1"
       - uses: lukka/run-vcpkg@v11
-      - name: Cache build and libs directory
-        id: cache-build-libs
+      - name: Cache build directory
+        id: cache-build
         uses: actions/cache@v4
         with:
-          path: |
-            ./build
-            ./libs
-          key: ${{ runner.os }}-build-cache-win-2-${{ hashFiles('**/CmakeLists.txt') }}
-          restore-keys: ${{ runner.os }}-build-cache-win-2-${{ hashFiles('**/CmakeLists.txt') }}
+          path: ./build
+          key: ${{ runner.os }}-build-cache-win-3-${{ hashFiles('**/CmakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-win-3-${{ hashFiles('**/CmakeLists.txt') }}
       - name: Configure
         run: cmake --preset windows -DCMAKE_BUILD_TYPE=RelWithDebInfo .
       - name: Build
