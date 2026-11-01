@@ -1,5 +1,7 @@
 # Kholors Station: Make better mixdowns
 
+**AI Notice**: AI was not used to code this, at the exception of small recent PRs that were reviewed and challenged by humans appropriately. We do welcome reasonable AI contributions, however we historically didn't use any and want to encourage sustainable development.
+
 **Kholors** is an app that gives you a single, comprehensive view of your entire mix's frequency spectrum and volume levels over time, inside a window separate from your DAW that you can run on an adjacent screen or desktop. It helps you visually identify frequency clashes, volume imbalances, tame resonant peaks, and ultimately make more informed EQ and mixing decisions to achieve a clean sound.
 
 It's composed of two parts:
