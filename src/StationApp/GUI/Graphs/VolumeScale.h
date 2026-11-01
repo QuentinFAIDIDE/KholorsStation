@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GUIToolkit/FontsLoader.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
@@ -21,11 +22,5 @@ class VolumeScale : public juce::Component
     void paint(juce::Graphics &g) override;
 
   private:
-    /**
-     * @brief Draw the rotated "VOLUME" axis title.
-     * @param g juce graphic context from paint.
-     */
-    void drawRotatedTitle(juce::Graphics &g);
-
-    void drawRotatedChannelNames(juce::Graphics &g);
+    juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */
 };

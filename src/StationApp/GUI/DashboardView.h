@@ -1,10 +1,12 @@
 #pragma once
 
+#include "GUIToolkit/Consts.h"
 #include "StationApp/Audio/BpmUpdateTask.h"
 #include "StationApp/Audio/ProcessingTimer.h"
 #include "StationApp/Audio/TimeSignatureUpdateTask.h"
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/Audio/VolumeSensitivityTask.h"
+#include "StationApp/GUI/Cards/Card.h"
 #include "StationApp/GUI/ClearTask.h"
 #include "StationApp/GUI/Graphs/FftOverTimeGraph.h"
 #include "StationApp/GUI/Graphs/FrequencyScale.h"
@@ -27,10 +29,11 @@ inline constexpr int MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS = 250;
 inline constexpr int MAX_TIME_WITHOUT_TRACK_LIST_PAINT_MS = 150;
 inline constexpr int VIEW_MOVE_TIME_INTERVAL_MS = 15;
 inline constexpr int FREQUENCY_GRID_WIDTH = 90;
-inline constexpr int TIME_GRID_HEIGHT = 55;
 inline constexpr int VOLUME_GRAPH_HEIGHT = 220;
 inline constexpr int TRACK_LIST_WIDTH = 220;
-inline constexpr int TIME_GRAPHS_PADDING = 20;
+inline constexpr int DASHBOARD_SIDE_MARGIN = 24;
+inline constexpr int CARDS_SPACING = 16;
+inline constexpr int TIME_GRID_HEIGHT = KHOLORS_DEFAULT_FONT_SIZE + CARDS_SPACING; /**< time scale and space below it */
 
 /**
  * @brief Describe a class which displays a timeline, and
@@ -132,10 +135,10 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
 
     TrackList trackList;
 
-    juce::Rectangle<int> unpaintedArea1, unpaintedArea2,
-        unpaintedArea3; /**< Area left unpainted that FreqView needs to paint */
-
-    juce::Rectangle<int> timeTicksAxisNameArea;
+    // cards are created once the graphs exist, and only reference the components above
+    std::unique_ptr<Card> frequencyCard;
+    std::unique_ptr<Card> volumeCard;
+    std::unique_ptr<Card> instrumentsCard;
 
     int lastFftMousePosX;
     int lastFftMousePosY;

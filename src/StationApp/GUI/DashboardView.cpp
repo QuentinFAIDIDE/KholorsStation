@@ -41,10 +41,7 @@ DashboardView::DashboardView(TrackInfoStore &tis, TaskingManager &tm)
     setOpaque(true);
 
     freqOverTimeGraph = std::make_shared<FftOverTimeGraph>(trackInfoStore, frequencyTransformer, intensityTransformer);
-    addAndMakeVisible(freqOverTimeGraph.get());
-
     volumeOverTimeGraph = std::make_shared<VolumeOverTimeGraph>(trackInfoStore);
-    addAndMakeVisible(volumeOverTimeGraph.get());
 
     auto const freqProjection = std::make_shared<Log10Projection>(0.005);
     frequencyTransformer.setProjection(freqProjection);
@@ -61,10 +58,13 @@ DashboardView::DashboardView(TrackInfoStore &tis, TaskingManager &tm)
     trackList.setViewPosition(viewPosition);
     trackList.setViewScale(viewScale);
 
-    addAndMakeVisible(frequencyScale);
+    frequencyCard = std::make_unique<Card>("Spectrograph", *freqOverTimeGraph, &frequencyScale, FREQUENCY_GRID_WIDTH);
+    volumeCard = std::make_unique<Card>("Stacked Volumes", *volumeOverTimeGraph, &volumeScale, FREQUENCY_GRID_WIDTH);
+    instrumentsCard = std::make_unique<Card>("Instruments", trackList);
+    addAndMakeVisible(frequencyCard.get());
+    addAndMakeVisible(volumeCard.get());
+    addAndMakeVisible(instrumentsCard.get());
     addAndMakeVisible(timeScale);
-    addAndMakeVisible(trackList);
-    addAndMakeVisible(volumeScale);
 
     startTimer(VIEW_MOVE_TIME_INTERVAL_MS);
 }
@@ -73,17 +73,7 @@ DashboardView::~DashboardView() = default;
 
 void DashboardView::paint(juce::Graphics &g)
 {
-    g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
-    g.fillRect(unpaintedArea1);
-    g.fillRect(unpaintedArea2);
-    g.fillRect(unpaintedArea3);
-    g.fillRect(timeTicksAxisNameArea);
-
-    // draw the bottom axis name
-    g.setFont(juce::Font(AXIS_TITLE_PIXELS_HEIGHT));
-    g.setColour(KHOLORS_COLOR_WHITE);
-    g.drawText(TRANS("Project Time").toUpperCase(), timeTicksAxisNameArea.withTrimmedBottom(TITLE_PIXELS_FROM_BOTTOM),
-               juce::Justification::centredBottom, false);
+    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 }
 
 void DashboardView::paintOverChildren(juce::Graphics &g)
@@ -149,7 +139,7 @@ void DashboardView::updateViewMouseDrag(const juce::MouseEvent &e)
 
     if (dragY != 0)
     {
-        needRepaint = handleZoom(dragY, e.x);
+        needRepaint = handleZoom(dragY, e.getEventRelativeTo(freqOverTimeGraph.get()).x);
     }
 
     if (dragX != 0)
@@ -315,36 +305,30 @@ bool DashboardView::handleVolumeSensitivityTask(std::shared_ptr<VolumeSensitivit
 
 void DashboardView::resized()
 {
-    auto fftBounds = getLocalBounds();
-    auto const trackListBounds = fftBounds.removeFromRight(TRACK_LIST_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
-    auto scalesArea = fftBounds.removeFromLeft(FREQUENCY_GRID_WIDTH).withTrimmedBottom(TIME_GRID_HEIGHT);
-    auto timeGridBounds = fftBounds.removeFromBottom(TIME_GRID_HEIGHT);
-    auto const volumeBounds = fftBounds.removeFromBottom(VOLUME_GRAPH_HEIGHT);
-    unpaintedArea3 = fftBounds.removeFromBottom(TIME_GRAPHS_PADDING);
+    auto bounds = getLocalBounds().reduced(DASHBOARD_SIDE_MARGIN, 0).withTrimmedTop(CARDS_SPACING);
 
-    auto const volumeGridBounds = scalesArea.removeFromBottom(VOLUME_GRAPH_HEIGHT);
-    auto const frequencyGridBounds = scalesArea.withTrimmedBottom(TIME_GRAPHS_PADDING);
+    auto const instrumentsBounds = bounds.removeFromRight(TRACK_LIST_WIDTH + (2 * CARD_PADDING));
+    bounds.removeFromRight(CARDS_SPACING);
 
-    freqOverTimeGraph->setBounds(fftBounds);
-    volumeOverTimeGraph->setBounds(volumeBounds);
-    frequencyScale.setBounds(frequencyGridBounds);
-    volumeScale.setBounds(volumeGridBounds);
-    timeScale.setBounds(timeGridBounds.removeFromTop(KHOLORS_DEFAULT_FONT_SIZE));
-    trackList.setBounds(trackListBounds);
+    auto timeGridBounds = bounds.removeFromBottom(TIME_GRID_HEIGHT);
+    auto const volumeBounds = bounds.removeFromBottom(Card::getHeightForContent(VOLUME_GRAPH_HEIGHT));
+    bounds.removeFromBottom(CARDS_SPACING);
 
-    timeTicksAxisNameArea = timeGridBounds;
+    frequencyCard->setBounds(bounds);
+    volumeCard->setBounds(volumeBounds);
+    instrumentsCard->setBounds(instrumentsBounds.withBottom(volumeBounds.getBottom()));
 
-    trackList.setFreqViewWidth(fftBounds.getWidth());
+    // the time scale is below the cards, aligned with the graphs
+    int const graphsLeft = volumeBounds.getX() + CARD_PADDING + FREQUENCY_GRID_WIDTH;
+    int const graphsRight = volumeBounds.getRight() - CARD_PADDING;
+    timeScale.setBounds(
+        timeGridBounds.withLeft(graphsLeft).withRight(graphsRight).removeFromTop(KHOLORS_DEFAULT_FONT_SIZE));
+
+    trackList.setFreqViewWidth(freqOverTimeGraph->getWidth());
 
     std::scoped_lock const lock(viewMutex);
     freqOverTimeGraph->updateViewPosition(viewPosition);
     volumeOverTimeGraph->updateViewPosition(viewPosition);
-
-    unpaintedArea1 = frequencyGridBounds.withY(frequencyGridBounds.getY() + frequencyGridBounds.getHeight());
-    unpaintedArea1.setHeight(getLocalBounds().getHeight() - frequencyGridBounds.getHeight());
-
-    unpaintedArea2 = trackListBounds.withY(trackListBounds.getY() + trackListBounds.getHeight());
-    unpaintedArea2.setHeight(getLocalBounds().getHeight() - trackListBounds.getHeight());
 }
 
 void DashboardView::timerCallback()
@@ -484,12 +468,12 @@ void DashboardView::mouseMove(const juce::MouseEvent &me)
 
 void DashboardView::broadcastMouseEventInfo(const juce::MouseEvent &me)
 {
-    auto const positionRelativeToDashboardView = me.getEventRelativeTo(freqOverTimeGraph.get());
-    bool const showCursor = freqOverTimeGraph->getBounds().contains(me.getPosition());
-    freqOverTimeGraph->setMouseCursor(showCursor, positionRelativeToDashboardView.position.x,
-                                      positionRelativeToDashboardView.position.y);
+    auto const positionRelativeToGraph = me.getEventRelativeTo(freqOverTimeGraph.get());
+    bool const showCursor = freqOverTimeGraph->getLocalBounds().contains(positionRelativeToGraph.getPosition());
+    freqOverTimeGraph->setMouseCursor(showCursor, positionRelativeToGraph.position.x,
+                                      positionRelativeToGraph.position.y);
 
-    emitMousePositionInfoTask(showCursor, positionRelativeToDashboardView.x, positionRelativeToDashboardView.y);
+    emitMousePositionInfoTask(showCursor, positionRelativeToGraph.x, positionRelativeToGraph.y);
 
     freqOverTimeGraph->repaint();
 }

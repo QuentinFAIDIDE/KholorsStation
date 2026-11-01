@@ -7,7 +7,7 @@
 inline constexpr int KHOLORS_BUTTON_CORNERSIZE = 8;
 inline constexpr int KHOLORS_BUTTON_BORDER_THICKNESS = 2;
 inline constexpr int KHOLORS_BUTTON_DOWN_DISPLACEMENT = 2;
-inline constexpr int BUTTON_TEXT_HEIGHT = 18;
+inline constexpr int BUTTON_TEXT_HEIGHT = 14;
 inline constexpr int LINEAR_SLIDER_HEIGHT = 6;
 inline constexpr float LINEAR_SLIDER_BAR_CORNER_RADIUS = 4.0f;
 inline constexpr int LINEAR_SLIDER_HANDLE_RADIUS = 18;

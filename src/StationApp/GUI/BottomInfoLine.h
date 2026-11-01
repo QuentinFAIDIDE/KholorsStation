@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GUIToolkit/FontsLoader.h"
 #include "TaskManagement/TaskListener.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
@@ -28,5 +29,6 @@ class BottomInfoLine : public juce::Component, public TaskListener
     std::atomic<float> lastSampleTime;
     std::atomic<bool> mouseOverSfftView;
     std::atomic<float> averageSegmentProcessingTimeMs;
-    std::string leftText; /**< left aligned bottom bar text */
+    std::string leftText;                                 /**< left aligned bottom bar text */
+    juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */
 };

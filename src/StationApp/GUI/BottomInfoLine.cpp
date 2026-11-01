@@ -23,8 +23,8 @@ void BottomInfoLine::paint(juce::Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
-    g.setColour(KHOLORS_COLOR_UNITS);
-    g.fillRect(getLocalBounds().withHeight(1));
+    g.setColour(KHOLORS_COLOR_HEADER_LINE);
+    g.fillRect(getLocalBounds().removeFromTop(1));
 
     std::string rightText = TRANS("No tip to display because mouse is not on grid...").toStdString();
 
@@ -38,14 +38,13 @@ void BottomInfoLine::paint(juce::Graphics &g)
                   "   " +
                   std::to_string(std::lround(ms)) + " ms";
 
-        rightText = std::to_string(std::lround(lastFrequency)) + " Hz (" + noteFromFreq(lastFrequency) +
-                    ")" + posTip;
+        rightText = std::to_string(std::lround(lastFrequency)) + " Hz (" + noteFromFreq(lastFrequency) + ")" + posTip;
     }
 
     auto bounds = getLocalBounds();
     bounds.reduce(BOTTOM_INFO_LINE_SIDE_PADDING, 0);
     g.setFont(juce::Font(KHOLORS_DEFAULT_FONT_SIZE));
-    g.setColour(KHOLORS_COLOR_WHITE);
+    g.setColour(KHOLORS_COLOR_DIMMED_LABEL);
     g.drawText(leftText, bounds, juce::Justification::centredLeft, true);
     g.drawText(rightText, bounds, juce::Justification::centredRight, true);
 }

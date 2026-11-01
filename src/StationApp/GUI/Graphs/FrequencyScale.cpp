@@ -1,11 +1,11 @@
 #include "FrequencyScale.h"
 #include "GUIToolkit/Consts.h"
+#include "StationApp/GUI/Graphs/ChannelBadge.h"
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include <limits>
 #include <optional>
 #include <vector>
 
-constexpr int AXIS_TITLE_PIXELS_FROM_LEFT = 14;
 constexpr double MAXIMUM_DRAWABLE_LABEL_POSITION_RATIO = 0.93;
 constexpr int LABEL_HEIGHT = 16;
 constexpr auto LABEL_FONT_HEIGHT = (KHOLORS_DEFAULT_FONT_SIZE - 2);
@@ -22,14 +22,9 @@ FrequencyScale::~FrequencyScale() = default;
 void FrequencyScale::paint(juce::Graphics &g)
 {
     // fill background
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    g.fillAll(KHOLORS_COLOR_CARD_BACKGROUND);
 
-    // draw the "FREQUENCIES" axis title
-    g.setColour(KHOLORS_COLOR_WHITE);
-    drawRotatedTitle(g);
-
-    g.setColour(KHOLORS_COLOR_UNITS);
-    drawRotatedChannelNames(g);
+    drawChannelBadges(g, getLocalBounds(), sharedFonts->monospaceFont);
 
     // generate necessary labels
     std::vector<LabelBox> labelsToDraw;
@@ -66,54 +61,6 @@ void FrequencyScale::paint(juce::Graphics &g)
     }
 
     drawLabels(g, labelsToDraw);
-}
-
-void FrequencyScale::drawRotatedTitle(juce::Graphics &g)
-{
-    // nice trick from https://forum.juce.com/t/draw-rotated-text/14695/11
-
-    juce::GlyphArrangement ga;
-    ga.addLineOfText(juce::Font(AXIS_TITLE_PIXELS_HEIGHT), TRANS("Frequency").toUpperCase(), 0, 0);
-    juce::Path p;
-    ga.createPath(p);
-
-    auto const pathBounds = p.getBounds();
-
-    p.applyTransform(
-        juce::AffineTransform()
-            .rotated(3.0f * juce::MathConstants<float>::halfPi, pathBounds.getCentreX(), pathBounds.getCentreY())
-            .translated(0, getHeight() * 0.5f));
-
-    p.applyTransform(juce::AffineTransform().translated(AXIS_TITLE_PIXELS_FROM_LEFT - p.getBounds().getX(), 0));
-
-    g.fillPath(p);
-}
-
-void FrequencyScale::drawRotatedChannelNames(juce::Graphics &g)
-{
-    juce::GlyphArrangement ga;
-    ga.addLineOfText(juce::Font(AXIS_TITLE_PIXELS_HEIGHT), TRANS("Left Channel").toUpperCase(), 0, 0);
-    juce::Path p;
-    ga.createPath(p);
-    auto pathBounds = p.getBounds();
-    p.applyTransform(
-        juce::AffineTransform()
-            .rotated(3.0f * juce::MathConstants<float>::halfPi, pathBounds.getCentreX(), pathBounds.getCentreY())
-            .translated(0, getHeight() * 0.25f));
-    p.applyTransform(juce::AffineTransform().translated(AXIS_TITLE_PIXELS_FROM_LEFT - p.getBounds().getX(), 0));
-    g.fillPath(p);
-
-    ga.clear();
-    ga.addLineOfText(juce::Font(AXIS_TITLE_PIXELS_HEIGHT), TRANS("Right Channel").toUpperCase(), 0, 0);
-    p.clear();
-    ga.createPath(p);
-    pathBounds = p.getBounds();
-    p.applyTransform(
-        juce::AffineTransform()
-            .rotated(3.0f * juce::MathConstants<float>::halfPi, pathBounds.getCentreX(), pathBounds.getCentreY())
-            .translated(0, getHeight() * 0.75f));
-    p.applyTransform(juce::AffineTransform().translated(AXIS_TITLE_PIXELS_FROM_LEFT - p.getBounds().getX(), 0));
-    g.fillPath(p);
 }
 
 std::vector<FrequencyScale::LabelBox> FrequencyScale::generateLabelBox(float frequencyHz, std::string text,

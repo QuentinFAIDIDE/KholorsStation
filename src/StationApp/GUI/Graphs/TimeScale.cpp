@@ -70,7 +70,7 @@ void TimeScale::drawTicks(juce::Graphics &g, int64_t currentViewPosition, int64_
 
     int const currentBarIndex = static_cast<int>((static_cast<float>(currentViewPosition) / grid0FrameWidth)) + 1;
 
-    g.setFont(KHOLORS_DEFAULT_FONT_SIZE);
+    g.setFont(sharedFonts->dimmedLabelFont);
 
     drawTickLevel(g, 4, 4, KHOLORS_COLOR_WHITE.withAlpha(0.0f), grid0PixelWidth, grid0PixelShift, currentBarIndex);
     drawTickLevel(g, 4, 2, KHOLORS_COLOR_WHITE.withAlpha(0.0f), grid1PixelWidth, grid1PixelShift, -1);
@@ -98,7 +98,7 @@ void TimeScale::drawTickLevel(juce::Graphics &g, int height, int width, juce::Co
             int const barIndex = (quarterIndex / 4) + 1;
             int const quarterInBar = 1 + (quarterIndex % 4);
             const std::string barIndexText = std::to_string(barIndex) + "." + std::to_string(quarterInBar);
-            g.setColour(KHOLORS_COLOR_WHITE.withAlpha(0.75f));
+            g.setColour(KHOLORS_COLOR_DIMMED_LABEL);
             textBox.setX(currentTickPos - (TICK_LABEL_WIDTH >> 1));
 
             // Use cached glyph arrangement for maximum performance

@@ -6,7 +6,14 @@
 inline const juce::Colour KHOLORS_COLOR_BLACK = juce::Colour(10, 10, 10);
 inline const juce::Colour KHOLORS_COLOR_WHITE = juce::Colour(243, 243, 243);
 
-inline const juce::Colour KHOLORS_COLOR_BACKGROUND = juce::Colour(3, 5, 22);
+inline const juce::Colour KHOLORS_COLOR_BACKGROUND = juce::Colour(7, 9, 14);
+inline const juce::Colour KHOLORS_COLOR_CARD_BACKGROUND = juce::Colour(13, 16, 23);
+inline const juce::Colour KHOLORS_COLOR_CARD_BORDER = juce::Colour(27, 33, 48);
+inline const juce::Colour KHOLORS_COLOR_HEADER_LINE = juce::Colour(22, 27, 38);
+inline const juce::Colour KHOLORS_COLOR_BUTTON_BORDER = juce::Colour(42, 50, 69);
+inline const juce::Colour KHOLORS_COLOR_DIMMED_LABEL = juce::Colour(94, 102, 121);
+inline const juce::Colour KHOLORS_COLOR_BADGE_BACKGROUND = juce::Colour(22, 27, 38);
+inline const juce::Colour KHOLORS_COLOR_BADGE_TEXT = juce::Colour(140, 148, 167);
 inline const juce::Colour KHOLORS_COLOR_TEXT = KHOLORS_COLOR_WHITE;
 inline const juce::Colour KHOLORS_COLOR_TEXT_DARKER = juce::Colour(179, 179, 179);
 inline const juce::Colour KHOLORS_COLOR_SEPARATOR_LINE = juce::Colour(80, 80, 80);
@@ -19,7 +26,7 @@ inline const juce::Colour KHOLORS_COLOR_GRIDS_LEVEL_2 = juce::Colour(static_cast
 inline const juce::Colour KHOLORS_COLOR_INPUT_BACKGROUND = juce::Colour(211, 222, 222);
 inline const juce::Colour KHOLORS_COLOR_INPUT_TEXT = juce::Colour(51, 51, 51);
 
-inline const juce::Colour KHOLORS_COLOR_FREQVIEW_GRADIENT_BORDERS = juce::Colour(0, 17, 43);
+inline const juce::Colour KHOLORS_COLOR_FREQVIEW_GRADIENT_BORDERS = KHOLORS_COLOR_CARD_BACKGROUND;
 inline const juce::Colour KHOLORS_COLOR_FREQVIEW_GRADIENT_CENTER = juce::Colour(0, 17, 43);
 
 inline const juce::Colour KHOLORS_COLOR_NOTIF_INFO = juce::Colour(64, 86, 165);
@@ -36,7 +43,6 @@ inline const juce::Colour KHOLORS_COLOR_UNITS = KHOLORS_COLOR_TEXT_DARKER.withAl
 inline constexpr int KHOLORS_DEFAULT_FONT_SIZE = 17;
 inline constexpr int KHOLORS_SMALLER_FONT_SIZE = 13;
 
-inline constexpr int AXIS_TITLE_PIXELS_HEIGHT = 16;
 
 inline constexpr int KHOLORS_TAB_BUTTONS_INNER_PADDING = 42;
 

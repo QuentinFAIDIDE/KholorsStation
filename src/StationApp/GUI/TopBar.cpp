@@ -7,12 +7,12 @@ constexpr int VERSION_FONT_HEIGHT = 18;
 constexpr int TOPBAR_SIDE_PADDING = 25;
 constexpr int TITLE_MIDDLE_PADDING = 6;
 constexpr int TITLE_VERSION_PADDING = 3;
-constexpr int VERSION_TOP_OFFSET = 38;
-constexpr int HELP_BUTTON_WIDTH = 75;
-constexpr int CLEAR_BUTTON_WIDTH = 90;
-constexpr int TOPBAR_BUTTON_HEIGHT = 55;
-constexpr int TOPBAR_BUTTONS_PADDING = 6;
-constexpr int TOPBAR_BUTTONS_RIGHT_MARGIN = 45;
+constexpr int VERSION_TOP_OFFSET = (TOP_BAR_HEIGHT / 2) - 2; /**< puts the version on the title baseline */
+constexpr int HELP_BUTTON_WIDTH = 70;
+constexpr int CLEAR_BUTTON_WIDTH = 78;
+constexpr int TOPBAR_BUTTON_HEIGHT = 40;
+constexpr int TOPBAR_BUTTONS_GAP = 4;         /**< between the buttons, added to their own inset */
+constexpr int TOPBAR_SLIDER_BUTTONS_GAP = 24; /**< between the slider pictogram and the buttons */
 constexpr int SENSITIVITY_SLIDER_WIDTH = 200;
 constexpr int SENSITIVITY_SLIDER_PICTOGRAM_WIDTH = 32;
 constexpr int SENSITIVITY_SLIDER_PICTOGRAM_PADDING = 4;
@@ -32,6 +32,9 @@ void TopBar::setUpdateAvailable(bool isUpdateAvailable)
 
 void TopBar::paint(juce::Graphics &g)
 {
+    g.setColour(KHOLORS_COLOR_HEADER_LINE);
+    g.fillRect(getLocalBounds().removeFromBottom(1));
+
     g.setColour(KHOLORS_COLOR_TEXT);
     g.setFont(sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT));
     g.drawText("KHOLORS", mainTitleArea, juce::Justification::centredRight, false);
@@ -84,20 +87,21 @@ void TopBar::resized()
     auto buttonsArea = bounds.withTrimmedRight(TOPBAR_SIDE_PADDING);
     buttonsArea.reduce(0, (buttonsArea.getHeight() - TOPBAR_BUTTON_HEIGHT) / 2);
     helpButton.setBounds(buttonsArea.removeFromRight(HELP_BUTTON_WIDTH));
+    buttonsArea.removeFromRight(TOPBAR_BUTTONS_GAP);
     clearButton.setBounds(buttonsArea.removeFromRight(CLEAR_BUTTON_WIDTH));
 
     // sensitivity slider between its two pictograms, hidden if it doesn't fit next to the title
     buttonsArea.setLeft(totalTitleWidth);
-    if (buttonsArea.getWidth() < (TOPBAR_BUTTONS_PADDING + TOPBAR_BUTTONS_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH +
-                                  SENSITIVITY_SLIDER_PICTOGRAM_PADDING + SENSITIVITY_SLIDER_WIDTH +
-                                  SENSITIVITY_SLIDER_PICTOGRAM_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH))
+    if (buttonsArea.getWidth() <
+        (TOPBAR_SLIDER_BUTTONS_GAP + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH + SENSITIVITY_SLIDER_PICTOGRAM_PADDING +
+         SENSITIVITY_SLIDER_WIDTH + SENSITIVITY_SLIDER_PICTOGRAM_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH))
     {
         volumeSensitivitySlider.setVisible(false);
         return;
     }
     volumeSensitivitySlider.setVisible(true);
 
-    buttonsArea.removeFromRight(SENSITIVITY_SLIDER_PICTOGRAM_PADDING);
+    buttonsArea.removeFromRight(TOPBAR_SLIDER_BUTTONS_GAP);
     auto const highWaveColumn = buttonsArea.removeFromRight(SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
     buttonsArea.removeFromRight(SENSITIVITY_SLIDER_PICTOGRAM_PADDING);
     auto const sliderArea = buttonsArea.removeFromRight(SENSITIVITY_SLIDER_WIDTH);

@@ -142,29 +142,32 @@ void KholorsLookAndFeel::drawMenuBarBackground(juce::Graphics &g, int /*width*/,
     g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
 }
 
-void KholorsLookAndFeel::drawButtonBackground(juce::Graphics &g, juce::Button & /*unused*/,
-                                              const juce::Colour &backgroundColor, bool /*highlighted*/, bool down)
+void KholorsLookAndFeel::drawButtonBackground(juce::Graphics &g, juce::Button &b, const juce::Colour &backgroundColor,
+                                              bool /*highlighted*/, bool down)
 {
-    g.setColour(backgroundColor);
-    auto reducedClipBounds =
-        g.getClipBounds().toFloat().reduced(KHOLORS_BUTTON_BORDER_THICKNESS + KHOLORS_BUTTON_DOWN_DISPLACEMENT);
+    // use the button bounds and not the clip bounds, which only cover the repainted area
+    auto buttonBounds =
+        b.getLocalBounds().toFloat().reduced(KHOLORS_BUTTON_BORDER_THICKNESS + KHOLORS_BUTTON_DOWN_DISPLACEMENT);
     if (down)
     {
-        reducedClipBounds.setX(reducedClipBounds.getX() + KHOLORS_BUTTON_DOWN_DISPLACEMENT);
-        reducedClipBounds.setY(reducedClipBounds.getY() + KHOLORS_BUTTON_DOWN_DISPLACEMENT);
+        buttonBounds.setX(buttonBounds.getX() + KHOLORS_BUTTON_DOWN_DISPLACEMENT);
+        buttonBounds.setY(buttonBounds.getY() + KHOLORS_BUTTON_DOWN_DISPLACEMENT);
     }
-    g.fillRoundedRectangle(reducedClipBounds, KHOLORS_BUTTON_CORNERSIZE);
+    g.setColour(backgroundColor);
+    g.fillRoundedRectangle(buttonBounds, KHOLORS_BUTTON_CORNERSIZE);
+    g.setColour(KHOLORS_COLOR_BUTTON_BORDER);
+    g.drawRoundedRectangle(buttonBounds.reduced(0.5f), KHOLORS_BUTTON_CORNERSIZE, 1.0f);
 }
 
 void KholorsLookAndFeel::drawButtonText(juce::Graphics &g, juce::TextButton &b, bool highlighted, bool down)
 {
-    g.setFont(sharedFonts->robotoBold.withHeight(BUTTON_TEXT_HEIGHT));
+    g.setFont(sharedFonts->robotoMedium.withHeight(BUTTON_TEXT_HEIGHT));
     g.setColour(KHOLORS_COLOR_TEXT_DARKER);
     if (highlighted)
     {
         g.setColour(KHOLORS_COLOR_TEXT);
     }
-    auto textBounds = g.getClipBounds();
+    auto textBounds = b.getLocalBounds();
     textBounds.reduce(KHOLORS_BUTTON_DOWN_DISPLACEMENT, KHOLORS_BUTTON_DOWN_DISPLACEMENT);
     if (down)
     {

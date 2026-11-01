@@ -9,7 +9,7 @@
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
-inline constexpr int TOP_BAR_HEIGHT = 80;
+inline constexpr int TOP_BAR_HEIGHT = 64;
 
 /**
  * @brief A component that is meant to be at the top of the

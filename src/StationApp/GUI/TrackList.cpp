@@ -36,7 +36,7 @@ TrackList::TrackList(TrackInfoStore &tis, NormalizedUnitTransformer &nut, Taskin
 
 void TrackList::paint(juce::Graphics &g)
 {
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    g.fillAll(KHOLORS_COLOR_CARD_BACKGROUND);
 
     int startTile = 0;
     int endTile = 0;

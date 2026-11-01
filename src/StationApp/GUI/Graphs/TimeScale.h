@@ -1,5 +1,6 @@
 #pragma once
 
+#include "GUIToolkit/FontsLoader.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <mutex>
 #include <string>
@@ -8,8 +9,6 @@
 inline constexpr int TICK_TOP_PADDING = 5;
 inline constexpr int TICK_LABEL_MARGIN = 4;
 inline constexpr int TICK_LABEL_WIDTH = 30;
-
-inline constexpr int TITLE_PIXELS_FROM_BOTTOM = 12;
 
 inline constexpr int MAXIMUM_GLYPH_CACHE_SIZE = 512;
 
@@ -39,4 +38,5 @@ class TimeScale : public juce::Component
     int64_t viewPosition{}, viewScale{};
     float bpm{};
     std::unordered_map<std::string, juce::GlyphArrangement> glyphCache;
+    juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */
 };
