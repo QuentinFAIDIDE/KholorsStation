@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <thread>
 
-TaskingManager::TaskingManager() : lastUsedTaskListenerId(-1)
+TaskingManager::TaskingManager()
 {
     backgroundThreadIsRunning = false;
     taskBroadcastStopped = true;
@@ -17,12 +17,12 @@ TaskingManager::TaskingManager() : lastUsedTaskListenerId(-1)
 
 TaskingManager::~TaskingManager()
 {
-    std::lock_guard<std::mutex> lock(taskingThreadStartMutex);
+    std::scoped_lock const lock(taskingThreadStartMutex);
 
     if (taskingThread != nullptr)
     {
         {
-            std::lock_guard<std::mutex> lock2(taskQueueMutex);
+            std::scoped_lock const lock2(taskQueueMutex);
             taskBroadcastStopped = true;
         }
         taskingThreadCV.notify_all();
@@ -35,12 +35,12 @@ TaskingManager::~TaskingManager()
 
 void TaskingManager::startTaskBroadcast()
 {
-    std::lock_guard<std::mutex> lock(taskingThreadStartMutex);
+    std::scoped_lock const lock(taskingThreadStartMutex);
 
     if (taskingThread == nullptr)
     {
         {
-            std::lock_guard<std::mutex> lock2(taskQueueMutex);
+            std::scoped_lock const lock2(taskQueueMutex);
             taskBroadcastStopped = false;
         }
         taskingThread = std::make_unique<std::thread>(&TaskingManager::taskingThreadLoop, this);
@@ -55,12 +55,12 @@ void TaskingManager::startTaskBroadcast()
 
 void TaskingManager::stopTaskBroadcast()
 {
-    std::lock_guard<std::mutex> lock(taskingThreadStartMutex);
+    std::scoped_lock const lock(taskingThreadStartMutex);
 
     if (taskingThread != nullptr)
     {
         {
-            std::lock_guard<std::mutex> lock2(taskQueueMutex);
+            std::scoped_lock const lock2(taskQueueMutex);
             taskBroadcastStopped = true;
         }
         taskingThreadCV.notify_all();
@@ -78,7 +78,7 @@ void TaskingManager::stopTaskBroadcast()
 void TaskingManager::taskingThreadLoop()
 {
     backgroundThreadIsRunning = true;
-    size_t lastQueueSize;
+    size_t lastQueueSize = 0;
     std::shared_ptr<Task> currentTask;
     // looping on successive wake ups from condition variable (or timeouts thereof)
     while (true)
@@ -88,7 +88,7 @@ void TaskingManager::taskingThreadLoop()
         {
             // fetch size of queue
             {
-                std::lock_guard<std::mutex> lock(taskQueueMutex);
+                std::scoped_lock const lock(taskQueueMutex);
                 lastQueueSize = taskQueue.size();
                 // abort if the thread is currently being stopped
                 if (taskBroadcastStopped)
@@ -104,7 +104,7 @@ void TaskingManager::taskingThreadLoop()
             }
             // if size > 0, pull and process task
             {
-                std::lock_guard<std::mutex> lock(taskQueueMutex);
+                std::scoped_lock const lock(taskQueueMutex);
                 currentTask = taskQueue.front();
                 taskQueue.pop();
             }
@@ -118,10 +118,10 @@ void TaskingManager::taskingThreadLoop()
 
             // core tasking code that iterate over listeners
             {
-                std::lock_guard<std::mutex> lock(taskListenersMutex);
-                for (size_t i = 0; i < taskListeners.size(); i++)
+                std::scoped_lock const lock(taskListenersMutex);
+                for (auto &taskListener : taskListeners)
                 {
-                    bool shouldStop = taskListeners[i]->taskHandler(currentTask);
+                    bool const shouldStop = taskListener->taskHandler(currentTask);
                     if (shouldStop)
                     {
                         break;
@@ -137,7 +137,7 @@ void TaskingManager::taskingThreadLoop()
         // wait on condition variable with timeout
         std::unique_lock<std::mutex> queueLock(taskQueueMutex);
         taskingThreadCV.wait_for(queueLock, std::chrono::seconds(1),
-                                 [this] { return taskBroadcastStopped || taskQueue.size() > 0; });
+                                 [this] { return taskBroadcastStopped || !taskQueue.empty(); });
     }
 }
 
@@ -145,7 +145,7 @@ void TaskingManager::broadcastTask(std::shared_ptr<Task> submittedTask)
 {
     submittedTask->setTaskingManager(this);
     {
-        std::lock_guard<std::mutex> lock(taskQueueMutex);
+        std::scoped_lock const lock(taskQueueMutex);
         taskQueue.push(submittedTask);
     }
     taskingThreadCV.notify_all();
@@ -153,8 +153,8 @@ void TaskingManager::broadcastTask(std::shared_ptr<Task> submittedTask)
 
 int64_t TaskingManager::registerTaskListener(TaskListener *newListener)
 {
-    std::lock_guard<std::mutex> lock(taskListenersMutex);
-    int64_t newId = lastUsedTaskListenerId + 1;
+    std::scoped_lock const lock(taskListenersMutex);
+    int64_t const newId = lastUsedTaskListenerId + 1;
     lastUsedTaskListenerId = newId;
     taskListeners.push_back(newListener);
     taskListenersIds.push_back(newId);
@@ -163,7 +163,7 @@ int64_t TaskingManager::registerTaskListener(TaskListener *newListener)
 
 void TaskingManager::purgeTaskListener(int64_t idToRemove)
 {
-    std::lock_guard<std::mutex> lock(taskListenersMutex);
+    std::scoped_lock const lock(taskListenersMutex);
 
     std::vector<TaskListener *> newTaskListeners;
     std::vector<int64_t> newTaskListersIds;
@@ -191,9 +191,9 @@ void TaskingManager::broadcastNestedTaskNow(std::shared_ptr<Task> priorityTask)
 
     // NOTE: we don't record nested tasks in history
 
-    for (size_t i = 0; i < taskListeners.size(); i++)
+    for (auto &taskListener : taskListeners)
     {
-        bool shouldStop = taskListeners[i]->taskHandler(priorityTask);
+        bool const shouldStop = taskListener->taskHandler(priorityTask);
         if (shouldStop)
         {
             break;
@@ -203,7 +203,7 @@ void TaskingManager::broadcastNestedTaskNow(std::shared_ptr<Task> priorityTask)
 
 void TaskingManager::throwIfCallerIsNotTaskingThread(std::string caller)
 {
-    std::lock_guard<std::mutex> lock(taskingThreadStartMutex);
+    std::scoped_lock const lock(taskingThreadStartMutex);
     if (std::this_thread::get_id() != taskingThread->get_id())
     {
         throw std::runtime_error("Trying to call " + caller +
@@ -219,43 +219,39 @@ bool TaskingManager::taskHandler(std::shared_ptr<Task> task)
     // So this is the only task implementation where we don't need to use broadcastNestedTaskNow
     // to let others now of success.
 
-    auto cancelTask = std::dynamic_pointer_cast<CancelTask>(task);
+    auto const cancelTask = std::dynamic_pointer_cast<CancelTask>(task);
     if (cancelTask != nullptr && !cancelTask->isCompleted() && !cancelTask->hasFailed())
     {
-        bool success = undoLastActivity();
+        bool const success = undoLastActivity();
         if (!success)
         {
             cancelTask->setFailed(true);
             cancelTask->setCompleted(false);
             return false;
         }
-        else
-        {
-            cancelTask->setFailed(false);
-            cancelTask->setCompleted(true);
-            return false;
-        }
+
+        cancelTask->setFailed(false);
+        cancelTask->setCompleted(true);
+        return false;
     }
 
-    auto restoreTask = std::dynamic_pointer_cast<RestoreTask>(task);
+    auto const restoreTask = std::dynamic_pointer_cast<RestoreTask>(task);
     if (restoreTask != nullptr && !restoreTask->isCompleted() && !restoreTask->hasFailed())
     {
-        bool success = redoLastActivity();
+        bool const success = redoLastActivity();
         if (!success)
         {
             restoreTask->setFailed(true);
             restoreTask->setCompleted(false);
             return false;
         }
-        else
-        {
-            restoreTask->setFailed(false);
-            restoreTask->setCompleted(true);
-            return false;
-        }
+
+        restoreTask->setFailed(false);
+        restoreTask->setCompleted(true);
+        return false;
     }
 
-    auto clearHistoryTask = std::dynamic_pointer_cast<ClearHistoryTask>(task);
+    auto const clearHistoryTask = std::dynamic_pointer_cast<ClearHistoryTask>(task);
     if (clearHistoryTask != nullptr && !clearHistoryTask->isCompleted() && !clearHistoryTask->hasFailed())
     {
         clearTaskHistory();
@@ -281,7 +277,7 @@ void TaskingManager::recordTaskInHistory(std::shared_ptr<Task> taskToRecord)
         canceledTasks.pop();
     }
 
-    history[historyNextIndex] = taskToRecord;
+    history[historyNextIndex] = std::move(taskToRecord);
     historyNextIndex = (historyNextIndex + 1) % ACTIVITY_HISTORY_RING_BUFFER_SIZE;
 }
 
@@ -307,21 +303,21 @@ bool TaskingManager::undoLastActivity()
 
         // we are saving the group index so that we can decide on canceling next
         // task if it's from the same task group
-        int taskGroupIndex = history[lastActivityIndex]->getTaskGroupIndex();
+        int const taskGroupIndex = history[lastActivityIndex]->getTaskGroupIndex();
 
         auto tasksToCancel = history[lastActivityIndex]->getOppositeTasks();
-        if (tasksToCancel.size() == 0)
+        if (tasksToCancel.empty())
         {
             spdlog::info("This task cannot be canceled (no opposite task set)");
             return false;
         }
 
-        for (size_t i = 0; i < tasksToCancel.size(); i++)
+        for (auto &i : tasksToCancel)
         {
-            tasksToCancel[i]->declareSelfAsPartOfReversion();
-            for (size_t j = 0; j < taskListeners.size(); j++)
+            i->declareSelfAsPartOfReversion();
+            for (auto &taskListener : taskListeners)
             {
-                bool shouldStop = taskListeners[j]->taskHandler(tasksToCancel[i]);
+                bool const shouldStop = taskListener->taskHandler(i);
                 if (shouldStop)
                 {
                     break;
@@ -340,14 +336,8 @@ bool TaskingManager::undoLastActivity()
         {
             lastActivityIndex += ACTIVITY_HISTORY_RING_BUFFER_SIZE;
         }
-        if (history[lastActivityIndex] != nullptr && history[lastActivityIndex]->getTaskGroupIndex() == taskGroupIndex)
-        {
-            cancelingNextTask = true;
-        }
-        else
-        {
-            cancelingNextTask = false;
-        }
+        cancelingNextTask =
+            history[lastActivityIndex] != nullptr && history[lastActivityIndex]->getTaskGroupIndex() == taskGroupIndex;
     }
 
     return true;
@@ -368,18 +358,18 @@ bool TaskingManager::redoLastActivity()
             return false;
         }
 
-        std::shared_ptr<Task> taskToRestore = canceledTasks.top();
+        std::shared_ptr<Task> const taskToRestore = canceledTasks.top();
         canceledTasks.pop();
 
-        int taskGroupIndex = taskToRestore->getTaskGroupIndex();
+        int const taskGroupIndex = taskToRestore->getTaskGroupIndex();
 
         taskToRestore->prepareForRepost();
         taskToRestore->preventFromGoingToTaskHistory();
         taskToRestore->declareSelfAsPartOfReversion();
 
-        for (size_t j = 0; j < taskListeners.size(); j++)
+        for (auto &taskListener : taskListeners)
         {
-            bool shouldStop = taskListeners[j]->taskHandler(taskToRestore);
+            bool const shouldStop = taskListener->taskHandler(taskToRestore);
             if (shouldStop)
             {
                 break;
@@ -390,14 +380,7 @@ bool TaskingManager::redoLastActivity()
         historyNextIndex = (historyNextIndex + 1) % ACTIVITY_HISTORY_RING_BUFFER_SIZE;
 
         // if the next canceled task exists and has same task group id, we restore it as well
-        if (!canceledTasks.empty() && canceledTasks.top()->getTaskGroupIndex() == taskGroupIndex)
-        {
-            restoringNextTask = true;
-        }
-        else
-        {
-            restoringNextTask = false;
-        }
+        restoringNextTask = !canceledTasks.empty() && canceledTasks.top()->getTaskGroupIndex() == taskGroupIndex;
     }
 
     return true;
@@ -411,9 +394,9 @@ void TaskingManager::clearTaskHistory()
     canceledTasks.swap(emptyTaskStack);
 
     // this will free a lot of stuff since we dereference smart pointers
-    for (int i = 0; i < ACTIVITY_HISTORY_RING_BUFFER_SIZE; i++)
+    for (auto &i : history)
     {
-        history[i] = nullptr;
+        i = nullptr;
     }
 
     // this is quite useless but I like it like this
@@ -425,7 +408,7 @@ void TaskingManager::clearTaskHistory()
 void TaskingManager::shutdownBackgroundThreadAsync()
 {
     {
-        std::lock_guard<std::mutex> lock2(taskQueueMutex);
+        std::scoped_lock const lock2(taskQueueMutex);
         taskBroadcastStopped = true;
     }
     taskingThreadCV.notify_all();
@@ -438,6 +421,6 @@ bool TaskingManager::isBackgroundThreadRunning()
 
 bool TaskingManager::shutdownWasCalled()
 {
-    std::lock_guard<std::mutex> lock2(taskQueueMutex);
+    std::scoped_lock const lock2(taskQueueMutex);
     return taskBroadcastStopped;
 }

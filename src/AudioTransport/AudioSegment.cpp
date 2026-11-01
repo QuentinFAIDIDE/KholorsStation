@@ -1,12 +1,11 @@
 #include "AudioSegment.h"
 #include <stdexcept>
+#include <utility>
 
 namespace AudioTransport
 {
 
-AudioSegment::AudioSegment()
-{
-}
+AudioSegment::AudioSegment() = default;
 
 void AudioSegment::parseFromApiPayload(const AudioSegmentPayload *payload, size_t channelPicked)
 {
@@ -21,7 +20,7 @@ void AudioSegment::parseFromApiPayload(const AudioSegmentPayload *payload, size_
             "parseFromApiPayload called when segment_audio_samples has different size than segment_sample_duration");
     }
 
-    if (channelPicked >= payload->segment_no_channels())
+    if (std::cmp_greater_equal(channelPicked, payload->segment_no_channels()))
     {
         throw std::invalid_argument("parseFromApiPayload called with invalid channel");
     }

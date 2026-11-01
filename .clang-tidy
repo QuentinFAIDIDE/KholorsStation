@@ -1,0 +1,72 @@
+---
+# Broad set of checks, minus the ones that are mostly noise for a JUCE/audio codebase.
+# cert-* and the cppcoreguidelines aliases listed at the end are only aliases of
+# checks already enabled; keeping them would report (and --fix) everything twice.
+# modernize-macro-to-enum is off because its unnamed enums break templates and
+# collide across headers; cppcoreguidelines-macro-usage still suggests constexpr.
+Checks: >
+  -*,
+  bugprone-*,
+  clang-analyzer-*,
+  concurrency-*,
+  cppcoreguidelines-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -bugprone-easily-swappable-parameters,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-avoid-const-or-ref-data-members,
+  -cppcoreguidelines-avoid-do-while,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-pro-type-union-access,
+  -cppcoreguidelines-pro-type-vararg,
+  -misc-include-cleaner,
+  -misc-non-private-member-variables-in-classes,
+  -modernize-avoid-c-arrays,
+  -modernize-macro-to-enum,
+  -modernize-use-designated-initializers,
+  -modernize-use-nodiscard,
+  -modernize-use-trailing-return-type,
+  -portability-avoid-pragma-once,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -readability-math-missing-parentheses,
+  -readability-uppercase-literal-suffix,
+  -cppcoreguidelines-c-copy-assignment-signature,
+  -cppcoreguidelines-explicit-constructor,
+  -cppcoreguidelines-explicit-virtual-functions,
+  -cppcoreguidelines-macro-to-enum,
+  -cppcoreguidelines-narrowing-conversions,
+  -cppcoreguidelines-noexcept-destructor,
+  -cppcoreguidelines-noexcept-move-operations,
+  -cppcoreguidelines-noexcept-swap,
+  -cppcoreguidelines-use-default-member-init,
+  -performance-faster-string-find
+
+WarningsAsErrors: ''
+
+# Only report warnings from our own headers, not from JUCE, gRPC or generated code.
+HeaderFilterRegex: '.*/src/.*'
+ExcludeHeaderFilterRegex: '.*/(libs|build|vcpkg_installed)/.*'
+
+CheckOptions:
+  - key: readability-function-cognitive-complexity.Threshold
+    value: 40
+  - key: readability-implicit-bool-conversion.AllowPointerConditions
+    value: true
+  - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+    value: true
+  - key: misc-const-correctness.WarnPointersAsValues
+    value: false
+  # the pointee analysis misses writes like *ptr++ = x and produces uncompilable fixes
+  - key: misc-const-correctness.AnalyzePointers
+    value: false
+...

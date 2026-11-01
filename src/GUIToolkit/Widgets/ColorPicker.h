@@ -11,7 +11,7 @@ class ColorPicker : public juce::Component, public TaskListener
 {
   public:
     ColorPicker(std::string id, TaskingManager &tm);
-    ~ColorPicker();
+    ~ColorPicker() override;
     void paint(juce::Graphics &g) override;
     void resized() override;
 
@@ -42,7 +42,7 @@ class ColorPicker : public juce::Component, public TaskListener
     juce::Colour currentColor; /**< used when custom colors is chosen to display it */
     std::mutex selectedColorMutex;
 
-    int64_t taskListenerId; /**< Id to delete itself from task listeners when destructor is called */
+    int64_t taskListenerId{}; /**< Id to delete itself from task listeners when destructor is called */
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ColorPicker)
 };

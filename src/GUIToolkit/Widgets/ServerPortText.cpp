@@ -18,7 +18,7 @@ void ServerPortText::paint(juce::Graphics &g)
 
     std::optional<uint32_t> portToDisplay;
     {
-        std::lock_guard lock(currentPortMutex);
+        std::scoped_lock const lock(currentPortMutex);
         portToDisplay = currentPort;
     }
 
@@ -36,10 +36,10 @@ void ServerPortText::paint(juce::Graphics &g)
 
 bool ServerPortText::taskHandler(std::shared_ptr<Task> task)
 {
-    auto taskToParse = std::dynamic_pointer_cast<AudioTransport::ServerStatusTask>(task);
+    auto const taskToParse = std::dynamic_pointer_cast<AudioTransport::ServerStatusTask>(task);
     if (taskToParse != nullptr)
     {
-        std::lock_guard lock(currentPortMutex);
+        std::scoped_lock const lock(currentPortMutex);
         currentPort = taskToParse->runningAndPort.second;
     }
 

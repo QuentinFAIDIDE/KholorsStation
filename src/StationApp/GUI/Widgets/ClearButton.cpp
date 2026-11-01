@@ -9,12 +9,10 @@ ClearButton::ClearButton(TaskingManager &tm)
 {
 }
 
-ClearButton::~ClearButton()
-{
-}
+ClearButton::~ClearButton() = default;
 
 void ClearButton::clicked()
 {
-    auto clearTask = std::make_shared<ClearTask>();
+    auto const clearTask = std::make_shared<ClearTask>();
     taskManager.broadcastTask(clearTask);
 }

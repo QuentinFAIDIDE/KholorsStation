@@ -14,7 +14,7 @@
 class ProcessingTimer
 {
   public:
-    ProcessingTimer(TaskingManager &tm);
+    explicit ProcessingTimer(TaskingManager &tm);
     ~ProcessingTimer();
 
     /**
@@ -53,7 +53,7 @@ class ProcessingTimer
 class ProcessingTimeUpdateTask : public SilentTask
 {
   public:
-    ProcessingTimeUpdateTask(float avgTimeMs);
+    explicit ProcessingTimeUpdateTask(float avgTimeMs);
     std::string marshal() override;
 
     float averageProcesingTimeMs;

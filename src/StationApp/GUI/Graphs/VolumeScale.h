@@ -22,7 +22,7 @@ class VolumeScale : public juce::Component
      */
     VolumeScale();
 
-    ~VolumeScale();
+    ~VolumeScale() override;
 
     void paint(juce::Graphics &g) override;
 

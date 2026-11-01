@@ -16,7 +16,7 @@
 class LabeledLineStack : public juce::Component
 {
   public:
-    LabeledLineStack(std::string name);
+    explicit LabeledLineStack(std::string name);
     void resized() override;
     void paint(juce::Graphics &g) override;
     void addComponent(std::shared_ptr<juce::Component> newComponent);

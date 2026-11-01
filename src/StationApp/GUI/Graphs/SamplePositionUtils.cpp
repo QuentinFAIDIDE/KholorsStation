@@ -5,9 +5,9 @@ void SamplePositionUtils::toVisualSampleRate(int64_t &startSample, int64_t &endS
 {
     if (sourceSampleRate != VISUAL_SAMPLE_RATE)
     {
-        float sampleRateRatio = float(VISUAL_SAMPLE_RATE) / float(sourceSampleRate);
-        startSample = float(startSample) * sampleRateRatio;
-        endSample = float(endSample) * sampleRateRatio;
+        float const sampleRateRatio = static_cast<float>(VISUAL_SAMPLE_RATE) / static_cast<float>(sourceSampleRate);
+        startSample = static_cast<float>(startSample) * sampleRateRatio;
+        endSample = static_cast<float>(endSample) * sampleRateRatio;
     }
 }
 

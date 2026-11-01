@@ -9,9 +9,9 @@ class HelpDialogContent : public juce::Component
 
   public:
     HelpDialogContent();
-    ~HelpDialogContent();
+    ~HelpDialogContent() override;
 
-    void paint(juce::Graphics &) override;
+    void paint(juce::Graphics & /*g*/) override;
     void resized() override;
 
   private:

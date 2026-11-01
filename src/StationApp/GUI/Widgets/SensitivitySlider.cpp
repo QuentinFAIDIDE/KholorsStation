@@ -13,9 +13,9 @@ SensitivitySlider::SensitivitySlider(TaskingManager &tm) : taskingManager(tm)
 
 void SensitivitySlider::valueChanged()
 {
-    float newValue = (float)getValue();
+    auto newValue = static_cast<float>(getValue());
     // we flip the value as more is actually less
     newValue = INTENSITY_SENSITIVITY_MAX - (newValue - INTENSITY_SENSITIVITY_MIN);
-    auto updateTask = std::make_shared<VolumeSensitivityTask>(newValue);
+    auto const updateTask = std::make_shared<VolumeSensitivityTask>(newValue);
     taskingManager.broadcastTask(updateTask);
 }

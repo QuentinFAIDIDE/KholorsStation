@@ -7,12 +7,15 @@
 #include "StationApp/GUI/TrackSelectionTask.h"
 #include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
+#include <algorithm>
 #include <cstdlib>
+#include <math.h>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
+#include <utility>
 
 // this is the number of tiles per seconds
 #define SECOND_TILE_RATIO 10
@@ -21,8 +24,7 @@
 #define TILE_WIDTH (VISUAL_SAMPLE_RATE / 4)
 
 TrackList::TrackList(TrackInfoStore &tis, NormalizedUnitTransformer &nut, TaskingManager &tm)
-    : taskingManager(tm), viewPosition(0), viewScale(200), freqViewWidth(1000), trackInfoStore(tis),
-      frequencyTransformer(nut)
+    : taskingManager(tm), trackInfoStore(tis), frequencyTransformer(nut)
 {
     lastMouseX = 0;
     lastMouseY = 0;
@@ -35,9 +37,10 @@ void TrackList::paint(juce::Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
-    int startTile, endTile;
+    int startTile;
+    int endTile;
     {
-        std::lock_guard lock(viewMutex);
+        std::scoped_lock const lock(viewMutex);
         startTile = viewPosition / TILE_WIDTH;
         // note that getParentWidth is not exactly the freqView width but it's not very important
         // to be precise to select which 1 second tile to use.
@@ -57,35 +60,36 @@ void TrackList::paint(juce::Graphics &g)
     }
 
     std::vector<juce::Rectangle<int>> drawnAreas;
-    auto drawableBounds = getLocalBounds().reduced(LABELS_AREA_X_PADDING, LABELS_AREA_Y_PADDING);
-    juce::Rectangle<int> labelArea = drawableBounds.withHeight(LABEL_HEIGHT);
+    auto const drawableBounds = getLocalBounds().reduced(LABELS_AREA_X_PADDING, LABELS_AREA_Y_PADDING);
+    juce::Rectangle<int> const labelArea = drawableBounds.withHeight(LABEL_HEIGHT);
 
-    int drawableHeightHalf = drawableBounds.getHeight() / 2;
+    int const drawableHeightHalf = drawableBounds.getHeight() / 2;
 
     tracksLabelPositions.resize(0);
 
-    for (size_t i = 0; i < tracks.size(); i++)
+    for (auto &track : tracks)
     {
-        auto trackNameOpt = trackInfoStore.getTrackName(tracks[i].trackIdentifier);
+        auto trackNameOpt = trackInfoStore.getTrackName(track.trackIdentifier);
         if (!trackNameOpt.has_value())
         {
             spdlog::warn("A track label was not drawn because its name could not be found at track info store!");
             continue;
         }
-        std::string trackName = trackNameOpt.value();
+        std::string const trackName = trackNameOpt.value();
 
-        auto trackColorOpt = trackInfoStore.getTrackColor(tracks[i].trackIdentifier);
+        auto trackColorOpt = trackInfoStore.getTrackColor(track.trackIdentifier);
         if (!trackColorOpt.has_value())
         {
             spdlog::warn("A track label was not drawn because its color could not be found at track info store!");
             continue;
         }
-        auto trackColor = juce::Colour(trackColorOpt->red, trackColorOpt->green, trackColorOpt->blue);
+        auto const trackColor = juce::Colour(trackColorOpt->red, trackColorOpt->green, trackColorOpt->blue);
 
         // which channel do we allow to draw based on its usage ?
-        bool leftChannelWillBeDrawn, rightChannelWillBeDrawn;
-        bool leftChannelCanBeDrawn = tracks[i].stereoBalance == 0 || tracks[i].stereoBalance == 2;
-        bool rightChannelCanBeDrawn = tracks[i].stereoBalance == 1 || tracks[i].stereoBalance == 2;
+        bool leftChannelWillBeDrawn;
+        bool rightChannelWillBeDrawn;
+        bool const leftChannelCanBeDrawn = track.stereoBalance == 0 || track.stereoBalance == 2;
+        bool const rightChannelCanBeDrawn = track.stereoBalance == 1 || track.stereoBalance == 2;
 
         // We are only allowed one channel, so we take the first one we can.
         // Note that we iteratively try whichever side has space so user will not necessarely
@@ -108,33 +112,33 @@ void TrackList::paint(juce::Graphics &g)
         if (leftChannelWillBeDrawn)
         {
             // do we allow the label to be drawn on any (left/right) side ?
-            bool allowedToSwitchChanSide = rightChannelCanBeDrawn;
+            bool const allowedToSwitchChanSide = rightChannelCanBeDrawn;
             // freq ratio from DC to Nyquist
-            float frequencyRatio;
+            float frequencyRatio = NAN;
             // if we wish to alternate side, we take average of both chans if possible
             if (allowedToSwitchChanSide)
             {
                 frequencyRatio =
-                    ((tracks[i].leftChannelAvgFreq + tracks[i].rightChannelAvgFreq)) / float(VISUAL_SAMPLE_RATE);
+                    ((track.leftChannelAvgFreq + track.rightChannelAvgFreq)) / static_cast<float>(VISUAL_SAMPLE_RATE);
             }
             else
             {
-                frequencyRatio = (0.5f * tracks[i].leftChannelAvgFreq) / float(VISUAL_SAMPLE_RATE);
+                frequencyRatio = (0.5f * track.leftChannelAvgFreq) / static_cast<float>(VISUAL_SAMPLE_RATE);
             }
-            float freqPositionRatio = frequencyTransformer.transform(frequencyRatio);
+            float const freqPositionRatio = frequencyTransformer.transform(frequencyRatio);
 
-            float originalSidePosition = 1.0f - freqPositionRatio;
+            float const originalSidePosition = 1.0f - freqPositionRatio;
 
-            auto labelAreaOpt = tryPositioningTrackLabel(labelArea, drawableBounds, allowedToSwitchChanSide,
-                                                         freqPositionRatio, originalSidePosition, drawableHeightHalf,
-                                                         drawnAreas, tracks[i].trackIdentifier);
+            auto labelAreaOpt =
+                tryPositioningTrackLabel(labelArea, drawableBounds, allowedToSwitchChanSide, freqPositionRatio,
+                                         originalSidePosition, drawableHeightHalf, drawnAreas, track.trackIdentifier);
 
             if (labelAreaOpt.has_value())
             {
-                drawLabel(g, labelAreaOpt.value(), trackName, trackColor, tracks[i].trackIdentifier);
+                drawLabel(g, labelAreaOpt.value(), trackName, trackColor, track.trackIdentifier);
                 drawnAreas.push_back(labelAreaOpt.value());
-                std::pair<uint64_t, juce::Rectangle<int>> trackLabelPos(tracks[i].trackIdentifier,
-                                                                        labelAreaOpt.value());
+                std::pair<uint64_t, juce::Rectangle<int>> const trackLabelPos(track.trackIdentifier,
+                                                                              labelAreaOpt.value());
                 tracksLabelPositions.push_back(trackLabelPos);
             }
         }
@@ -142,33 +146,33 @@ void TrackList::paint(juce::Graphics &g)
         if (rightChannelWillBeDrawn)
         {
             // do we allow the label to be drawn on any (left/right) side ?
-            bool allowedToSwitchChanSide = leftChannelCanBeDrawn;
+            bool const allowedToSwitchChanSide = leftChannelCanBeDrawn;
             // freq ratio from DC to Nyquist
-            float frequencyRatio;
+            float frequencyRatio = NAN;
             // if we wish to alternate side, we take average of both chans if possible
             if (allowedToSwitchChanSide)
             {
                 frequencyRatio =
-                    ((tracks[i].leftChannelAvgFreq + tracks[i].rightChannelAvgFreq)) / float(VISUAL_SAMPLE_RATE);
+                    ((track.leftChannelAvgFreq + track.rightChannelAvgFreq)) / static_cast<float>(VISUAL_SAMPLE_RATE);
             }
             else
             {
-                frequencyRatio = (0.5f * tracks[i].rightChannelAvgFreq) / float(VISUAL_SAMPLE_RATE);
+                frequencyRatio = (0.5f * track.rightChannelAvgFreq) / static_cast<float>(VISUAL_SAMPLE_RATE);
             }
-            float freqPositionRatio = frequencyTransformer.transform(frequencyRatio);
+            float const freqPositionRatio = frequencyTransformer.transform(frequencyRatio);
 
-            float originalSidePosition = 1.0f + freqPositionRatio;
+            float const originalSidePosition = 1.0f + freqPositionRatio;
 
-            auto labelAreaOpt = tryPositioningTrackLabel(labelArea, drawableBounds, allowedToSwitchChanSide,
-                                                         freqPositionRatio, originalSidePosition, drawableHeightHalf,
-                                                         drawnAreas, tracks[i].trackIdentifier);
+            auto labelAreaOpt =
+                tryPositioningTrackLabel(labelArea, drawableBounds, allowedToSwitchChanSide, freqPositionRatio,
+                                         originalSidePosition, drawableHeightHalf, drawnAreas, track.trackIdentifier);
 
             if (labelAreaOpt.has_value())
             {
-                drawLabel(g, labelAreaOpt.value(), trackName, trackColor, tracks[i].trackIdentifier);
+                drawLabel(g, labelAreaOpt.value(), trackName, trackColor, track.trackIdentifier);
                 drawnAreas.push_back(labelAreaOpt.value());
-                std::pair<uint64_t, juce::Rectangle<int>> trackLabelPos(tracks[i].trackIdentifier,
-                                                                        labelAreaOpt.value());
+                std::pair<uint64_t, juce::Rectangle<int>> const trackLabelPos(track.trackIdentifier,
+                                                                              labelAreaOpt.value());
                 tracksLabelPositions.push_back(trackLabelPos);
             }
         }
@@ -178,7 +182,7 @@ void TrackList::paint(juce::Graphics &g)
     updateSelectedTrack(lastMouseX, lastMouseY);
 }
 
-int64_t TrackList::getLastRedrawMs()
+int64_t TrackList::getLastRedrawMs() const
 {
     return lastRedrawMs;
 }
@@ -186,7 +190,7 @@ int64_t TrackList::getLastRedrawMs()
 void TrackList::updateSelectedTrack(int mouseX, int mouseY)
 {
     // TODO: see currently selected track, if changed after running this func, broadcast new TrackSelectionTask
-    std::optional<uint64_t> previouslySelectedTrack = selectedTrack;
+    std::optional<uint64_t> const previouslySelectedTrack = selectedTrack;
     lastMouseX = mouseX;
     lastMouseY = mouseY;
     if (!mouseOnComponent)
@@ -198,11 +202,11 @@ void TrackList::updateSelectedTrack(int mouseX, int mouseY)
         }
         return;
     }
-    for (size_t i = 0; i < tracksLabelPositions.size(); i++)
+    for (auto &tracksLabelPosition : tracksLabelPositions)
     {
-        if (tracksLabelPositions[i].second.contains(lastMouseX, lastMouseY))
+        if (tracksLabelPosition.second.contains(lastMouseX, lastMouseY))
         {
-            selectedTrack = tracksLabelPositions[i].first;
+            selectedTrack = tracksLabelPosition.first;
             if (selectedTrack != previouslySelectedTrack)
             {
                 broadcastSelectedTrack();
@@ -219,7 +223,7 @@ void TrackList::updateSelectedTrack(int mouseX, int mouseY)
 
 void TrackList::broadcastSelectedTrack()
 {
-    auto selectionUpdate = std::make_shared<TrackSelectionTask>(selectedTrack);
+    auto const selectionUpdate = std::make_shared<TrackSelectionTask>(selectedTrack);
     taskingManager.broadcastTask(selectionUpdate);
 }
 
@@ -235,7 +239,7 @@ void TrackList::mouseDrag(const juce::MouseEvent &me)
     updateSelectedTrack(me.position.x, me.position.y);
 }
 
-void TrackList::mouseExit(const juce::MouseEvent &)
+void TrackList::mouseExit(const juce::MouseEvent & /*event*/)
 {
     mouseOnComponent = false;
 }
@@ -282,7 +286,7 @@ std::optional<juce::Rectangle<int>> TrackList::tryPositioningTrackLabel(
     // It is used to choose whether this track label will be shown on
     // left or right channel.
 
-    int sideSeed = trackIdentifier % 2;
+    int const sideSeed = trackIdentifier % 2;
 
     // this is the label area we will try to position
     juce::Rectangle<int> labelCandidatePosition = labelRectangle;
@@ -297,12 +301,12 @@ std::optional<juce::Rectangle<int>> TrackList::tryPositioningTrackLabel(
             return std::nullopt;
         }
 
-        int newPos;
+        int newPos = 0;
 
         if (allowedToSwitchChanSide)
         {
-            int channelPosDiff;
-            float sidePosition;
+            int channelPosDiff = 0;
+            float sidePosition = NAN;
 
             // loop on 4 positions below or above current label:
             // UP(iter) - UP(iter) - DOWN(iter) - DOWN(iter)
@@ -328,18 +332,19 @@ std::optional<juce::Rectangle<int>> TrackList::tryPositioningTrackLabel(
                 sidePosition = (1.0f - freqPositionRatio);
             }
 
-            newPos = channelPosDiff + int(float(drawableHeightHalf) * sidePosition) - (LABEL_HEIGHT / 2);
+            newPos = channelPosDiff + static_cast<int>(static_cast<float>(drawableHeightHalf) * sidePosition) -
+                     (LABEL_HEIGHT / 2);
         }
         else
         {
             if (iter % 2 == 0)
             {
-                newPos = int(float(drawableHeightHalf) * labelPositionRatioInDrawableArea) +
+                newPos = static_cast<int>(static_cast<float>(drawableHeightHalf) * labelPositionRatioInDrawableArea) +
                          ((((int)iter / 2)) * LABEL_HEIGHT);
             }
             else
             {
-                newPos = int(float(drawableHeightHalf) * labelPositionRatioInDrawableArea) -
+                newPos = static_cast<int>(static_cast<float>(drawableHeightHalf) * labelPositionRatioInDrawableArea) -
                          ((((int)iter / 2)) * LABEL_HEIGHT);
             }
         }
@@ -355,9 +360,9 @@ std::optional<juce::Rectangle<int>> TrackList::tryPositioningTrackLabel(
 
 bool TrackList::rectIntersectsRectList(juce::Rectangle<int> &rect, std::vector<juce::Rectangle<int>> &rectangleList)
 {
-    for (size_t i = 0; i < rectangleList.size(); i++)
+    for (auto i : rectangleList)
     {
-        if (rect.intersects(rectangleList[i]))
+        if (rect.intersects(i))
         {
             return true;
         }
@@ -367,33 +372,34 @@ bool TrackList::rectIntersectsRectList(juce::Rectangle<int> &rect, std::vector<j
 
 void TrackList::setViewPosition(int64_t newVP)
 {
-    std::lock_guard lock(viewMutex);
+    std::scoped_lock const lock(viewMutex);
     viewPosition = newVP;
 }
 
 void TrackList::setViewScale(int64_t newVS)
 {
-    std::lock_guard lock(viewMutex);
+    std::scoped_lock const lock(viewMutex);
     viewScale = newVS;
 }
 
 void TrackList::setFreqViewWidth(int64_t newFVW)
 {
-    std::lock_guard lock(viewMutex);
+    std::scoped_lock const lock(viewMutex);
     freqViewWidth = newFVW;
 }
 
 void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
 {
-    size_t fftNumFreqBins = newSffts->fftData->size() / newSffts->noFFTs;
-    int64_t fftSampleWidth = (int64_t)newSffts->segmentSampleLength / (int64_t)newSffts->noFFTs;
+    size_t const fftNumFreqBins = newSffts->fftData->size() / newSffts->noFFTs;
+    int64_t const fftSampleWidth =
+        static_cast<int64_t>(newSffts->segmentSampleLength) / static_cast<int64_t>(newSffts->noFFTs);
 
     // if new, compute width of each FFT bin shown on screen given
     // the frequency transformation in order to correct
     // average frequency (right now bass are underrepresented)
     // and compute the bin position in frequency.
 
-    if (lastUsedFftSize != fftNumFreqBins || lastUsedSampleRate != newSffts->sampleRate ||
+    if (lastUsedFftSize != fftNumFreqBins || std::cmp_not_equal(lastUsedSampleRate, newSffts->sampleRate) ||
         lastUsedTransformerNonce != frequencyTransformer.getNonce())
     {
 
@@ -404,25 +410,25 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
         freqWeight.resize(fftNumFreqBins);
         binFrequencies.resize(fftNumFreqBins);
 
-        float linearBinWidth = 1.0f / float(fftNumFreqBins);
-        float maxFreq = float(newSffts->sampleRate) / 2.0f;
+        float const linearBinWidth = 1.0f / static_cast<float>(fftNumFreqBins);
+        float const maxFreq = static_cast<float>(newSffts->sampleRate) / 2.0f;
 
         for (size_t j = 0; j < fftNumFreqBins; j++)
         {
-            float lowerBinBound = frequencyTransformer.transform((float)(j)*linearBinWidth);
-            float upperBinBound = frequencyTransformer.transform((float)(j + 1) * linearBinWidth);
-            float binWidth = upperBinBound - lowerBinBound;
+            float const lowerBinBound = frequencyTransformer.transform(static_cast<float>(j) * linearBinWidth);
+            float const upperBinBound = frequencyTransformer.transform(static_cast<float>(j + 1) * linearBinWidth);
+            float const binWidth = upperBinBound - lowerBinBound;
             freqWeight[j] = binWidth;
-            binFrequencies[j] = maxFreq * ((float(j) + 0.5f) / float(fftNumFreqBins));
+            binFrequencies[j] = maxFreq * ((static_cast<float>(j) + 0.5f) / static_cast<float>(fftNumFreqBins));
         }
 
-        sampleRateRatio = float(VISUAL_SAMPLE_RATE) / float(newSffts->sampleRate);
+        sampleRateRatio = static_cast<float>(VISUAL_SAMPLE_RATE) / static_cast<float>(newSffts->sampleRate);
     }
 
     float *fftShift = newSffts->fftData->data();
-    float *currentFftDataPos;
-    float *freqWeightPos;
-    float *binFreqsPtr;
+    float *currentFftDataPos = nullptr;
+    float *freqWeightPos = nullptr;
+    float *binFreqsPtr = nullptr;
 
     int64_t startSampleFftShift = 0;
 
@@ -439,9 +445,9 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
         for (size_t j = 0; j < fftNumFreqBins; j += 4)
         {
             // we normalize the db intensity between 0 and 1
-            float dbIntensity = *currentFftDataPos;
-            float intensityAtFreqBin = -MIN_DB + dbIntensity;
-            float weightedIntensity = intensityAtFreqBin * (*freqWeightPos);
+            float const dbIntensity = *currentFftDataPos;
+            float const intensityAtFreqBin = -MIN_DB + dbIntensity;
+            float const weightedIntensity = intensityAtFreqBin * (*freqWeightPos);
             avgIntensity += weightedIntensity;
             avgFreq += (*binFreqsPtr) * weightedIntensity;
 
@@ -465,11 +471,11 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
         int64_t endSample = startSample + fftSampleWidth;
         if (newSffts->sampleRate != VISUAL_SAMPLE_RATE)
         {
-            startSample = float(startSample) * sampleRateRatio;
-            endSample = float(endSample) * sampleRateRatio;
+            startSample = static_cast<float>(startSample) * sampleRateRatio;
+            endSample = static_cast<float>(endSample) * sampleRateRatio;
         }
-        int64_t secondTileIndexStartSample = startSample / TILE_WIDTH;
-        int64_t secondTileIndexEndSample = endSample / TILE_WIDTH;
+        int64_t const secondTileIndexStartSample = startSample / TILE_WIDTH;
+        int64_t const secondTileIndexEndSample = endSample / TILE_WIDTH;
         // for each second tile it covers
         for (int64_t j = secondTileIndexStartSample; j <= secondTileIndexEndSample; j++)
         {
@@ -477,11 +483,11 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
             {
                 continue;
             }
-            std::lock_guard lock(tilesMutex);
+            std::scoped_lock const lock(tilesMutex);
             // if the tile does not exist, create it
-            size_t tileIndex = getOrCreateTile(j);
+            size_t const tileIndex = getOrCreateTile(j);
             //   if track not recorded in tile
-            int64_t trackIndexInTile = getTrackIndexInTileOrInsert(tileIndex, newSffts->trackIdentifier);
+            int64_t const trackIndexInTile = getTrackIndexInTileOrInsert(tileIndex, newSffts->trackIdentifier);
             // this is triggered if we reached the maximum number of displayable tiles
             if (trackIndexInTile < 0)
             {
@@ -512,38 +518,36 @@ void TrackList::recordSfft(std::shared_ptr<NewFftDataTask> newSffts)
 
 size_t TrackList::getOrCreateTile(int64_t tilePosition)
 {
-    auto existingTile = tileIndexesPerPosition.find(tilePosition);
+    auto const existingTile = tileIndexesPerPosition.find(tilePosition);
     if (existingTile != tileIndexesPerPosition.end())
     {
         return existingTile->second;
     }
-    else
+
+    size_t const newTileIndex = nextTileIndex;
+
+    if (tilesRingBuffer.size() < TILES_RING_BUFFER_SIZE)
     {
-        size_t newTileIndex = nextTileIndex;
-
-        if (tilesRingBuffer.size() < TILES_RING_BUFFER_SIZE)
-        {
-            // ring buffer has not yet reached its full size
-            // we will extend it
-            tilesRingBuffer.emplace_back();
-        }
-
-        // clear the previous (replaced) tile from the tile index
-        tileIndexesPerPosition.erase(tilesRingBuffer[newTileIndex].tilePosition);
-        tileIndexesPerPosition[tilePosition] = newTileIndex;
-
-        // clear all values from the tile
-        tilesRingBuffer[newTileIndex].tilePosition = tilePosition;
-        tilesRingBuffer[newTileIndex].numSeenTracks = 0;
-
-        nextTileIndex++;
-        if (nextTileIndex >= TILES_RING_BUFFER_SIZE)
-        {
-            nextTileIndex = 0;
-        }
-
-        return newTileIndex;
+        // ring buffer has not yet reached its full size
+        // we will extend it
+        tilesRingBuffer.emplace_back();
     }
+
+    // clear the previous (replaced) tile from the tile index
+    tileIndexesPerPosition.erase(tilesRingBuffer[newTileIndex].tilePosition);
+    tileIndexesPerPosition[tilePosition] = newTileIndex;
+
+    // clear all values from the tile
+    tilesRingBuffer[newTileIndex].tilePosition = tilePosition;
+    tilesRingBuffer[newTileIndex].numSeenTracks = 0;
+
+    nextTileIndex++;
+    if (nextTileIndex >= TILES_RING_BUFFER_SIZE)
+    {
+        nextTileIndex = 0;
+    }
+
+    return newTileIndex;
 }
 
 int64_t TrackList::getTrackIndexInTileOrInsert(size_t tileIndex, uint64_t trackIdentifier)
@@ -553,7 +557,7 @@ int64_t TrackList::getTrackIndexInTileOrInsert(size_t tileIndex, uint64_t trackI
     {
         if (tilesRingBuffer[tileIndex].trackIdentifiers[i] == trackIdentifier)
         {
-            return (int64_t)i;
+            return static_cast<int64_t>(i);
         }
     }
     // if we reach here, the track was not found
@@ -563,7 +567,7 @@ int64_t TrackList::getTrackIndexInTileOrInsert(size_t tileIndex, uint64_t trackI
         return -1;
     }
     // otherwise we insert it
-    size_t newTrackIndex = tilesRingBuffer[tileIndex].numSeenTracks;
+    size_t const newTrackIndex = tilesRingBuffer[tileIndex].numSeenTracks;
     tilesRingBuffer[tileIndex].trackIdentifiers[newTrackIndex] = trackIdentifier;
     tilesRingBuffer[tileIndex].summedLeftChanIntensities[newTrackIndex] = 0.0f;
     tilesRingBuffer[tileIndex].averageLeftChanFrequencies[newTrackIndex] = 0.0f;
@@ -573,38 +577,38 @@ int64_t TrackList::getTrackIndexInTileOrInsert(size_t tileIndex, uint64_t trackI
     tilesRingBuffer[tileIndex].rightChanFftCount[newTrackIndex] = 0;
     tilesRingBuffer[tileIndex].numSeenTracks += 1;
 
-    return (int64_t)newTrackIndex;
+    return static_cast<int64_t>(newTrackIndex);
 }
 
 void TrackList::clear()
 {
-    std::lock_guard lock(tilesMutex);
-    for (size_t i = 0; i < tilesRingBuffer.size(); i++)
+    std::scoped_lock const lock(tilesMutex);
+    for (auto &i : tilesRingBuffer)
     {
-        tilesRingBuffer[i].numSeenTracks = 0;
+        i.numSeenTracks = 0;
     }
 }
 
 std::vector<TrackList::TrackPresenceSummary> TrackList::getVisibleTracks(int64_t startTile, int64_t endTile)
 {
-    std::lock_guard lock(tilesMutex);
+    std::scoped_lock const lock(tilesMutex);
     std::vector<TrackPresenceSummary> response;
     std::map<uint64_t, size_t> existingTracks;
     for (int64_t currentTile = startTile; currentTile <= endTile; currentTile++)
     {
         // if the tile exist, get its index, otherwise skip
-        auto existingTile = tileIndexesPerPosition.find(currentTile);
+        auto const existingTile = tileIndexesPerPosition.find(currentTile);
         if (existingTile == tileIndexesPerPosition.end())
         {
             continue;
         }
-        TracksPlaybackInfoTile &tile = tilesRingBuffer[existingTile->second];
+        TracksPlaybackInfoTile const &tile = tilesRingBuffer[existingTile->second];
         // for each track in the tile
         for (size_t i = 0; i < tile.numSeenTracks; i++)
         {
             // if not existing in response array yet, create an entry
-            auto existingTrackInTile = existingTracks.find(tile.trackIdentifiers[i]);
-            size_t trackIndexInResponse;
+            auto const existingTrackInTile = existingTracks.find(tile.trackIdentifiers[i]);
+            size_t trackIndexInResponse = 0;
             if (existingTrackInTile == existingTracks.end())
             {
                 trackIndexInResponse = response.size();
@@ -627,56 +631,56 @@ std::vector<TrackList::TrackPresenceSummary> TrackList::getVisibleTracks(int64_t
             {
                 trackSummary.noFreqsAveragedLeft++;
                 trackSummary.leftChannelAvgFreq +=
-                    (tile.averageLeftChanFrequencies[i] / (float)(tile.leftChanFftCount[i]));
+                    (tile.averageLeftChanFrequencies[i] / static_cast<float>(tile.leftChanFftCount[i]));
             }
             if (tile.rightChanFftCount[i] != 0)
             {
                 trackSummary.noFreqsAveragedRight++;
                 trackSummary.rightChannelAvgFreq +=
-                    (tile.averageRightChanFrequencies[i] / (float)(tile.leftChanFftCount[i]));
+                    (tile.averageRightChanFrequencies[i] / static_cast<float>(tile.leftChanFftCount[i]));
             }
         }
     }
     // for each track
-    for (size_t i = 0; i < response.size(); i++)
+    for (auto &i : response)
     {
         // set left channel average freq
-        if (response[i].noFreqsAveragedLeft > 0)
+        if (i.noFreqsAveragedLeft > 0)
         {
-            response[i].leftChannelAvgFreq = response[i].leftChannelAvgFreq / float(response[i].noFreqsAveragedLeft);
+            i.leftChannelAvgFreq = i.leftChannelAvgFreq / i.noFreqsAveragedLeft;
         }
         else
         {
-            response[i].leftChannelAvgFreq = VISUAL_SAMPLE_RATE / 2.0f;
+            i.leftChannelAvgFreq = VISUAL_SAMPLE_RATE / 2.0f;
         }
 
         // set right channel average freq
-        if (response[i].noFreqsAveragedRight > 0)
+        if (i.noFreqsAveragedRight > 0)
         {
-            response[i].rightChannelAvgFreq = response[i].rightChannelAvgFreq / float(response[i].noFreqsAveragedRight);
+            i.rightChannelAvgFreq = i.rightChannelAvgFreq / i.noFreqsAveragedRight;
         }
         else
         {
-            response[i].leftChannelAvgFreq = VISUAL_SAMPLE_RATE / 2.0f;
+            i.leftChannelAvgFreq = VISUAL_SAMPLE_RATE / 2.0f;
         }
 
         // decide on stereo balance
-        float balance = response[i].stereoDiff / response[i].allChannel;
+        float const balance = i.stereoDiff / i.allChannel;
         if (balance < (-BALANCE_SWITCH_THRESOLD))
         {
-            response[i].stereoBalance = 0;
+            i.stereoBalance = 0;
         }
         else if (balance > BALANCE_SWITCH_THRESOLD)
         {
-            response[i].stereoBalance = 1;
+            i.stereoBalance = 1;
         }
         else
         {
-            response[i].stereoBalance = 2;
+            i.stereoBalance = 2;
         }
     }
 
-    std::sort(response.begin(), response.end(), TrackList::compareTrackPresence);
+    std::ranges::sort(response, TrackList::compareTrackPresence);
     return response;
 }
 
@@ -687,16 +691,17 @@ bool TrackList::compareTrackPresence(const TrackPresenceSummary &a, const TrackP
 
 void TrackList::clearTrackFromRange(uint64_t trackIdientifier, int64_t startSample, uint64_t length)
 {
-    std::lock_guard lock(tilesMutex);
+    std::scoped_lock const lock(tilesMutex);
 
     // generate indices in TrackList tiles positions
-    int64_t startTile = (float(startSample) / float(TILE_WIDTH)) + 0.5f;
-    int64_t endTile = startTile + int64_t((float(length) / float(TILE_WIDTH)) + 0.5f) - 1;
+    int64_t const startTile = (static_cast<float>(startSample) / static_cast<float>(TILE_WIDTH)) + 0.5f;
+    int64_t const endTile =
+        startTile + static_cast<int64_t>((static_cast<float>(length) / static_cast<float>(TILE_WIDTH)) + 0.5f) - 1;
 
     for (int64_t i = startTile; i <= endTile; i++)
     {
         // if a TrackList tile exist with that position index get it
-        auto existingTrackListTile = tileIndexesPerPosition.find(i);
+        auto const existingTrackListTile = tileIndexesPerPosition.find(i);
         if (existingTrackListTile == tileIndexesPerPosition.end())
         {
             continue;
@@ -718,20 +723,18 @@ void TrackList::TracksPlaybackInfoTile::clearFromTrackInfo(uint64_t trackIdentif
                 numSeenTracks--;
                 return;
             }
-            else
-            {
-                // otherwise we move last tile to this index and shrink array size (numSeenTracks)
-                size_t lastTileIndex = numSeenTracks - 1;
-                trackIdentifiers[i] = trackIdentifiers[lastTileIndex];
-                summedLeftChanIntensities[i] = summedLeftChanIntensities[lastTileIndex];
-                averageLeftChanFrequencies[i] = averageLeftChanFrequencies[lastTileIndex];
-                summedRightChanIntensities[i] = summedRightChanIntensities[lastTileIndex];
-                averageRightChanFrequencies[i] = averageRightChanFrequencies[lastTileIndex];
-                leftChanFftCount[i] = leftChanFftCount[lastTileIndex];
-                rightChanFftCount[i] = rightChanFftCount[lastTileIndex];
-                numSeenTracks = numSeenTracks - 1;
-                return;
-            }
+
+            // otherwise we move last tile to this index and shrink array size (numSeenTracks)
+            size_t const lastTileIndex = numSeenTracks - 1;
+            trackIdentifiers[i] = trackIdentifiers[lastTileIndex];
+            summedLeftChanIntensities[i] = summedLeftChanIntensities[lastTileIndex];
+            averageLeftChanFrequencies[i] = averageLeftChanFrequencies[lastTileIndex];
+            summedRightChanIntensities[i] = summedRightChanIntensities[lastTileIndex];
+            averageRightChanFrequencies[i] = averageRightChanFrequencies[lastTileIndex];
+            leftChanFftCount[i] = leftChanFftCount[lastTileIndex];
+            rightChanFftCount[i] = rightChanFftCount[lastTileIndex];
+            numSeenTracks = numSeenTracks - 1;
+            return;
         }
     }
 }

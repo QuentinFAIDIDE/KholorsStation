@@ -1,5 +1,7 @@
 #include "HelpDialogContent.h"
+
 #include "GUIToolkit/Consts.h"
+#include <algorithm>
 
 #define TIP_LINE_HEIGHT 40
 #define TIP_LEFT_PADDING 22
@@ -30,26 +32,21 @@ HelpDialogContent::HelpDialogContent()
     tipsAndText.push_back(std::make_pair(&freqTipPos, FREQ_TIP));
     tipsAndText.push_back(std::make_pair(&volumeTipPos, VOLUME_TIP));
     font = sharedFonts->roboto.withHeight(KHOLORS_DEFAULT_FONT_SIZE + 1);
-    int maxWidth = getMaxWidthFromTexts();
-    int maxHeight = (2 * TOP_PADDING) + (tipsAndText.size() * TIP_LINE_HEIGHT);
+    int const maxWidth = getMaxWidthFromTexts();
+    int const maxHeight = (2 * TOP_PADDING) + (tipsAndText.size() * TIP_LINE_HEIGHT);
     // another line height is added here to compensate for the width of the numbers boxes
     setSize(maxWidth + TIP_LINE_HEIGHT, maxHeight);
 }
 
-HelpDialogContent::~HelpDialogContent()
-{
-}
+HelpDialogContent::~HelpDialogContent() = default;
 
 int HelpDialogContent::getMaxWidthFromTexts()
 {
     int maxWidth = 0;
-    for (size_t i = 0; i < tipsAndText.size(); i++)
+    for (auto &i : tipsAndText)
     {
-        int width = juce::GlyphArrangement::getStringWidthInt(font, tipsAndText[i].second);
-        if (width > maxWidth)
-        {
-            maxWidth = width;
-        }
+        int const width = juce::GlyphArrangement::getStringWidthInt(font, i.second);
+        maxWidth = std::max(width, maxWidth);
     }
     // the padding applies to the left and right, and the numbered box for tips
     // is TIP-LINE-HEIGHT pixels wide.
@@ -64,7 +61,7 @@ void HelpDialogContent::paint(juce::Graphics &g)
     {
         g.setColour(KHOLORS_COLOR_TEXT_DARKER);
         auto lineArea = *tipsAndText[i].first;
-        auto numberArea = lineArea.removeFromLeft(TIP_LINE_HEIGHT);
+        auto const numberArea = lineArea.removeFromLeft(TIP_LINE_HEIGHT);
         g.drawText(std::to_string(i + 1), numberArea, juce::Justification::centred);
         g.setColour(KHOLORS_COLOR_TEXT);
         g.drawText(tipsAndText[i].second, lineArea, juce::Justification::centredLeft);
@@ -76,8 +73,8 @@ void HelpDialogContent::resized()
     auto area = getLocalBounds();
     area.removeFromLeft(TIP_LEFT_PADDING);
     area.removeFromTop(TOP_PADDING);
-    for (size_t i = 0; i < tipsAndText.size(); i++)
+    for (auto &i : tipsAndText)
     {
-        *tipsAndText[i].first = area.removeFromTop(TIP_LINE_HEIGHT);
+        *i.first = area.removeFromTop(TIP_LINE_HEIGHT);
     }
 }

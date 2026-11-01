@@ -74,12 +74,12 @@ void SyncServerTestSuite::testTransport01()
 
     Client client(8794);
 
-    ColorContainer a = ColorContainer(10, 20, 30, 40);
+    ColorContainer const a = ColorContainer(10, 20, 30, 40);
 
     std::vector<float> data(2000 * 2);
     for (size_t i = 0; i < 4000; i++)
     {
-        data[i] = (float)i;
+        data[i] = static_cast<float>(i);
     }
 
     AudioSegmentPayload payload;
@@ -112,7 +112,7 @@ void SyncServerTestSuite::testTransport01()
     auto datum3 = server.waitForDatum();
     auto datum4 = server.waitForDatum();
 
-    auto datum1Segment = std::dynamic_pointer_cast<AudioSegment>(datum1->datum);
+    auto const datum1Segment = std::dynamic_pointer_cast<AudioSegment>(datum1->datum);
     if (datum1Segment == nullptr)
     {
         throw std::runtime_error("d1 not an AudioSegment");
@@ -143,13 +143,13 @@ void SyncServerTestSuite::testTransport01()
     }
     for (size_t i = 0; i < 2000; i++)
     {
-        if (std::abs((float)i - datum1Segment->audioSamples[i]) > std::numeric_limits<float>::epsilon())
+        if (std::abs(static_cast<float>(i) - datum1Segment->audioSamples[i]) > std::numeric_limits<float>::epsilon())
         {
             throw std::runtime_error("samples don't match");
         }
     }
 
-    auto datum2Segment = std::dynamic_pointer_cast<AudioSegment>(datum2->datum);
+    auto const datum2Segment = std::dynamic_pointer_cast<AudioSegment>(datum2->datum);
     if (datum2Segment == nullptr)
     {
         throw std::runtime_error("d2 not AudioSegment");
@@ -180,18 +180,19 @@ void SyncServerTestSuite::testTransport01()
     }
     for (size_t i = 0; i < 2000; i++)
     {
-        if (std::abs((float)(i + 2000) - datum2Segment->audioSamples[i]) > std::numeric_limits<float>::epsilon())
+        if (std::abs(static_cast<float>(i + 2000) - datum2Segment->audioSamples[i]) >
+            std::numeric_limits<float>::epsilon())
         {
             throw std::runtime_error("samples don't match");
         }
     }
 
-    auto dawInfo = std::dynamic_pointer_cast<DawInfo>(datum3->datum);
+    auto const dawInfo = std::dynamic_pointer_cast<DawInfo>(datum3->datum);
     if (dawInfo == nullptr)
     {
         throw std::runtime_error("3rd thing is not dawInfo");
     }
-    if (dawInfo->isLooping != false)
+    if (dawInfo->isLooping)
     {
         throw std::runtime_error("dawInfo wrong isLooping");
     }
@@ -220,7 +221,7 @@ void SyncServerTestSuite::testTransport01()
         throw std::runtime_error("dawInfo wrong timeSignatureDenominator");
     }
 
-    auto trackInfo = std::dynamic_pointer_cast<TrackInfo>(datum4->datum);
+    auto const trackInfo = std::dynamic_pointer_cast<TrackInfo>(datum4->datum);
     if (trackInfo == nullptr)
     {
         throw std::runtime_error("datum4 is not a TrackInfo");

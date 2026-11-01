@@ -30,14 +30,15 @@ void BottomInfoLine::paint(juce::Graphics &g)
     if (mouseOverSfftView)
     {
         std::string posTip;
-        float secs = lastSampleTime / float(VISUAL_SAMPLE_RATE);
-        float ms = (secs - std::floor(secs)) * 1000;
-        posTip += "     |    " + std::to_string(int(secs)) +
+        float const secs = lastSampleTime / static_cast<float>(VISUAL_SAMPLE_RATE);
+        float const ms = (secs - std::floor(secs)) * 1000;
+        posTip += "     |    " + std::to_string(static_cast<int>(secs)) +
                   " s"
                   "   " +
-                  std::to_string(int(ms + 0.5f)) + " ms";
+                  std::to_string(static_cast<int>(ms + 0.5f)) + " ms";
 
-        rightText = std::to_string(int(lastFrequency + 0.5f)) + " Hz (" + noteFromFreq(lastFrequency) + ")" + posTip;
+        rightText = std::to_string(static_cast<int>(lastFrequency + 0.5f)) + " Hz (" + noteFromFreq(lastFrequency) +
+                    ")" + posTip;
     }
 
     auto bounds = getLocalBounds();
@@ -50,15 +51,15 @@ void BottomInfoLine::paint(juce::Graphics &g)
 
 bool BottomInfoLine::taskHandler(std::shared_ptr<Task> task)
 {
-    auto cursorInfo = std::dynamic_pointer_cast<MouseCursorInfoTask>(task);
+    auto const cursorInfo = std::dynamic_pointer_cast<MouseCursorInfoTask>(task);
     if (cursorInfo != nullptr)
     {
         mouseOverSfftView = cursorInfo->cursorOnSfftView;
         lastFrequency = cursorInfo->frequencyUnderMouse;
         lastSampleTime = cursorInfo->timeUnderMouse;
         {
-            juce::MessageManager::Lock mmLock;
-            juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+            juce::MessageManager::Lock const mmLock;
+            juce::MessageManager::Lock::ScopedTryLockType const tryLock(mmLock);
             while (!tryLock.isLocked())
             {
                 if (task->getTaskingManager()->shutdownWasCalled())
@@ -71,13 +72,13 @@ bool BottomInfoLine::taskHandler(std::shared_ptr<Task> task)
         }
     }
 
-    auto processingRateTask = std::dynamic_pointer_cast<ProcessingTimeUpdateTask>(task);
+    auto const processingRateTask = std::dynamic_pointer_cast<ProcessingTimeUpdateTask>(task);
     if (processingRateTask != nullptr)
     {
         averageSegmentProcessingTimeMs = processingRateTask->averageProcesingTimeMs;
         {
-            juce::MessageManager::Lock mmLock;
-            juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+            juce::MessageManager::Lock const mmLock;
+            juce::MessageManager::Lock::ScopedTryLockType const tryLock(mmLock);
             while (!tryLock.isLocked())
             {
                 if (task->getTaskingManager()->shutdownWasCalled())
@@ -95,11 +96,11 @@ bool BottomInfoLine::taskHandler(std::shared_ptr<Task> task)
 
 std::string BottomInfoLine::noteFromFreq(float freq)
 {
-    float semiToneShiftFromA4 = 12.0f * std::log2(freq / 440);
-    int centDistanceToNearestNote = ((100.0f * (semiToneShiftFromA4 - std::round(semiToneShiftFromA4))) + 0.5f);
-    int noteId = (int)(semiToneShiftFromA4 + 0.5f);
-    int octaveInvariantNoteId = noteId % 12;
-    int octave = 4 + (noteId / 12);
+    float const semiToneShiftFromA4 = 12.0f * std::log2(freq / 440);
+    int const centDistanceToNearestNote = ((100.0f * (semiToneShiftFromA4 - std::round(semiToneShiftFromA4))) + 0.5f);
+    int const noteId = static_cast<int>(semiToneShiftFromA4 + 0.5f);
+    int const octaveInvariantNoteId = noteId % 12;
+    int const octave = 4 + (noteId / 12);
     std::string noteTxt;
     switch (octaveInvariantNoteId)
     {
@@ -146,7 +147,7 @@ std::string BottomInfoLine::noteFromFreq(float freq)
     noteTxt += std::to_string(octave);
     if (centDistanceToNearestNote < 0)
     {
-        noteTxt += " ";
+        noteTxt += ' ';
     }
     else
     {

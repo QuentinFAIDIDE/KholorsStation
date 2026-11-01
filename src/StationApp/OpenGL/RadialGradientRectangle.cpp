@@ -13,49 +13,67 @@ RadialGradientRectangle::RadialGradientRectangle(juce::Colour centerCol, juce::C
     // it for the few solid mesh that don't use it
 
     // 0 (top left)
-    vertices.push_back({{-1.0f, -1.0f, -1.0f},
-                        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
-                        {0.0f, 1.0f}});
+    vertices.push_back({
+        {-1.0f, -1.0f, -1.0f},
+        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
+        {0.0f, 1.0f},
+    });
 
     // 1 (top middle)
-    vertices.push_back({{0.0f, -1.0f, -1.0f},
-                        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
-                        {0.0f, 1.0f}});
+    vertices.push_back({
+        {0.0f, -1.0f, -1.0f},
+        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
+        {0.0f, 1.0f},
+    });
 
     // 2 (top right)
-    vertices.push_back({{1.0f, -1.0f, -1.0f},
-                        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
-                        {0.0f, 1.0f}});
+    vertices.push_back({
+        {1.0f, -1.0f, -1.0f},
+        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
+        {0.0f, 1.0f},
+    });
 
     // 3 (middle left)
-    vertices.push_back({{-1.0f, 0.0f, -1.0f},
-                        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
-                        {0.0f, 1.0f}});
+    vertices.push_back({
+        {-1.0f, 0.0f, -1.0f},
+        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
+        {0.0f, 1.0f},
+    });
 
     // 4 (center)
-    vertices.push_back({{0.0f, 0.0f, -1.0f},
-                        {centerCol.getFloatRed(), centerCol.getFloatGreen(), centerCol.getFloatBlue()},
-                        {0.0f, 1.0f}});
+    vertices.push_back({
+        {0.0f, 0.0f, -1.0f},
+        {centerCol.getFloatRed(), centerCol.getFloatGreen(), centerCol.getFloatBlue()},
+        {0.0f, 1.0f},
+    });
 
     // 5 (middle right)
-    vertices.push_back({{1.0f, 0.0f, -1.0f},
-                        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
-                        {0.0f, 1.0f}});
+    vertices.push_back({
+        {1.0f, 0.0f, -1.0f},
+        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
+        {0.0f, 1.0f},
+    });
 
     // 6 (bottom left)
-    vertices.push_back({{-1.0f, 1.0f, -1.0f},
-                        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
-                        {0.0f, 1.0f}});
+    vertices.push_back({
+        {-1.0f, 1.0f, -1.0f},
+        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
+        {0.0f, 1.0f},
+    });
 
     // 7 (bottom middle)
-    vertices.push_back({{0.0f, 1.0f, -1.0f},
-                        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
-                        {0.0f, 1.0f}});
+    vertices.push_back({
+        {0.0f, 1.0f, -1.0f},
+        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
+        {0.0f, 1.0f},
+    });
 
     // 8 (bottom right)
-    vertices.push_back({{1.0f, 1.0f, -1.0f},
-                        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
-                        {0.0f, 1.0f}});
+    vertices.push_back({
+        {1.0f, 1.0f, -1.0f},
+        {borderCol.getFloatRed(), borderCol.getFloatGreen(), borderCol.getFloatBlue()},
+        {0.0f, 1.0f},
+    });
 
     triangleIds.push_back(0);
     triangleIds.push_back(1);
@@ -107,11 +125,12 @@ void RadialGradientRectangle::registerGlObjects()
 
     // register and upload the vertices data (vbo)
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(Vertex) * vertices.size()), vertices.data(),
+                 GL_STATIC_DRAW);
     // register and upload indices of the vertices to form the triangles (ebo)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(GLuint) * triangleIds.size()), triangleIds.data(),
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(GLuint) * triangleIds.size()),
+                 triangleIds.data(), GL_STATIC_DRAW);
 
     Vertex::registerVertexFormat();
     OpenGLHelpers::printAllOpenGlError();

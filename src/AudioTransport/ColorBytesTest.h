@@ -4,7 +4,7 @@ class ColorBytesTestSuite
 {
   public:
     void runAll();
-    void testColorConversion();
-    void testColorConversion2();
-    void testColorConversion3();
+    static void testColorConversion();
+    static void testColorConversion2();
+    static void testColorConversion3();
 };

@@ -7,7 +7,7 @@
 class VolumeSensitivityTask : public SilentTask
 {
   public:
-    VolumeSensitivityTask(float newSensitivity)
+    explicit VolumeSensitivityTask(float newSensitivity)
     {
         sensitivity = newSensitivity;
     }
@@ -17,13 +17,15 @@ class VolumeSensitivityTask : public SilentTask
     */
     std::string marshal() override
     {
-        nlohmann::json taskj = {{"object", "task"},
-                                {"task", "volume_sensitivity_update_task"},
-                                {"sensitivity", sensitivity},
-                                {"is_completed", isCompleted()},
-                                {"failed", hasFailed()},
-                                {"recordable_in_history", recordableInHistory},
-                                {"is_part_of_reversion", isPartOfReversion}};
+        nlohmann::json const taskj = {
+            {"object", "task"},
+            {"task", "volume_sensitivity_update_task"},
+            {"sensitivity", sensitivity},
+            {"is_completed", isCompleted()},
+            {"failed", hasFailed()},
+            {"recordable_in_history", recordableInHistory},
+            {"is_part_of_reversion", isPartOfReversion},
+        };
         return taskj.dump();
     }
 

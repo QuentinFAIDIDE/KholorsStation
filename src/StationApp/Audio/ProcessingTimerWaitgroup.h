@@ -55,5 +55,5 @@ class ProcessingTimerWaitgroup
     int64_t payloadSentTimeUnixMs; /**< time at which the audio segment we track was sent */
     std::mutex mutex;              /**< preventing race conditions between threads */
     int64_t identifier;            /**< a unique identifier for this processing timer waitgroup */
-    int expectedCounts;            /**< how many counts we expect to consider the task completed */
+    int expectedCounts{};          /**< how many counts we expect to consider the task completed */
 };

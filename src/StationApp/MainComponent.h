@@ -35,9 +35,9 @@ class MainComponent final : public juce::Component, public TaskListener
 {
   public:
     MainComponent();
-    ~MainComponent();
+    ~MainComponent() override;
 
-    void paint(juce::Graphics &) override;
+    void paint(juce::Graphics & /*g*/) override;
     void resized() override;
     bool taskHandler(std::shared_ptr<Task> task) override;
 
@@ -54,7 +54,7 @@ class MainComponent final : public juce::Component, public TaskListener
     HelpButton helpButton;
     ClearButton clearButton;
     SensitivitySlider volumeSensitivitySlider;
-    bool showTipsAtStartup, needsUpdate;
+    bool showTipsAtStartup{true}, needsUpdate;
 
     juce::SharedResourcePointer<IconsLoader> sharedSvgs; /**< singleton that loads svg files */
 

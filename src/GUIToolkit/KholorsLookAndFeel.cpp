@@ -44,9 +44,10 @@ KholorsLookAndFeel::KholorsLookAndFeel()
     setColour(juce::ResizableWindow::backgroundColourId, KHOLORS_COLOR_BACKGROUND);
 }
 
-void KholorsLookAndFeel::drawTabButton(juce::TabBarButton &tb, juce::Graphics &g, bool isMouseOver, bool)
+void KholorsLookAndFeel::drawTabButton(juce::TabBarButton &tb, juce::Graphics &g, bool isMouseOver,
+                                       bool /*isMouseDown*/)
 {
-    auto bounds = g.getClipBounds();
+    auto const bounds = g.getClipBounds();
 
     g.setColour(KHOLORS_COLOR_TEXT);
     g.setFont(juce::Font(KHOLORS_DEFAULT_FONT_SIZE));
@@ -66,16 +67,17 @@ void KholorsLookAndFeel::drawTabButton(juce::TabBarButton &tb, juce::Graphics &g
 
 juce::Font KholorsLookAndFeel::getPopupMenuFont()
 {
-    return juce::Font(KHOLORS_DEFAULT_FONT_SIZE + 2);
+    return {KHOLORS_DEFAULT_FONT_SIZE + 2};
 }
 
-juce::Font KholorsLookAndFeel::getMenuBarFont(juce::MenuBarComponent &, int, const juce::String &)
+juce::Font KholorsLookAndFeel::getMenuBarFont(juce::MenuBarComponent & /*unused*/, int /*itemIndex*/,
+                                              const juce::String & /*itemText*/)
 {
-    return juce::Font(KHOLORS_DEFAULT_FONT_SIZE + 3);
+    return {KHOLORS_DEFAULT_FONT_SIZE + 3};
 }
 
-void KholorsLookAndFeel::getIdealPopupMenuItemSize(const juce::String &text, bool isSeparator, int, int &idealWidth,
-                                                   int &idealHeight)
+void KholorsLookAndFeel::getIdealPopupMenuItemSize(const juce::String &text, bool isSeparator,
+                                                   int /*standardMenuItemHeight*/, int &idealWidth, int &idealHeight)
 {
     if (isSeparator)
     {
@@ -83,37 +85,38 @@ void KholorsLookAndFeel::getIdealPopupMenuItemSize(const juce::String &text, boo
         return;
     }
 
-    auto font = getPopupMenuFont();
-    int textWidth = juce::GlyphArrangement::getStringWidthInt(font, text);
+    auto const font = getPopupMenuFont();
+    int const textWidth = juce::GlyphArrangement::getStringWidthInt(font, text);
     idealWidth = textWidth + MENU_ITEM_SIDE_PADDING;
     idealHeight = MENU_ITEM_HEIGHT;
 }
 
-int KholorsLookAndFeel::getTabButtonBestWidth(juce::TabBarButton &tbb, int)
+int KholorsLookAndFeel::getTabButtonBestWidth(juce::TabBarButton &tbb, int /*tabDepth*/)
 {
-    auto font = juce::Font(KHOLORS_DEFAULT_FONT_SIZE);
-    int i = tbb.getIndex();
+    auto const font = juce::Font(KHOLORS_DEFAULT_FONT_SIZE);
+    int const i = tbb.getIndex();
     return juce::GlyphArrangement::getStringWidthInt(font, tbb.getTabbedButtonBar().getTabNames()[i]) +
            KHOLORS_TAB_BUTTONS_INNER_PADDING;
 }
 
-void KholorsLookAndFeel::drawTabbedButtonBarBackground(juce::TabbedButtonBar &, juce::Graphics &g)
+void KholorsLookAndFeel::drawTabbedButtonBarBackground(juce::TabbedButtonBar & /*unused*/, juce::Graphics &g)
 {
     g.setColour(KHOLORS_COLOR_BACKGROUND);
     g.fillAll();
 
     g.setColour(KHOLORS_COLOR_SEPARATOR_LINE);
-    auto line = g.getClipBounds().withHeight(1);
+    auto const line = g.getClipBounds().withHeight(1);
     g.drawRect(line);
 }
 
-void KholorsLookAndFeel::drawTabAreaBehindFrontButton(juce::TabbedButtonBar &tb, juce::Graphics &g, int, int)
+void KholorsLookAndFeel::drawTabAreaBehindFrontButton(juce::TabbedButtonBar &tb, juce::Graphics &g, int /*w*/,
+                                                      int /*h*/)
 {
-    int currentTabIndex = tb.getCurrentTabIndex();
-    auto tabBounds = tb.getTabButton(currentTabIndex)->getBounds();
+    int const currentTabIndex = tb.getCurrentTabIndex();
+    auto const tabBounds = tb.getTabButton(currentTabIndex)->getBounds();
     g.setColour(KHOLORS_COLOR_HIGHLIGHT);
-    auto line = tabBounds.withY(tabBounds.getY() + tabBounds.getHeight() - KHOLORS_TAB_HIGHLIGHT_LINE_WIDTH)
-                    .withHeight(KHOLORS_TAB_HIGHLIGHT_LINE_WIDTH);
+    auto const line = tabBounds.withY(tabBounds.getY() + tabBounds.getHeight() - KHOLORS_TAB_HIGHLIGHT_LINE_WIDTH)
+                          .withHeight(KHOLORS_TAB_HIGHLIGHT_LINE_WIDTH);
     g.fillRect(line);
 }
 
@@ -122,24 +125,25 @@ int KholorsLookAndFeel::getPopupMenuBorderSize()
     return 0;
 }
 
-int KholorsLookAndFeel::getPopupMenuBorderSizeWithOptions(const juce::PopupMenu::Options &)
+int KholorsLookAndFeel::getPopupMenuBorderSizeWithOptions(const juce::PopupMenu::Options & /*unused*/)
 {
     return 0;
 }
 
-void KholorsLookAndFeel::drawResizableFrame(juce::Graphics &, int, int, const juce::BorderSize<int> &)
+void KholorsLookAndFeel::drawResizableFrame(juce::Graphics & /*unused*/, int /*w*/, int /*h*/,
+                                            const juce::BorderSize<int> & /*unused*/)
 {
     // not working for removing popup menu borders...
-    return;
 }
 
-void KholorsLookAndFeel::drawMenuBarBackground(juce::Graphics &g, int, int, bool, juce::MenuBarComponent &)
+void KholorsLookAndFeel::drawMenuBarBackground(juce::Graphics &g, int /*width*/, int /*height*/,
+                                               bool /*isMouseOverBar*/, juce::MenuBarComponent & /*unused*/)
 {
     g.fillAll(findColour(juce::ResizableWindow::backgroundColourId));
 }
 
-void KholorsLookAndFeel::drawButtonBackground(juce::Graphics &g, juce::Button &, const juce::Colour &backgroundColor,
-                                              bool highlighted, bool down)
+void KholorsLookAndFeel::drawButtonBackground(juce::Graphics &g, juce::Button & /*unused*/,
+                                              const juce::Colour &backgroundColor, bool /*highlighted*/, bool down)
 {
     g.setColour(backgroundColor);
     auto reducedClipBounds =
@@ -171,13 +175,13 @@ void KholorsLookAndFeel::drawButtonText(juce::Graphics &g, juce::TextButton &b, 
     g.drawText(b.getButtonText().toUpperCase(), textBounds, juce::Justification::centred, true);
 }
 
-void KholorsLookAndFeel::drawLinearSlider(juce::Graphics &g, int x, int y, int width, int height, float sliderPos,
-                                          float minSliderPos, float maxSliderPos, juce::Slider::SliderStyle,
-                                          juce::Slider &sl)
+void KholorsLookAndFeel::drawLinearSlider(juce::Graphics &g, int x, int y, int width, int height, float /*sliderPos*/,
+                                          float /*minSliderPos*/, float /*maxSliderPos*/,
+                                          juce::Slider::SliderStyle /*unused*/, juce::Slider &sl)
 {
-    auto area = juce::Rectangle<int>(x, y, width, height);
+    auto const area = juce::Rectangle<int>(x, y, width, height);
 
-    float posRatio = (sl.getValue() - sl.getMinimum()) / (sl.getMaximum() - sl.getMinimum());
+    float const posRatio = (sl.getValue() - sl.getMinimum()) / (sl.getMaximum() - sl.getMinimum());
 
     g.setColour(KHOLORS_COLOR_TEXT_DARKER);
     g.fillRoundedRectangle(area.reduced(0, (area.getHeight() - (LINEAR_SLIDER_HEIGHT - 2)) / 2).toFloat(),
@@ -188,10 +192,10 @@ void KholorsLookAndFeel::drawLinearSlider(juce::Graphics &g, int x, int y, int w
         area.reduced(0, (area.getHeight() - LINEAR_SLIDER_HEIGHT) / 2).toFloat().withWidth(area.getWidth() * posRatio),
         LINEAR_SLIDER_BAR_CORNER_RADIUS);
 
-    auto handleArea =
-        area.reduced(0, (area.getHeight() - LINEAR_SLIDER_HANDLE_RADIUS) / 2)
-            .toFloat()
-            .withX(area.getX() + (area.getWidth() * posRatio) - ((float)LINEAR_SLIDER_HANDLE_RADIUS / 2.0f))
-            .withWidth(LINEAR_SLIDER_HANDLE_RADIUS);
+    auto const handleArea = area.reduced(0, (area.getHeight() - LINEAR_SLIDER_HANDLE_RADIUS) / 2)
+                                .toFloat()
+                                .withX(area.getX() + (area.getWidth() * posRatio) -
+                                       (static_cast<float>(LINEAR_SLIDER_HANDLE_RADIUS) / 2.0f))
+                                .withWidth(LINEAR_SLIDER_HANDLE_RADIUS);
     g.fillEllipse(handleArea);
 }

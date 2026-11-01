@@ -4,6 +4,7 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <utility>
 
 /**
  * @brief Abstract class for a projection from range [0,1] to [0,1] that
@@ -38,7 +39,7 @@ class LinearProjection : public NormalizedBijectiveProjection
 class InvertProjection : public NormalizedBijectiveProjection
 {
   public:
-    InvertProjection(std::shared_ptr<NormalizedBijectiveProjection> proj) : projToInvert(proj)
+    explicit InvertProjection(std::shared_ptr<NormalizedBijectiveProjection> proj) : projToInvert(std::move(proj))
     {
     }
 
@@ -73,35 +74,31 @@ class StackedProjections : public NormalizedBijectiveProjection
 
     float projectIn(float input) const override
     {
-        if (projections.size() == 0)
+        if (projections.empty())
         {
             return defaultProjection.projectIn(input);
         }
-        else
+
+        float currentValue = input;
+        for (const auto &projection : projections)
         {
-            float currentValue = input;
-            for (size_t i = 0; i < projections.size(); i++)
-            {
-                currentValue = projections[i]->projectIn(currentValue);
-            }
-            return currentValue;
+            currentValue = projection->projectIn(currentValue);
         }
+        return currentValue;
     }
     float projectOut(float input) const override
     {
-        if (projections.size() == 0)
+        if (projections.empty())
         {
             return defaultProjection.projectOut(input);
         }
-        else
+
+        float currentValue = input;
+        for (int i = projections.size() - 1; i >= 0; i--)
         {
-            float currentValue = input;
-            for (int i = projections.size() - 1; i >= 0; i--)
-            {
-                currentValue = projections[(size_t)i]->projectOut(currentValue);
-            }
-            return currentValue;
+            currentValue = projections[static_cast<size_t>(i)]->projectOut(currentValue);
         }
+        return currentValue;
     }
 
   private:
@@ -123,7 +120,7 @@ class Log10Projection : public NormalizedBijectiveProjection
      *
      * @param shift the shift of source range to avoid having log10(0)
      */
-    Log10Projection(float shift = 0.1) : inputShift(shift)
+    explicit Log10Projection(float shift = 0.1) : inputShift(shift)
     {
         if (inputShift <= std::numeric_limits<float>::epsilon())
         {
@@ -139,13 +136,13 @@ class Log10Projection : public NormalizedBijectiveProjection
     float projectIn(float input) const override
     {
         // ensure we map in range
-        float inputPreProcessed = juce::jlimit(0.0f, 1.0f, input) + inputShift;
+        float const inputPreProcessed = juce::jlimit(0.0f, 1.0f, input) + inputShift;
         return preComputedFactor1 + (aCoef * std::log10(inputPreProcessed));
     }
 
     float projectOut(float input) const override
     {
-        float inputPreProcessed = juce::jlimit(0.0f, 1.0f, input);
+        float const inputPreProcessed = juce::jlimit(0.0f, 1.0f, input);
         return (std::pow(10.0f, inputPreProcessed / aCoef) * bCoefInv) - inputShift;
     }
 
@@ -168,10 +165,10 @@ class SigmoidProjection : public NormalizedBijectiveProjection
      *
      * @param maxSourceRangeToUse The maximum absolute value of range sent to sigmoid.
      */
-    SigmoidProjection(float maxSourceRangeToUse = 6.0)
+    explicit SigmoidProjection(float maxSourceRangeToUse = 6.0)
     {
         maxSourceRange = maxSourceRangeToUse;
-        float expc = std::exp(maxSourceRangeToUse);
+        float const expc = std::exp(maxSourceRangeToUse);
         a = -1.0f / (expc - 1.0f);
         b = (expc + 1.0f) / (expc - 1.0f);
     }
@@ -179,15 +176,15 @@ class SigmoidProjection : public NormalizedBijectiveProjection
     float projectIn(float input) const override
     {
         // ensure we map in range
-        float limitedInput = juce::jlimit(0.0f, 1.0f, input);
-        float mappedInput = juce::jmap(limitedInput, -1.0f, 1.0f);
+        float const limitedInput = juce::jlimit(0.0f, 1.0f, input);
+        float const mappedInput = juce::jmap(limitedInput, -1.0f, 1.0f);
         return a + (b / (1.0f + std::exp(-mappedInput * maxSourceRange)));
     }
 
     float projectOut(float input) const override
     {
-        float limitedInput = juce::jlimit(0.0f, 1.0f, input);
-        float inputAfterSigmoidInv = -(1.0f / maxSourceRange) * std::log((b / (limitedInput - a)) - 1.0f);
+        float const limitedInput = juce::jlimit(0.0f, 1.0f, input);
+        float const inputAfterSigmoidInv = -(1.0f / maxSourceRange) * std::log((b / (limitedInput - a)) - 1.0f);
         return juce::jmap(inputAfterSigmoidInv, -1.0f, 1.0f, 0.0f, 1.0f);
     }
 

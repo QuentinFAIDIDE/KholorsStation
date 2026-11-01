@@ -74,18 +74,16 @@ class TrackList : public juce::Component
     struct TrackPresenceSummary
     {
         TrackPresenceSummary()
-            : trackIdentifier(0), stereoBalance(0), allChannel(0), stereoDiff(0), noFreqsAveragedLeft(0),
-              noFreqsAveragedRight(0), leftChannelAvgFreq(0), rightChannelAvgFreq(0)
-        {
-        }
-        uint64_t trackIdentifier;   /**< identifier of the track */
-        int stereoBalance;          /**< 0 for left, 1 for right, 2 for both */
-        float allChannel;           /** used for computing stereoBalance */
-        float stereoDiff;           /** used for computing stereo balance */
-        float noFreqsAveragedLeft;  /**< Used for computing avgFreq */
-        float noFreqsAveragedRight; /**< Used for computing avgFreq */
-        float leftChannelAvgFreq;   /**< used for avgFreq before balance is known */
-        float rightChannelAvgFreq;  /**< used for avgFreq before balance is known */
+
+            = default;
+        uint64_t trackIdentifier{0};   /**< identifier of the track */
+        int stereoBalance{0};          /**< 0 for left, 1 for right, 2 for both */
+        float allChannel{0};           /** used for computing stereoBalance */
+        float stereoDiff{0};           /** used for computing stereo balance */
+        float noFreqsAveragedLeft{0};  /**< Used for computing avgFreq */
+        float noFreqsAveragedRight{0}; /**< Used for computing avgFreq */
+        float leftChannelAvgFreq{0};   /**< used for avgFreq before balance is known */
+        float rightChannelAvgFreq{0};  /**< used for avgFreq before balance is known */
     };
 
     static bool compareTrackPresence(const TrackPresenceSummary &a, const TrackPresenceSummary &b);
@@ -129,7 +127,7 @@ class TrackList : public juce::Component
      *
      * @return int64_t timestamp in MS at which last drawing completed.
      */
-    int64_t getLastRedrawMs();
+    int64_t getLastRedrawMs() const;
 
     void mouseMove(const juce::MouseEvent &me) override;
     void mouseDrag(const juce::MouseEvent &me) override;
@@ -153,7 +151,7 @@ class TrackList : public juce::Component
      * @param drawnAreas area that were already drawns on screen and that we should not overlap with
      * @return std::optional<juce::Rectangle<int>> a rectangle where to draw the label if there was room for it
      */
-    std::optional<juce::Rectangle<int>> tryPositioningTrackLabel(
+    static std::optional<juce::Rectangle<int>> tryPositioningTrackLabel(
         juce::Rectangle<int> labelRectangle, juce::Rectangle<int> drawableBounds, bool allowedToSwitchChanSide,
         float freqPositionRatio, float labelPositionRatioInDrawableArea, int drawableHeightHalf,
         std::vector<juce::Rectangle<int>> &drawnAreas, uint64_t trackIdentifier);
@@ -206,16 +204,16 @@ class TrackList : public juce::Component
     std::map<int64_t, size_t> tileIndexesPerPosition;    /**< tile indexes indexes by tile position in seconds */
     size_t nextTileIndex;                                /**< index of the next tile to create/replace */
     std::mutex tilesMutex;
-    int64_t viewPosition, viewScale, freqViewWidth;
+    int64_t viewPosition{0}, viewScale{200}, freqViewWidth{1000};
     std::mutex viewMutex;
 
     std::vector<float>
         freqWeight; /**< weight representing width of each freq bin with current freq transfo. Sums to 1 */
     std::vector<float> binFrequencies; /**< frequency of each bin */
 
-    size_t lastUsedFftSize;            /**< if these change, we need to recompute freqWeight and binFreqs */
-    int64_t lastUsedSampleRate;        /**< if these change, we need to recompute freqWeight and binFreqs */
-    uint64_t lastUsedTransformerNonce; /**< if these change, we need to recompute freqWeight and binFreqs */
+    size_t lastUsedFftSize{};            /**< if these change, we need to recompute freqWeight and binFreqs */
+    int64_t lastUsedSampleRate{};        /**< if these change, we need to recompute freqWeight and binFreqs */
+    uint64_t lastUsedTransformerNonce{}; /**< if these change, we need to recompute freqWeight and binFreqs */
 
     int64_t lastRedrawMs = 0;
 
@@ -225,9 +223,9 @@ class TrackList : public juce::Component
     std::vector<std::pair<uint64_t, juce::Rectangle<int>>> tracksLabelPositions;
     std::optional<uint64_t> selectedTrack;
     int lastMouseX, lastMouseY;
-    bool mouseOnComponent;
+    bool mouseOnComponent{};
 
     std::vector<TrackPresenceSummary> lastUsedTrackList;
 
-    float sampleRateRatio;
+    float sampleRateRatio{};
 };

@@ -31,7 +31,7 @@ class AudioDataStore
      *
      * @param preallocatedAudioSegments number of audio segment structs to preallocate
      */
-    AudioDataStore(size_t preallocatedAudioSegments);
+    explicit AudioDataStore(size_t preallocatedAudioSegments);
 
     /**
      * @brief An audio datum along with an id to identify where it's stored.
@@ -39,7 +39,7 @@ class AudioDataStore
     struct AudioDatumWithStorageId
     {
         std::shared_ptr<AudioTransportData> datum;
-        uint64_t storageIdentifier;
+        uint64_t storageIdentifier{};
     };
 
     /**
@@ -157,7 +157,7 @@ class AudioDataStore
 
     size_t noPreallocatedStructs;
 
-    bool isStopping;
+    bool isStopping{false};
 };
 
 } // namespace AudioTransport

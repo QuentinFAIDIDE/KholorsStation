@@ -1,6 +1,7 @@
 #include "FftRunner.h"
 #include "fft.h"
 #include "fft_internal.h"
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstring>
@@ -8,24 +9,25 @@
 #include <mutex>
 #include <spdlog/spdlog.h>
 #include <thread>
+#include <utility>
 #include <vector>
 
 using namespace std::chrono_literals;
 
-FftRunner::FftRunner() : exiting(false)
+FftRunner::FftRunner()
 {
     lowIntensityBounds =
         std::pow(10.0f, MIN_DB / 10.0f) / (HANN_AMPLITUDE_CORRECTION_FACTOR * HANN_AMPLITUDE_CORRECTION_FACTOR);
     highIntensityBounds = 1.0f / (HANN_AMPLITUDE_CORRECTION_FACTOR * HANN_AMPLITUDE_CORRECTION_FACTOR);
 
-    invNoIntensityF = 1.0f / float(FFT_INPUT_NO_INTENSITIES);
+    invNoIntensityF = 1.0f / static_cast<float>(FFT_INPUT_NO_INTENSITIES);
 
     precomputedHannAmplitudeCorrectionShift = 20.0f * std::log10(HANN_AMPLITUDE_CORRECTION_FACTOR);
 
     // preallocate jobs data structures
     for (int i = 0; i < FFT_PREALLOCATED_JOB_STRUCTS; i++)
     {
-        auto newEmptyJob = std::make_shared<FftRunnerJob>();
+        auto const newEmptyJob = std::make_shared<FftRunnerJob>();
         emptyJobPool.push(newEmptyJob);
     }
 
@@ -33,8 +35,8 @@ FftRunner::FftRunner() : exiting(false)
     hannWindowTable.resize(FFT_INPUT_NO_INTENSITIES);
     for (size_t i = 0; i < hannWindowTable.size(); i++)
     {
-        hannWindowTable[i] =
-            0.5 * (1 - std::cos(2.0f * juce::MathConstants<float>::pi * (float)i / float(hannWindowTable.size() - 1)));
+        hannWindowTable[i] = 0.5 * (1 - std::cos(2.0f * juce::MathConstants<float>::pi * static_cast<float>(i) /
+                                                 static_cast<float>(hannWindowTable.size() - 1)));
     }
 
     // Pick the number of threads and start them.
@@ -49,15 +51,15 @@ FftRunner::FftRunner() : exiting(false)
 FftRunner::~FftRunner()
 {
     {
-        std::scoped_lock<std::mutex> lock(queueMutex);
+        std::scoped_lock<std::mutex> const lock(queueMutex);
         exiting = true;
     }
 
     mutexCondition.notify_all();
 
-    for (size_t i = 0; i < workerThreads.size(); i++)
+    for (auto &workerThread : workerThreads)
     {
-        workerThreads[i].join();
+        workerThread.join();
     }
     workerThreads.clear();
 }
@@ -65,7 +67,8 @@ FftRunner::~FftRunner()
 int FftRunner::getNumFftFromNumSamples(int numSamples)
 {
     // how many non overlapping fft windows we can fit if we pad the end with zeros
-    int numWindowsNoOverlap = std::ceil(float(numSamples) / float(FFT_INPUT_NO_INTENSITIES));
+    int const numWindowsNoOverlap =
+        std::ceil(static_cast<float>(numSamples) / static_cast<float>(FFT_INPUT_NO_INTENSITIES));
     // this formula get the exact amount of available overlapped bins.
     return (numWindowsNoOverlap * FFT_OVERLAP_DIVISION) - (FFT_OVERLAP_DIVISION - 1);
 }
@@ -73,7 +76,7 @@ int FftRunner::getNumFftFromNumSamples(int numSamples)
 void FftRunner::reuseResultArray(std::shared_ptr<std::vector<float>> ptr)
 {
     {
-        std::lock_guard lock(resultsArrayMutex);
+        std::scoped_lock const lock(resultsArrayMutex);
         freeResultsArrays.push(ptr);
     }
 }
@@ -85,15 +88,15 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
     // OPTIMIZATION: reuse result, wg and batchJobs to avoid allocating at every fft
 
     // number of jobs to send per channel
-    int noJobsPerChannel = getNumFftFromNumSamples(audioFile->getNumSamples());
+    int const noJobsPerChannel = getNumFftFromNumSamples(audioFile->getNumSamples());
 
     // compute size (in # of floats!) and allocate response array
-    int respArraySize = audioFile->getNumChannels() * noJobsPerChannel * FFT_OUTPUT_NO_FREQS;
+    int const respArraySize = audioFile->getNumChannels() * noJobsPerChannel * FFT_OUTPUT_NO_FREQS;
 
     std::shared_ptr<std::vector<float>> result;
     {
-        std::lock_guard lock(resultsArrayMutex);
-        if (freeResultsArrays.size() > 0)
+        std::scoped_lock const lock(resultsArrayMutex);
+        if (!freeResultsArrays.empty())
         {
             result = freeResultsArrays.front();
             freeResultsArrays.pop();
@@ -103,13 +106,13 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
             result = std::make_shared<std::vector<float>>();
         }
     }
-    result->resize((size_t)respArraySize);
+    result->resize(static_cast<size_t>(respArraySize));
 
     // jobs sent in the current batch
     std::shared_ptr<std::vector<std::shared_ptr<FftRunnerJob>>> batchJobs;
     {
-        std::lock_guard lock(jobListsMutex);
-        if (freeJobLists.size() > 0)
+        std::scoped_lock const lock(jobListsMutex);
+        if (!freeJobLists.empty())
         {
             batchJobs = freeJobLists.front();
             freeJobLists.pop();
@@ -123,17 +126,19 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
     batchJobs->reserve(FFT_JOBS_BATCH_SIZE);
 
     // waitgroup for successive batches of jobs
-    auto wg = std::make_shared<WaitGroup>();
+    auto const wg = std::make_shared<WaitGroup>();
 
-    size_t windowPadding = ((size_t)FFT_INPUT_NO_INTENSITIES / (size_t)FFT_OVERLAP_DIVISION);
+    size_t const windowPadding =
+        (static_cast<size_t>(FFT_INPUT_NO_INTENSITIES) / static_cast<size_t>(FFT_OVERLAP_DIVISION));
 
-    size_t numSamples = (size_t)audioFile->getNumSamples();
+    auto const numSamples = static_cast<size_t>(audioFile->getNumSamples());
 
     // repeat for each channel
     for (int ch = 0; ch < audioFile->getNumChannels(); ch++)
     {
         // channel offset in the destination array (result)
-        size_t channelResultArrayOffset = (size_t)ch * (size_t)noJobsPerChannel * FFT_OUTPUT_NO_FREQS;
+        size_t const channelResultArrayOffset =
+            static_cast<size_t>(ch) * static_cast<size_t>(noJobsPerChannel) * FFT_OUTPUT_NO_FREQS;
 
         // pointer to the start of the next job
         const float *nextJobStart = audioFile->getReadPointer(ch);
@@ -151,12 +156,9 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
             batchJobs->clear();
             {
                 int maxJobsToPick = remainingJobs;
-                if (maxJobsToPick > FFT_JOBS_BATCH_SIZE)
-                {
-                    maxJobsToPick = FFT_JOBS_BATCH_SIZE;
-                }
+                maxJobsToPick = std::min(maxJobsToPick, FFT_JOBS_BATCH_SIZE);
 
-                std::scoped_lock<std::mutex> lock(emptyJobsMutex);
+                std::scoped_lock<std::mutex> const lock(emptyJobsMutex);
                 for (int i = 0; i < maxJobsToPick; ++i)
                 {
                     if (emptyJobPool.empty())
@@ -172,18 +174,18 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
             // Note that this can happen if more than FFT_PREALLOCATED_JOB_STRUCTS / FFT_JOBS_BATCH_SIZE
             // threads are racing to use the preallocated empty jobs. But as of now only one thread is requesting FFTs
             // so t's safe to assume that it should not happen.
-            if (batchJobs->size() == 0)
+            if (batchJobs->empty())
             {
                 std::cerr << "Too many threads are trying to perform ffts and buffered jobs could not handle batch "
                              "size for that amount of threads!"
-                          << std::endl;
+                          << '\n';
                 std::this_thread::sleep_for(std::chrono::milliseconds(3000));
                 continue;
             }
 
             // iterate over empty job and set the appropriate input data, length, and reset bool statuses
-            std::shared_ptr<FftRunnerJob> *batchJobPtr = batchJobs->data();
-            for (int i = 0; i < (int)batchJobs->size(); i++)
+            std::shared_ptr<FftRunnerJob> const *batchJobPtr = batchJobs->data();
+            for (int i = 0; std::cmp_less(i, batchJobs->size()); i++)
             {
                 // set job properties and increment wg here
                 FftRunnerJob *currentJob = (*batchJobPtr).get();
@@ -192,8 +194,8 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
                 currentJob->position = fftPosition;
                 wg->Add(1);
                 // if our buffer will extend past end of channel, prevent it
-                size_t windowStart = ((size_t)fftPosition * windowPadding);
-                size_t windowEnd = windowStart + (FFT_INPUT_NO_INTENSITIES - 1);
+                size_t const windowStart = (static_cast<size_t>(fftPosition) * windowPadding);
+                size_t const windowEnd = windowStart + (FFT_INPUT_NO_INTENSITIES - 1);
                 if (windowEnd >= numSamples)
                 {
                     currentJob->inputLength = numSamples - windowStart;
@@ -214,7 +216,7 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
 
             // push all jobs on the todo queue
             {
-                std::scoped_lock<std::mutex> lock(queueMutex);
+                std::scoped_lock<std::mutex> const lock(queueMutex);
 
                 batchJobPtr = batchJobs->data();
                 for (size_t i = 0; i < batchJobs->size(); i++)
@@ -232,16 +234,16 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
 
             // copy back the responses once we're done
             batchJobPtr = batchJobs->data();
-            for (int i = 0; i < (int)batchJobs->size(); i++)
+            for (int i = 0; std::cmp_less(i, batchJobs->size()); i++)
             {
                 // helper to locate the destination area
                 FftRunnerJob *currentJob = (*batchJobPtr).get();
-                size_t fftChannelOffset = ((size_t)currentJob->position * FFT_OUTPUT_NO_FREQS);
-                size_t fftResultArrayOffset = channelResultArrayOffset + fftChannelOffset;
+                size_t const fftChannelOffset = (static_cast<size_t>(currentJob->position) * FFT_OUTPUT_NO_FREQS);
+                size_t const fftResultArrayOffset = channelResultArrayOffset + fftChannelOffset;
                 // copy the memory from job data to destination buffer
                 memcpy(result->data() + fftResultArrayOffset, currentJob->output, sizeof(float) * FFT_OUTPUT_NO_FREQS);
                 {
-                    std::scoped_lock<std::mutex> lock(emptyJobsMutex);
+                    std::scoped_lock<std::mutex> const lock(emptyJobsMutex);
                     emptyJobPool.push(*batchJobPtr);
                 }
                 batchJobPtr++;
@@ -253,7 +255,7 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
 
     // let's reuse this heap allocated vector
     {
-        std::lock_guard lock(jobListsMutex);
+        std::scoped_lock const lock(jobListsMutex);
         freeJobLists.push(batchJobs);
     }
 
@@ -263,14 +265,14 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
 void FftRunner::fftThreadsLoop()
 {
     // instanciate mufft objects
-    float *fftInput;
-    cfloat *fftOutput;
-    mufft_plan_1d *mufftPlan;
+    float *fftInput = nullptr;
+    cfloat *fftOutput = nullptr;
+    mufft_plan_1d *mufftPlan = nullptr;
     // allocate them and compute the plan
     {
-        std::scoped_lock<std::mutex> lock(fftMutex);
-        fftInput = (float *)mufft_alloc(FFT_INPUT_SIZE * sizeof(float));
-        fftOutput = (cfloat *)mufft_alloc(FFT_OUTPUT_NO_FREQS * sizeof(cfloat));
+        std::scoped_lock<std::mutex> const lock(fftMutex);
+        fftInput = static_cast<float *>(mufft_alloc(FFT_INPUT_SIZE * sizeof(float)));
+        fftOutput = static_cast<cfloat *>(mufft_alloc(FFT_OUTPUT_NO_FREQS * sizeof(cfloat)));
         mufftPlan = mufft_create_plan_1d_r2c(FFT_INPUT_SIZE, MUFFT_FLAG_CPU_ANY);
         if (mufftPlan == nullptr)
         {
@@ -290,7 +292,7 @@ void FftRunner::fftThreadsLoop()
         // try to pull a job on the queue
         std::shared_ptr<FftRunnerJob> nextJob = nullptr;
         {
-            std::scoped_lock<std::mutex> lock(queueMutex);
+            std::scoped_lock<std::mutex> const lock(queueMutex);
             if (!todoJobQueue.empty())
             {
                 nextJob = todoJobQueue.front();
@@ -315,7 +317,7 @@ void FftRunner::fftThreadsLoop()
             {
                 // free the muFFT resources
                 {
-                    std::scoped_lock<std::mutex> lockFft(fftMutex);
+                    std::scoped_lock<std::mutex> const lockFft(fftMutex);
                     mufft_free_plan_1d(mufftPlan);
                     mufft_free(fftInput);
                     mufft_free(fftOutput);
@@ -332,7 +334,7 @@ void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, mufft_plan_1d *pla
     // copy data into the input
     memcpy(in, job->input, sizeof(float) * job->inputLength);
     // eventually pad rest of the input with zero if job input is not full size
-    int diffToFullSize = FFT_INPUT_NO_INTENSITIES - job->inputLength;
+    int const diffToFullSize = FFT_INPUT_NO_INTENSITIES - job->inputLength;
     float *inPtr = in + (FFT_INPUT_NO_INTENSITIES - 1);
     if (diffToFullSize > 0)
     {
@@ -345,7 +347,7 @@ void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, mufft_plan_1d *pla
     }
     // apply the hanning windowing function
     inPtr = in;
-    float *hannPtr = hannWindowTable.data();
+    float const *hannPtr = hannWindowTable.data();
     for (size_t i = 0; i < FFT_INPUT_NO_INTENSITIES >> 3; ++i)
     {
         *inPtr = (*hannPtr) * (*inPtr);
@@ -383,7 +385,9 @@ void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, mufft_plan_1d *pla
     // execute the muFFT plan (and the DFT)
     mufft_execute_plan_1d(plan, out, in);
     // copy back the output intensities normalized
-    float re, im, dist; /**< real and imaginary parts buffers */
+    float re;
+    float im;
+    float dist; /**< real and imaginary parts buffers */
 
     float *outPtr = job->output;
 

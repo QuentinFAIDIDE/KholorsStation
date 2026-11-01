@@ -25,7 +25,7 @@ class FrequencyScale : public juce::Component
      */
     FrequencyScale(NormalizedUnitTransformer &ut, float maxDrawableFreqA);
 
-    ~FrequencyScale();
+    ~FrequencyScale() override;
 
     void paint(juce::Graphics &g) override;
 
@@ -61,7 +61,7 @@ class FrequencyScale : public juce::Component
      */
     std::vector<LabelBox> generateLabelBox(float frequencyHz, std::string text, std::string unit);
 
-    void drawLabels(juce::Graphics &g, std::vector<LabelBox> &labs);
+    static void drawLabels(juce::Graphics &g, std::vector<LabelBox> &labs);
 
     NormalizedUnitTransformer &unitTransformer;
     float maxDrawableFreq; /**< maximum frequency shown on screen */

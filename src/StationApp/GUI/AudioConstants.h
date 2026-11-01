@@ -4,5 +4,5 @@
 #define GRID_ALIGN_SAMPLE_POS_SHIFT 1920
 #define MIN_SHOWABLE_RMS_VOLUME 0.001f
 #define MAX_SHOWABLE_RMS_VOLUME 1.1f
-#define MIN_DB -64.0f
+#define MIN_DB (-64.0f)
 #define MAX_DB 0.0f

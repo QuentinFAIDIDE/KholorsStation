@@ -1,14 +1,17 @@
 #include "BeatGridMesh.h"
+
 #include "OpenGLHelpers.h"
 #include "StationApp/GUI/AudioConstants.h"
+#include <algorithm>
 #include <limits>
+#include <math.h>
 #include <stdexcept>
 
-BeatGridMesh::BeatGridMesh(bool superGrid) : isShown(true), isSuperGrid(superGrid), lastTimeSignatureNumerator(4)
+BeatGridMesh::BeatGridMesh(bool superGrid) : isSuperGrid(superGrid)
 {
     vertices.reserve(4);
 
-    juce::Colour col = KHOLORS_BACKGROUND_GRID_TEXTURE_COLOR;
+    juce::Colour const col = KHOLORS_BACKGROUND_GRID_TEXTURE_COLOR;
 
     // upper left corner 0
     vertices.push_back(
@@ -36,14 +39,12 @@ BeatGridMesh::BeatGridMesh(bool superGrid) : isShown(true), isSuperGrid(superGri
     triangleIds.push_back(1);
     triangleIds.push_back(2);
 
-    texture.resize((size_t)(KHOLORS_BACKGROUND_GRID_TEXTURE_WIDTH * KHOLORS_BACKGROUND_GRID_TEXTURE_HEIGHT *
-                            TEXTURE_PIXEL_FLOAT_LEN));
-    std::fill(texture.begin(), texture.end(), 0.0f);
+    texture.resize(static_cast<size_t>(KHOLORS_BACKGROUND_GRID_TEXTURE_WIDTH * KHOLORS_BACKGROUND_GRID_TEXTURE_HEIGHT *
+                                       TEXTURE_PIXEL_FLOAT_LEN));
+    std::ranges::fill(texture, 0.0f);
 }
 
-BeatGridMesh::~BeatGridMesh()
-{
-}
+BeatGridMesh::~BeatGridMesh() = default;
 
 void BeatGridMesh::setTimeSignatureNumerator(int numerator)
 {
@@ -63,12 +64,13 @@ void BeatGridMesh::registerGlObjects()
 
     // register and upload the vertices data
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(Vertex) * vertices.size()), vertices.data(),
+                 GL_STATIC_DRAW);
     // register and upload indices of the vertices to form the triangles
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(unsigned int) * triangleIds.size()), triangleIds.data(),
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(unsigned int) * triangleIds.size()),
+                 triangleIds.data(), GL_STATIC_DRAW);
 
     // register the vertex attribute format
     Vertex::registerVertexFormat();
@@ -118,15 +120,15 @@ void BeatGridMesh::refreshGpuTexture()
 
 void BeatGridMesh::generateBeatGridTexture(int timeSignatureNumerator)
 {
-    float intensity;
-    int subdivWidth = KHOLORS_BACKGROUND_GRID_TEXTURE_WIDTH / timeSignatureNumerator;
+    float intensity = NAN;
+    int const subdivWidth = KHOLORS_BACKGROUND_GRID_TEXTURE_WIDTH / timeSignatureNumerator;
     for (size_t x = 0; x < KHOLORS_BACKGROUND_GRID_TEXTURE_WIDTH; x++)
     {
         if (x < KHOLORS_BACKGROUND_GRID_LEVEL_0_WIDTH)
         {
             intensity = 1.0f;
         }
-        else if ((x % (size_t)subdivWidth) < KHOLORS_BACKGROUND_GRID_LEVEL_1_WIDTH)
+        else if ((x % static_cast<size_t>(subdivWidth)) < KHOLORS_BACKGROUND_GRID_LEVEL_1_WIDTH)
         {
             intensity = 0.75f;
         }
@@ -137,38 +139,39 @@ void BeatGridMesh::generateBeatGridTexture(int timeSignatureNumerator)
 
         for (size_t y = 0; y < KHOLORS_BACKGROUND_GRID_TEXTURE_HEIGHT; y++)
         {
-            size_t openGlTexelIndex = (size_t)((y * KHOLORS_BACKGROUND_GRID_TEXTURE_WIDTH) + x);
-            texture[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = intensity;
+            auto const openGlTexelIndex = ((y * KHOLORS_BACKGROUND_GRID_TEXTURE_WIDTH) + x);
+            texture[((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = intensity;
         }
     }
 }
 
 void BeatGridMesh::updateGridPosition(int64_t viewPosition, int64_t viewScale, int64_t screenWidth, float bpm)
 {
-    int64_t viewSampleWidth = viewScale * screenWidth;
+    int64_t const viewSampleWidth = viewScale * screenWidth;
 
-    int64_t beatSampleWidth = (((float)VISUAL_SAMPLE_RATE) * 60.0f) / bpm;
+    int64_t beatSampleWidth = ((static_cast<float>(VISUAL_SAMPLE_RATE)) * 60.0f) / bpm;
     if (isSuperGrid)
     {
         beatSampleWidth = beatSampleWidth * lastTimeSignatureNumerator;
     }
-    int64_t samplesToNextBeatBar = beatSampleWidth - (viewPosition % beatSampleWidth);
+    int64_t const samplesToNextBeatBar = beatSampleWidth - (viewPosition % beatSampleWidth);
 
     // position of the grid in mesh coordinates
-    float gridPosLeftX = (float)samplesToNextBeatBar / (float)viewSampleWidth;
-    float gridPosRightX = gridPosLeftX + ((float)beatSampleWidth / (float)viewSampleWidth);
+    float const gridPosLeftX = static_cast<float>(samplesToNextBeatBar) / static_cast<float>(viewSampleWidth);
+    float const gridPosRightX =
+        gridPosLeftX + (static_cast<float>(beatSampleWidth) / static_cast<float>(viewSampleWidth));
 
     if (std::abs(gridPosLeftX - gridPosRightX) < std::numeric_limits<float>::epsilon())
     {
         throw std::runtime_error("Beat grid has zero length");
     }
 
-    float alpha = 1.0f / (gridPosRightX - gridPosLeftX);
-    float beta = -gridPosLeftX;
+    float const alpha = 1.0f / (gridPosRightX - gridPosLeftX);
+    float const beta = -gridPosLeftX;
 
     // position of the mesh in the texture coordinates
-    float meshPosLeftX = alpha * beta;
-    float meshPosRightX = alpha * (1.0f + beta);
+    float const meshPosLeftX = alpha * beta;
+    float const meshPosRightX = alpha * (1.0f + beta);
 
     // upper left corner 0
     vertices[0].texturePosition[0] = meshPosLeftX;
@@ -178,7 +181,7 @@ void BeatGridMesh::updateGridPosition(int64_t viewPosition, int64_t viewScale, i
 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, (long)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<long>(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
     OpenGLHelpers::printAllOpenGlError();
 }
 
@@ -219,7 +222,8 @@ void BeatGridMesh::setVisible(bool visible)
         }
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, (long)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, static_cast<long>(sizeof(Vertex) * vertices.size()), vertices.data(),
+                     GL_STATIC_DRAW);
         OpenGLHelpers::printAllOpenGlError();
     }
 }

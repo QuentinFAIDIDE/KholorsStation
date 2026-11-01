@@ -3,7 +3,7 @@
 int Task::taskGroupIndexIterator = 0;
 
 #include <nlohmann/json.hpp>
-using json = nlohmann::json;
+using nlohmann::json;
 
 Task::Task()
 {
@@ -20,13 +20,11 @@ Task::Task()
     taskGroupIndex = getNewTaskGroupIndex();
 }
 
-Task::~Task()
-{
-}
+Task::~Task() = default;
 
 std::string Task::marshal()
 {
-    json taskj = {
+    json const taskj = {
         {"object", "task"},
         {"task", "generic_task"},
         {"is_completed", completed},
@@ -37,12 +35,11 @@ std::string Task::marshal()
     return taskj.dump();
 }
 
-void Task::unmarshal(std::string &)
+void Task::unmarshal(std::string & /*unused*/)
 {
-    return;
 }
 
-bool Task::isCompleted()
+bool Task::isCompleted() const
 {
     return completed;
 }
@@ -57,12 +54,12 @@ void Task::setFailed(bool f)
     failed = f;
 }
 
-bool Task::hasFailed()
+bool Task::hasFailed() const
 {
     return failed;
 }
 
-bool Task::goesInTaskHistory()
+bool Task::goesInTaskHistory() const
 {
     return recordableInHistory;
 }
@@ -94,7 +91,7 @@ std::vector<std::shared_ptr<Task>> Task::getOppositeTasks()
     return emptyReversionTasks;
 }
 
-int Task::getTaskGroupIndex()
+int Task::getTaskGroupIndex() const
 {
     return taskGroupIndex;
 }
@@ -111,7 +108,7 @@ void Task::setTaskGroupToTarget(Task &targetTask)
 
 int Task::getNewTaskGroupIndex()
 {
-    int taskGroupToReturn = taskGroupIndexIterator;
+    int const taskGroupToReturn = taskGroupIndexIterator;
 
     taskGroupIndexIterator++;
     if (taskGroupIndexIterator >= MAX_TASK_INDEX)
@@ -143,34 +140,40 @@ SilentTask::SilentTask()
 
 std::string CancelTask::marshal()
 {
-    json taskj = {{"object", "task"},
-                  {"task", "cancel_task"},
-                  {"is_completed", isCompleted()},
-                  {"failed", hasFailed()},
-                  {"recordable_in_history", recordableInHistory},
-                  {"is_part_of_reversion", isPartOfReversion}};
+    json const taskj = {
+        {"object", "task"},
+        {"task", "cancel_task"},
+        {"is_completed", isCompleted()},
+        {"failed", hasFailed()},
+        {"recordable_in_history", recordableInHistory},
+        {"is_part_of_reversion", isPartOfReversion},
+    };
     return taskj.dump();
 }
 
 std::string RestoreTask::marshal()
 {
-    json taskj = {{"object", "task"},
-                  {"task", "restore_task"},
-                  {"is_completed", isCompleted()},
-                  {"failed", hasFailed()},
-                  {"recordable_in_history", recordableInHistory},
-                  {"is_part_of_reversion", isPartOfReversion}};
+    json const taskj = {
+        {"object", "task"},
+        {"task", "restore_task"},
+        {"is_completed", isCompleted()},
+        {"failed", hasFailed()},
+        {"recordable_in_history", recordableInHistory},
+        {"is_part_of_reversion", isPartOfReversion},
+    };
     return taskj.dump();
 }
 
 std::string ClearHistoryTask::marshal()
 {
-    json taskj = {{"object", "task"},
-                  {"task", "clear_history_task"},
-                  {"is_completed", isCompleted()},
-                  {"failed", hasFailed()},
-                  {"recordable_in_history", recordableInHistory},
-                  {"is_part_of_reversion", isPartOfReversion}};
+    json const taskj = {
+        {"object", "task"},
+        {"task", "clear_history_task"},
+        {"is_completed", isCompleted()},
+        {"failed", hasFailed()},
+        {"recordable_in_history", recordableInHistory},
+        {"is_part_of_reversion", isPartOfReversion},
+    };
     return taskj.dump();
 }
 
@@ -178,11 +181,13 @@ std::string ClearHistoryTask::marshal()
 
 std::string QuittingTask::marshal()
 {
-    json taskj = {{"object", "task"},
-                  {"task", "quitting"},
-                  {"is_completed", isCompleted()},
-                  {"failed", hasFailed()},
-                  {"recordable_in_history", recordableInHistory},
-                  {"is_part_of_reversion", isPartOfReversion}};
+    json const taskj = {
+        {"object", "task"},
+        {"task", "quitting"},
+        {"is_completed", isCompleted()},
+        {"failed", hasFailed()},
+        {"recordable_in_history", recordableInHistory},
+        {"is_part_of_reversion", isPartOfReversion},
+    };
     return taskj.dump();
 }

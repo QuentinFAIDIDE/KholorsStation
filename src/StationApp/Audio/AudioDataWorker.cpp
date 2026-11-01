@@ -20,7 +20,7 @@
 #define NUM_AUDIO_WORKER_THREADS 2
 
 AudioDataWorker::AudioDataWorker(AudioTransport::SyncServer &server, TaskingManager &tm)
-    : shouldStop(false), taskingManager(tm), audioDataServer(server), processingTimerDelayMs(0), volumeProjection(0.1)
+    : taskingManager(tm), audioDataServer(server), processingTimerDelayMs(0), volumeProjection(0.1)
 {
     // create the worker threads
     for (size_t i = 0; i < NUM_AUDIO_WORKER_THREADS; i++)
@@ -49,28 +49,28 @@ void AudioDataWorker::processAudioSegment(std::shared_ptr<AudioTransport::AudioS
 
     for (size_t i = 0; i < audioSegment->noAudioSamples; i++)
     {
-        audioBuffer->setSample(0, (int)i, audioSegment->audioSamples[i]);
+        audioBuffer->setSample(0, static_cast<int>(i), audioSegment->audioSamples[i]);
     }
 
-    size_t numSubdivs = audioSegment->noAudioSamples / VOLUME_SEGMENTS_BLOCK_SIZE;
+    size_t const numSubdivs = audioSegment->noAudioSamples / VOLUME_SEGMENTS_BLOCK_SIZE;
     for (size_t i = 0; i < numSubdivs; i++)
     {
-        size_t subdivShiftSamples = i * VOLUME_SEGMENTS_BLOCK_SIZE;
+        size_t const subdivShiftSamples = i * VOLUME_SEGMENTS_BLOCK_SIZE;
         float subVolume = audioBuffer->getRMSLevel(0, subdivShiftSamples, VOLUME_SEGMENTS_BLOCK_SIZE);
         subVolume = volumeProjection.projectIn(subVolume);
-        auto volumeUpdateTask = std::make_shared<NewTrackVolumeDataTask>(
+        auto const volumeUpdateTask = std::make_shared<NewTrackVolumeDataTask>(
             audioSegment->trackIdentifier, audioSegment->noChannels, audioSegment->channel,
             audioSegment->segmentStartSample + subdivShiftSamples, VOLUME_SEGMENTS_BLOCK_SIZE, subVolume,
             audioSegment->sampleRate);
         taskingManager.broadcastTask(volumeUpdateTask);
     }
 
-    int numFFTs = fftProcessor.getNumFftFromNumSamples(audioSegment->noAudioSamples);
-    auto shortTimeFFTs = fftProcessor.performFft(audioBuffer);
+    int const numFFTs = FftRunner::getNumFftFromNumSamples(audioSegment->noAudioSamples);
+    auto const shortTimeFFTs = fftProcessor.performFft(audioBuffer);
 
-    auto newDataTask = std::make_shared<NewFftDataTask>(
+    auto const newDataTask = std::make_shared<NewFftDataTask>(
         audioSegment->trackIdentifier, audioSegment->noChannels, audioSegment->channel, audioSegment->sampleRate,
-        audioSegment->segmentStartSample, audioSegment->noAudioSamples, (uint32_t)numFFTs, shortTimeFFTs,
+        audioSegment->segmentStartSample, audioSegment->noAudioSamples, static_cast<uint32_t>(numFFTs), shortTimeFFTs,
         audioSegment->payloadSentTimeMs);
 
     if (processingTimerDelayMs > MAX_AUDIO_SEGMENT_PROCESSING_DELAY_MS)
@@ -84,7 +84,7 @@ void AudioDataWorker::processAudioSegment(std::shared_ptr<AudioTransport::AudioS
 
 void AudioDataWorker::processTrackInfo(std::shared_ptr<AudioTransport::TrackInfo> trackInfo)
 {
-    auto trackudpateTask =
+    auto const trackudpateTask =
         std::make_shared<TrackInfoUpdateTask>(trackInfo->identifier, trackInfo->name, trackInfo->redColorLevel,
                                               trackInfo->greenColorLevel, trackInfo->blueColorLevel);
     taskingManager.broadcastTask(trackudpateTask);
@@ -92,22 +92,22 @@ void AudioDataWorker::processTrackInfo(std::shared_ptr<AudioTransport::TrackInfo
 
 void AudioDataWorker::processDawInfo(std::shared_ptr<AudioTransport::DawInfo> dawInfo)
 {
-    auto timeSignatureUpdate = std::make_shared<TimeSignatureUpdateTask>(dawInfo->timeSignatureNumerator);
+    auto const timeSignatureUpdate = std::make_shared<TimeSignatureUpdateTask>(dawInfo->timeSignatureNumerator);
     taskingManager.broadcastTask(timeSignatureUpdate);
 
-    auto bpmUpdate = std::make_shared<BpmUpdateTask>(dawInfo->bpm);
+    auto const bpmUpdate = std::make_shared<BpmUpdateTask>(dawInfo->bpm);
     taskingManager.broadcastTask(bpmUpdate);
 }
 
 void AudioDataWorker::workerThreadLoop()
 {
-    auto audioBuffer = std::make_shared<juce::AudioSampleBuffer>();
+    auto const audioBuffer = std::make_shared<juce::AudioSampleBuffer>();
     audioBuffer->setSize(1, AUDIO_SEGMENTS_BLOCK_SIZE);
 
     while (true)
     {
         {
-            std::lock_guard lock(shouldStopMutex);
+            std::scoped_lock const lock(shouldStopMutex);
             if (shouldStop)
             {
                 return;
@@ -117,15 +117,17 @@ void AudioDataWorker::workerThreadLoop()
         auto audioDataUpdate = audioDataServer.waitForDatum();
         if (audioDataUpdate.has_value())
         {
-            if (auto audioSegment = std::dynamic_pointer_cast<AudioTransport::AudioSegment>(audioDataUpdate->datum))
+            if (auto const audioSegment =
+                    std::dynamic_pointer_cast<AudioTransport::AudioSegment>(audioDataUpdate->datum))
             {
                 processAudioSegment(audioSegment, audioBuffer);
             }
-            else if (auto trackInfo = std::dynamic_pointer_cast<AudioTransport::TrackInfo>(audioDataUpdate->datum))
+            else if (auto const trackInfo =
+                         std::dynamic_pointer_cast<AudioTransport::TrackInfo>(audioDataUpdate->datum))
             {
                 processTrackInfo(trackInfo);
             }
-            else if (auto dawInfo = std::dynamic_pointer_cast<AudioTransport::DawInfo>(audioDataUpdate->datum))
+            else if (auto const dawInfo = std::dynamic_pointer_cast<AudioTransport::DawInfo>(audioDataUpdate->datum))
             {
                 processDawInfo(dawInfo);
             }
@@ -136,7 +138,7 @@ void AudioDataWorker::workerThreadLoop()
 
 bool AudioDataWorker::taskHandler(std::shared_ptr<Task> task)
 {
-    auto reuseVectorTask = std::dynamic_pointer_cast<FftResultVectorReuseTask>(task);
+    auto const reuseVectorTask = std::dynamic_pointer_cast<FftResultVectorReuseTask>(task);
     if (reuseVectorTask != nullptr && !reuseVectorTask->isCompleted())
     {
         fftProcessor.reuseResultArray(reuseVectorTask->resultArray);
@@ -144,7 +146,7 @@ bool AudioDataWorker::taskHandler(std::shared_ptr<Task> task)
         return true;
     }
 
-    auto processingTimerDelayUpdate = std::dynamic_pointer_cast<ProcessingTimeUpdateTask>(task);
+    auto const processingTimerDelayUpdate = std::dynamic_pointer_cast<ProcessingTimeUpdateTask>(task);
     if (processingTimerDelayUpdate != nullptr)
     {
         processingTimerDelayMs = processingTimerDelayUpdate->averageProcesingTimeMs;
@@ -157,12 +159,12 @@ AudioDataWorker::~AudioDataWorker()
 {
     // take lock and set shouldStop to true
     {
-        std::lock_guard lock(shouldStopMutex);
+        std::scoped_lock const lock(shouldStopMutex);
         shouldStop = true;
     }
     // for each thread, join it
-    for (size_t i = 0; i < dataProcessingThreads.size(); i++)
+    for (auto &dataProcessingThread : dataProcessingThreads)
     {
-        dataProcessingThreads[i].join();
+        dataProcessingThread.join();
     }
 }

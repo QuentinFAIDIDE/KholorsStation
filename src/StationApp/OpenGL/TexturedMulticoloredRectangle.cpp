@@ -1,8 +1,10 @@
 #include "TexturedMulticoloredRectangle.h"
+
 #include "OpenGLHelpers.h"
 #include "StationApp/GUI/AudioConstants.h"
 #include "juce_opengl/opengl/juce_gl.h"
 #include "spdlog/spdlog.h"
+#include <algorithm>
 
 TexturedMulticoloredRectangle::TexturedMulticoloredRectangle(int64_t width, int64_t height)
     : textureWidth(width), textureHeight(height)
@@ -33,13 +35,11 @@ TexturedMulticoloredRectangle::TexturedMulticoloredRectangle(int64_t width, int6
     triangleIds.push_back(1);
     triangleIds.push_back(2);
 
-    texture.resize((size_t)(width * height * TEXTURE_PIXEL_FLOAT_LEN));
-    std::fill(texture.begin(), texture.end(), 0.0f);
+    texture.resize(static_cast<size_t>(width * height * TEXTURE_PIXEL_FLOAT_LEN));
+    std::ranges::fill(texture, 0.0f);
 }
 
-TexturedMulticoloredRectangle::~TexturedMulticoloredRectangle()
-{
-}
+TexturedMulticoloredRectangle::~TexturedMulticoloredRectangle() = default;
 
 void TexturedMulticoloredRectangle::registerGlObjects()
 {
@@ -56,12 +56,13 @@ void TexturedMulticoloredRectangle::registerGlObjects()
 
     // register and upload the vertices data
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(Vertex) * vertices.size()), vertices.data(),
+                 GL_STATIC_DRAW);
     // register and upload indices of the vertices to form the triangles
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(unsigned int) * triangleIds.size()), triangleIds.data(),
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(unsigned int) * triangleIds.size()),
+                 triangleIds.data(), GL_STATIC_DRAW);
 
     // register the vertex attribute format
     Vertex::registerVertexFormat();
@@ -83,7 +84,7 @@ void TexturedMulticoloredRectangle::registerGlObjects()
     OpenGLHelpers::printAllOpenGlError();
 
     // after everything was uplaoded we can reset the nonce
-    int64_t newNonce = textureNonce;
+    int64_t const newNonce = textureNonce;
     lastUploadedTextureNonce = newNonce;
 }
 
@@ -118,7 +119,7 @@ void TexturedMulticoloredRectangle::refreshGpuTextureIfChanged()
 
 void TexturedMulticoloredRectangle::setPosition(int64_t viewPositionSamples)
 {
-    int tileWidth = VISUAL_SAMPLE_RATE;
+    int const tileWidth = VISUAL_SAMPLE_RATE;
 
     // upper left corner 0
     vertices[0].position[0] = viewPositionSamples;
@@ -131,25 +132,25 @@ void TexturedMulticoloredRectangle::setPosition(int64_t viewPositionSamples)
 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, (long)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<long>(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
     OpenGLHelpers::printAllOpenGlError();
 }
 
 void TexturedMulticoloredRectangle::setRectangle(int x, int y, int width, int height, float r, float g, float b,
                                                  float a)
 {
-    size_t openGlTexelIndex;
+    size_t openGlTexelIndex = 0;
     float *textureData = texture.data();
 
     for (int i = 0; i < width; i++)
     {
         for (int j = 0; j < height; j++)
         {
-            openGlTexelIndex = (size_t)(((y + j) * textureWidth) + (x + i));
-            textureData[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN))] = r;
-            textureData[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 1)] = g;
-            textureData[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 2)] = b;
-            textureData[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = a;
+            openGlTexelIndex = static_cast<size_t>(((y + j) * textureWidth) + (x + i));
+            textureData[(openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN)] = r;
+            textureData[((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 1)] = g;
+            textureData[((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 2)] = b;
+            textureData[((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = a;
         }
     }
     textureNonce++;
@@ -157,16 +158,16 @@ void TexturedMulticoloredRectangle::setRectangle(int x, int y, int width, int he
 
 void TexturedMulticoloredRectangle::setPixelAt(int x, int y, float r, float g, float b, float a)
 {
-    size_t openGlTexelIndex = (size_t)((y * textureWidth) + x);
-    texture[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN))] = r;
-    texture[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 1)] = g;
-    texture[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 2)] = b;
-    texture[(size_t)((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = a;
+    auto const openGlTexelIndex = static_cast<size_t>((y * textureWidth) + x);
+    texture[(openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN)] = r;
+    texture[((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 1)] = g;
+    texture[((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 2)] = b;
+    texture[((openGlTexelIndex * TEXTURE_PIXEL_FLOAT_LEN) + 3)] = a;
     textureNonce++;
 }
 
 void TexturedMulticoloredRectangle::clearAllData()
 {
-    std::fill(texture.begin(), texture.end(), 0.0f);
+    std::ranges::fill(texture, 0.0f);
     textureNonce++;
 }

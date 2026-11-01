@@ -13,7 +13,7 @@
 class LockFreeIndexFIFO
 {
   public:
-    LockFreeIndexFIFO(size_t size) : abstractFifo(size)
+    explicit LockFreeIndexFIFO(size_t size) : abstractFifo(size)
     {
         ringBuffer.resize(size);
     }
@@ -29,12 +29,12 @@ class LockFreeIndexFIFO
         const auto scope = abstractFifo.write(1);
         if (scope.blockSize1 > 0)
         {
-            ringBuffer[(size_t)scope.startIndex1] = indexToInsert;
+            ringBuffer[static_cast<size_t>(scope.startIndex1)] = indexToInsert;
             return 1;
         }
         if (scope.blockSize2 > 0)
         {
-            ringBuffer[(size_t)scope.startIndex2] = indexToInsert;
+            ringBuffer[static_cast<size_t>(scope.startIndex2)] = indexToInsert;
             return 1;
         }
         return 0;
@@ -56,12 +56,13 @@ class LockFreeIndexFIFO
         const auto scope = abstractFifo.read(numItems);
 
         // we ensure there is enough space to push_back our fetched indices.
-        data->reserve((size_t)(scope.blockSize1 + scope.blockSize2));
+        data->reserve(static_cast<size_t>(scope.blockSize1 + scope.blockSize2));
         data->resize(0);
 
         if (scope.blockSize1 > 0)
         {
-            for (size_t i = (size_t)scope.startIndex1; i < (size_t)scope.startIndex1 + (size_t)scope.blockSize1; i++)
+            for (auto i = static_cast<size_t>(scope.startIndex1);
+                 i < static_cast<size_t>(scope.startIndex1) + static_cast<size_t>(scope.blockSize1); i++)
             {
                 data->push_back(ringBuffer[i]);
             }
@@ -69,7 +70,8 @@ class LockFreeIndexFIFO
 
         if (scope.blockSize2 > 0)
         {
-            for (size_t i = (size_t)scope.startIndex2; i < (size_t)scope.startIndex2 + (size_t)scope.blockSize2; i++)
+            for (auto i = static_cast<size_t>(scope.startIndex2);
+                 i < static_cast<size_t>(scope.startIndex2) + static_cast<size_t>(scope.blockSize2); i++)
             {
                 data->push_back(ringBuffer[i]);
             }

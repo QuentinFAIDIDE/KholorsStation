@@ -19,7 +19,7 @@ class ServerStatusText : public juce::Component, public TaskListener
      *
      * @param tm tasking manager to register handler to.
      */
-    ServerStatusText(TaskingManager &tm);
+    explicit ServerStatusText(TaskingManager &tm);
 
     /**
      * @brief Paint the text reading the server status.
@@ -46,7 +46,7 @@ class ServerStatusText : public juce::Component, public TaskListener
     };
 
   private:
-    DisplayedServerState currentStatus;                   /**< The state of server displayed on screen */
+    DisplayedServerState currentStatus{UNKNOWN};          /**< The state of server displayed on screen */
     juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads fonts */
     std::mutex currentStatusMutex;                        /**< Used to protect currentStatus variable */
     juce::Colour unknownStatusColor;

@@ -7,15 +7,13 @@ HelpButton::HelpButton() : juce::TextButton("Help", "Open tip list")
 {
 }
 
-HelpButton::~HelpButton()
-{
-}
+HelpButton::~HelpButton() = default;
 
 void HelpButton::clicked()
 {
     juce::DialogWindow::LaunchOptions options;
     options.dialogTitle = "Usage Tips";
-    juce::OptionalScopedPointer<HelpDialogContent> contentContainer;
+    juce::OptionalScopedPointer<HelpDialogContent> const contentContainer;
     options.resizable = false;
     options.useNativeTitleBar = false;
     options.content.set(new HelpDialogContent(), true);

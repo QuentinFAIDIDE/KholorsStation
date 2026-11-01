@@ -27,7 +27,7 @@ class BeatGridMesh : public GlMesh
      *
      * @param superGrid if true, will make it 4x wider
      */
-    BeatGridMesh(bool superGrid);
+    explicit BeatGridMesh(bool superGrid);
     ~BeatGridMesh();
 
     void registerGlObjects() override;
@@ -76,14 +76,14 @@ class BeatGridMesh : public GlMesh
     std::vector<Vertex> vertices;          /**< List of vertices with position, texture pos, and color */
     std::vector<unsigned int> triangleIds; /**< List of vertice ids to draw each triangle */
 
-    GLuint vbo; /**< vertex buffer object identifier */
-    GLuint ebo; /**< index buffer object identifier (ids of vertices for triangles to draw) */
-    GLuint vao; /**< vertex array object identifier to draw with a oneliner */
-    GLuint tbo; /**< Texture buffer object identifier */
+    GLuint vbo{}; /**< vertex buffer object identifier */
+    GLuint ebo{}; /**< index buffer object identifier (ids of vertices for triangles to draw) */
+    GLuint vao{}; /**< vertex array object identifier to draw with a oneliner */
+    GLuint tbo{}; /**< Texture buffer object identifier */
 
-    bool isShown;
+    bool isShown{true};
 
     bool isSuperGrid;
 
-    int lastTimeSignatureNumerator;
+    int lastTimeSignatureNumerator{4};
 };

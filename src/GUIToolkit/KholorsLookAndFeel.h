@@ -16,26 +16,29 @@ class KholorsLookAndFeel : public juce::LookAndFeel_V4
 {
   public:
     KholorsLookAndFeel();
-    void drawTabButton(juce::TabBarButton &, juce::Graphics &, bool isMouseOver, bool isMouseDown) override;
+    void drawTabButton(juce::TabBarButton & /*tb*/, juce::Graphics & /*g*/, bool isMouseOver,
+                       bool isMouseDown) override;
     juce::Font getPopupMenuFont() override;
-    juce::Font getMenuBarFont(juce::MenuBarComponent &, int, const juce::String &) override;
+    juce::Font getMenuBarFont(juce::MenuBarComponent & /*unused*/, int /*itemIndex*/,
+                              const juce::String & /*itemText*/) override;
     int getTabButtonBestWidth(juce::TabBarButton &tbb, int depth) override;
-    void drawTabbedButtonBarBackground(juce::TabbedButtonBar &, juce::Graphics &) override;
+    void drawTabbedButtonBarBackground(juce::TabbedButtonBar & /*unused*/, juce::Graphics & /*g*/) override;
     void drawTabAreaBehindFrontButton(juce::TabbedButtonBar &tb, juce::Graphics &g, int w, int h) override;
     void getIdealPopupMenuItemSize(const juce::String &text, bool isSeparator, int standardMenuItemHeight,
                                    int &idealWidth, int &idealHeight) override;
     void drawResizableFrame(juce::Graphics &g, int w, int h, const juce::BorderSize<int> &border) override;
     int getPopupMenuBorderSize() override;
-    int getPopupMenuBorderSizeWithOptions(const juce::PopupMenu::Options &) override;
+    int getPopupMenuBorderSizeWithOptions(const juce::PopupMenu::Options & /*unused*/) override;
     void drawMenuBarBackground(juce::Graphics &g, int width, int height, bool isMouseOverBar,
-                               juce::MenuBarComponent &) override;
+                               juce::MenuBarComponent & /*unused*/) override;
     void drawButtonBackground(juce::Graphics &g, juce::Button &b, const juce::Colour &backgroundColor, bool highlighted,
                               bool down) override;
-    void drawButtonText(juce::Graphics &, juce::TextButton &, bool shouldDrawButtonAsHighlighted,
+    void drawButtonText(juce::Graphics & /*g*/, juce::TextButton & /*b*/, bool shouldDrawButtonAsHighlighted,
                         bool shouldDrawButtonAsDown) override;
 
-    void drawLinearSlider(juce::Graphics &, int x, int y, int width, int height, float sliderPos, float minSliderPos,
-                          float maxSliderPos, juce::Slider::SliderStyle, juce::Slider &) override;
+    void drawLinearSlider(juce::Graphics & /*g*/, int x, int y, int width, int height, float sliderPos,
+                          float minSliderPos, float maxSliderPos, juce::Slider::SliderStyle /*unused*/,
+                          juce::Slider & /*sl*/) override;
 
   private:
     juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */

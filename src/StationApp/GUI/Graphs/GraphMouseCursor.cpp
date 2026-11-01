@@ -1,20 +1,18 @@
 #include "GraphMouseCursor.h"
 #include "GUIToolkit/Consts.h"
 
-GraphMouseCursor::GraphMouseCursor() : lastMouseX(0), lastMouseY(0), mouseOnComponent(false)
+GraphMouseCursor::GraphMouseCursor()
 {
 }
 
-GraphMouseCursor::~GraphMouseCursor()
-{
-}
+GraphMouseCursor::~GraphMouseCursor() = default;
 
-void GraphMouseCursor::paint(juce::Graphics &g, const juce::Rectangle<int> &bounds)
+void GraphMouseCursor::paint(juce::Graphics &g, const juce::Rectangle<int> &bounds) const
 {
     if (mouseOnComponent)
     {
-        auto horizontalLine = bounds.withHeight(1).withY(lastMouseY);
-        auto verticalLine = bounds.withWidth(1).withX(lastMouseX);
+        auto const horizontalLine = bounds.withHeight(1).withY(lastMouseY);
+        auto const verticalLine = bounds.withWidth(1).withX(lastMouseX);
         g.setColour(KHOLORS_COLOR_WHITE);
         g.fillRect(horizontalLine);
         g.fillRect(verticalLine);

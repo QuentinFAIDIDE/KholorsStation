@@ -1,13 +1,16 @@
 #include "VolumeOverTimeGraph.h"
+
 #include "StationApp/GUI/AudioConstants.h"
 #include "StationApp/GUI/Graphs/SamplePositionUtils.h"
 #include "StationApp/OpenGL/OpenGlShaders.h"
 #include "StationApp/OpenGL/ShaderHelpers.h"
 #include "juce_opengl/opengl/juce_gl.h"
 #include "spdlog/spdlog.h"
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <math.h>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -26,9 +29,7 @@ VolumeOverTimeGraph::VolumeOverTimeGraph(TrackInfoStore &tis) : BaseOverTimeGrap
     }
 }
 
-VolumeOverTimeGraph::~VolumeOverTimeGraph()
-{
-}
+VolumeOverTimeGraph::~VolumeOverTimeGraph() = default;
 
 void VolumeOverTimeGraph::clearTracksFromRange(int64_t startSample, int64_t length)
 {
@@ -37,10 +38,10 @@ void VolumeOverTimeGraph::clearTracksFromRange(int64_t startSample, int64_t leng
         throw std::runtime_error("VolumeOverTimeGraph::clearTracksFromRange: length < 1");
     }
 
-    int64_t endSample = startSample + (length - 1);
+    int64_t const endSample = startSample + (length - 1);
 
-    int64_t secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
-    int64_t secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
+    int64_t const secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
+    int64_t const secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
 
     for (int64_t j = secondTileIndexStartSample; j <= secondTileIndexEndSample; j++)
     {
@@ -59,9 +60,9 @@ void VolumeOverTimeGraph::clear()
 
 void VolumeOverTimeGraph::queueTileRemoval(int64_t tileIndex)
 {
-    std::lock_guard lock(tileRemovalQueueMutex);
+    std::scoped_lock const lock(tileRemovalQueueMutex);
 
-    if (tilesToRemoveSet.find(tileIndex) != tilesToRemoveSet.end())
+    if (tilesToRemoveSet.contains(tileIndex))
     {
         return;
     }
@@ -75,7 +76,7 @@ void VolumeOverTimeGraph::queueTileRemoval(int64_t tileIndex)
     tilesToRemoveSet.insert(tileIndex);
 }
 
-void VolumeOverTimeGraph::setTrackColor(uint64_t trackIdentifier, juce::Colour col)
+void VolumeOverTimeGraph::setTrackColor(uint64_t /*trackIdentifier*/, juce::Colour /*col*/)
 {
     // PERF: It would be good to cache color and update our local cache. This way
     // we rely less on foreign track info object that takes a lock.
@@ -83,11 +84,11 @@ void VolumeOverTimeGraph::setTrackColor(uint64_t trackIdentifier, juce::Colour c
     shouldRedrawTiles = true;
 }
 
-void VolumeOverTimeGraph::setSelectedTrack(std::optional<uint64_t> trackToSelect, TaskingManager *tm)
+void VolumeOverTimeGraph::setSelectedTrack(std::optional<uint64_t> trackToSelect, TaskingManager * /*tm*/)
 {
     {
-        std::lock_guard lock(selectedTrackMutex);
-        bool existenceDiffers = trackToSelect.has_value() != selectedTrack.has_value();
+        std::scoped_lock const lock(selectedTrackMutex);
+        bool const existenceDiffers = trackToSelect.has_value() != selectedTrack.has_value();
         if (existenceDiffers ||
             (!existenceDiffers && trackToSelect.has_value() && trackToSelect.value() != selectedTrack.value()))
         {
@@ -104,14 +105,14 @@ void VolumeOverTimeGraph::displayNewVolumeData(std::shared_ptr<NewTrackVolumeDat
         throw std::runtime_error("VolumeOverTimeGraph::displayNewVolumeData: segmentSampleLength < 1");
     }
 
-    int64_t sectionSampleWidth = (int64_t)volumeData->segmentSampleLength;
+    auto const sectionSampleWidth = static_cast<int64_t>(volumeData->segmentSampleLength);
     int64_t startSample = volumeData->segmentStartSample;
     int64_t endSample = startSample + (sectionSampleWidth - 1);
 
-    SamplePositionUtils::toVisualSampleRate(startSample, endSample, (int64_t)volumeData->sampleRate);
+    SamplePositionUtils::toVisualSampleRate(startSample, endSample, static_cast<int64_t>(volumeData->sampleRate));
 
-    int64_t secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
-    int64_t secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
+    int64_t const secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
+    int64_t const secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
 
     // fill the tile (one or two if overlaps) with the fft data
     for (int64_t j = secondTileIndexStartSample; j <= secondTileIndexEndSample; j++)
@@ -155,7 +156,7 @@ void VolumeOverTimeGraph::queueVolumeForDrawing(uint64_t trackIdentifier, int64_
                                                 int64_t tileStartSample, int64_t tileEndSample, float volume,
                                                 int channelIndex)
 {
-    TrackVolumeData volumeData;
+    TrackVolumeData volumeData{};
     volumeData.trackIdentifier = trackIdentifier;
     volumeData.secondTileIndex = secondTileIndex;
     volumeData.tileStartSample = tileStartSample;
@@ -163,7 +164,7 @@ void VolumeOverTimeGraph::queueVolumeForDrawing(uint64_t trackIdentifier, int64_
     volumeData.volumeLevel = volume;
     volumeData.channelIdentifier = channelIndex;
 
-    std::lock_guard<std::mutex> lock(volumeUpdateQueueMutex);
+    std::scoped_lock const lock(volumeUpdateQueueMutex);
     if (volumeUpdateQueue.size() > MAX_QUEUED_VOLUME_DRAW)
     {
         spdlog::warn("VolumeOverTimeGraph::queueVolumeForDrawing: volumeUpdateQueue.size() > MAX_QUEUED_VOLUME_DRAW");
@@ -174,7 +175,7 @@ void VolumeOverTimeGraph::queueVolumeForDrawing(uint64_t trackIdentifier, int64_
 
 void VolumeOverTimeGraph::resetJuceOpenGLShaders(juce::OpenGLContext &openGLContext)
 {
-    texturedPositionedShader.reset(new juce::OpenGLShaderProgram(openGLContext));
+    texturedPositionedShader = std::make_unique<juce::OpenGLShaderProgram>(openGLContext);
 }
 
 void VolumeOverTimeGraph::setShadersUniformsAtOpenGlInit()
@@ -187,16 +188,16 @@ void VolumeOverTimeGraph::loadGlObjectsAtInit()
 {
     // load tiles textures
     texturedPositionedShader->use();
-    for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+    for (auto &i : secondTilesRingBuffer)
     {
-        secondTilesRingBuffer[i]->mesh->registerGlObjects();
+        i->mesh->registerGlObjects();
     }
     spdlog::debug("Tiles textures loaded");
 }
 
 bool VolumeOverTimeGraph::buildShadersAtInit()
 {
-    bool builtTexturedShader =
+    bool const builtTexturedShader =
         ShaderHelpers::buildShader(texturedPositionedShader, volumesVertexShader, volumesFragmentShader);
     if (!builtTexturedShader)
     {
@@ -210,16 +211,17 @@ bool VolumeOverTimeGraph::buildShadersAtInit()
 void VolumeOverTimeGraph::uploadAdditionalShadersUniforms()
 {
 
-    float zoomFactor;
+    float zoomFactor = NAN;
     if (glIterCount % 5 == 0)
     {
-        int64_t currentTime = juce::Time::currentTimeMillis();
+        int64_t const currentTime = juce::Time::currentTimeMillis();
         if (currentTime - lastZoomFactorUpdateTimeMs > ZOOM_FACTOR_UPDATE_INTERVAL_MS)
         {
-            float desiredZoomFactor = (float)(TILE_PIXEL_HEIGHT >> 1) / (float)getMaxPixelDistDrawnInView();
-            float dist = desiredZoomFactor - lastZoomFactor;
-            float distSign = dist < 0 ? -1 : 1;
-            float increment;
+            float const desiredZoomFactor =
+                static_cast<float>(TILE_PIXEL_HEIGHT >> 1) / static_cast<float>(getMaxPixelDistDrawnInView());
+            float const dist = desiredZoomFactor - lastZoomFactor;
+            float const distSign = dist < 0 ? -1 : 1;
+            float increment = NAN;
             if (distSign < 0)
             {
                 // we reduce zooming
@@ -254,20 +256,21 @@ void VolumeOverTimeGraph::uploadAdditionalShadersUniforms()
     }
 
     texturedPositionedShader->use();
-    texturedPositionedShader->setUniform("viewPosition", (GLfloat)getViewPositionLockFree());
-    texturedPositionedShader->setUniform("viewWidth", (GLfloat)(getViewWidthLockFree() * getViewScaleLockFree()));
-    texturedPositionedShader->setUniform("convolutionId", (GLint)0);
-    texturedPositionedShader->setUniform("zoomFactor", (GLfloat)zoomFactor);
+    texturedPositionedShader->setUniform("viewPosition", static_cast<GLfloat>(getViewPositionLockFree()));
+    texturedPositionedShader->setUniform("viewWidth",
+                                         static_cast<GLfloat>(getViewWidthLockFree() * getViewScaleLockFree()));
+    texturedPositionedShader->setUniform("convolutionId", static_cast<GLint>(0));
+    texturedPositionedShader->setUniform("zoomFactor", static_cast<GLfloat>(zoomFactor));
 }
 
 int64_t VolumeOverTimeGraph::getMaxPixelDistDrawnInView()
 {
-    int64_t sectionSampleWidth = getViewWidthLockFree() * getViewScaleLockFree();
-    int64_t startSample = getViewPositionLockFree();
-    int64_t endSample = startSample + (sectionSampleWidth - 1);
+    int64_t const sectionSampleWidth = getViewWidthLockFree() * getViewScaleLockFree();
+    int64_t const startSample = getViewPositionLockFree();
+    int64_t const endSample = startSample + (sectionSampleWidth - 1);
 
-    int64_t secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
-    int64_t secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
+    int64_t const secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
+    int64_t const secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
 
     int64_t maxDistFromCenter = 0;
 
@@ -278,7 +281,7 @@ int64_t VolumeOverTimeGraph::getMaxPixelDistDrawnInView()
             continue;
         }
 
-        auto existingTile = secondTilesIndexMap.find(j);
+        auto const existingTile = secondTilesIndexMap.find(j);
         if (existingTile != secondTilesIndexMap.end())
         {
             maxDistFromCenter = std::max(maxDistFromCenter, secondTilesRingBuffer[existingTile->second]->maxDrawnPixel);
@@ -289,16 +292,14 @@ int64_t VolumeOverTimeGraph::getMaxPixelDistDrawnInView()
     {
         return TILE_PIXEL_HEIGHT >> 1;
     }
-    else
-    {
-        return maxDistFromCenter;
-    }
+
+    return maxDistFromCenter;
 }
 
 void VolumeOverTimeGraph::deleteTilesQueuedForDeletion()
 {
     {
-        std::lock_guard lock(tileRemovalQueueMutex);
+        std::scoped_lock const lock(tileRemovalQueueMutex);
         std::swap(tileRemovalQueue, tileRemovalReadQueue);
         std::swap(tilesToRemoveSet, tilesToRemoveReadSet);
     }
@@ -307,7 +308,7 @@ void VolumeOverTimeGraph::deleteTilesQueuedForDeletion()
         shouldClear = false;
         for (const auto &entry : secondTilesIndexMap)
         {
-            size_t tileIndex = entry.second;
+            size_t const tileIndex = entry.second;
             secondTilesRingBuffer[tileIndex]->tileIndexPosition = -1;
             freeSecondTilesIndexes.push(tileIndex);
         }
@@ -323,16 +324,16 @@ void VolumeOverTimeGraph::deleteTilesQueuedForDeletion()
     }
     else
     {
-        while (tileRemovalReadQueue.size() > 0)
+        while (!tileRemovalReadQueue.empty())
         {
-            int64_t tileIndex = tileRemovalReadQueue.front();
+            int64_t const tileIndex = tileRemovalReadQueue.front();
             tileRemovalReadQueue.pop();
             tilesToRemoveReadSet.erase(tileIndex);
 
-            auto tileIdentifier = secondTilesIndexMap.find(tileIndex);
+            auto const tileIdentifier = secondTilesIndexMap.find(tileIndex);
             if (tileIdentifier != secondTilesIndexMap.end())
             {
-                size_t ringBufferIndex = tileIdentifier->second;
+                size_t const ringBufferIndex = tileIdentifier->second;
                 secondTilesIndexMap.erase(tileIdentifier);
                 secondTilesRingBuffer[ringBufferIndex]->tileIndexPosition = -1;
                 freeSecondTilesIndexes.push(ringBufferIndex);
@@ -346,14 +347,14 @@ void VolumeOverTimeGraph::drawQueuedVolumesToTextures()
     // TODO: do not drain the queue at every refresh to group
     // bar redrawings together and reduce overlapping work
     {
-        std::lock_guard lock(volumeUpdateQueueMutex);
+        std::scoped_lock const lock(volumeUpdateQueueMutex);
         std::swap(volumeUpdateQueue, volumeUpdateReadQueue);
     }
-    while (volumeUpdateReadQueue.size() > 0)
+    while (!volumeUpdateReadQueue.empty())
     {
         TrackVolumeData volumeData = volumeUpdateReadQueue.front();
         volumeUpdateReadQueue.pop();
-        size_t tileIndex = getOrCreateSecondTile(volumeData.secondTileIndex);
+        size_t const tileIndex = getOrCreateSecondTile(volumeData.secondTileIndex);
         addVolumeOnTile(tileIndex, volumeData);
     }
     drawUpdatedTileBars();
@@ -361,14 +362,14 @@ void VolumeOverTimeGraph::drawQueuedVolumesToTextures()
 
 size_t VolumeOverTimeGraph::getOrCreateSecondTile(int64_t secondTileIndex)
 {
-    auto existingTile = secondTilesIndexMap.find(secondTileIndex);
+    auto const existingTile = secondTilesIndexMap.find(secondTileIndex);
     if (existingTile != secondTilesIndexMap.end())
     {
         return existingTile->second;
     }
 
     size_t freeIndex = 0;
-    if (freeSecondTilesIndexes.size() > 0)
+    if (!freeSecondTilesIndexes.empty())
     {
         freeIndex = freeSecondTilesIndexes.front();
         freeSecondTilesIndexes.pop();
@@ -402,21 +403,18 @@ size_t VolumeOverTimeGraph::getOrCreateSecondTile(int64_t secondTileIndex)
 void VolumeOverTimeGraph::addVolumeOnTile(size_t tileIndex, TrackVolumeData &volData)
 {
     // for each volume bar
-    size_t firstBarIndex = (size_t)(volData.tileStartSample / TILE_BAR_SAMPLE_WIDTH);
-    size_t lastBarIndex = (size_t)(volData.tileEndSample / TILE_BAR_SAMPLE_WIDTH);
+    auto const firstBarIndex = static_cast<size_t>(volData.tileStartSample / TILE_BAR_SAMPLE_WIDTH);
+    auto const lastBarIndex = static_cast<size_t>(volData.tileEndSample / TILE_BAR_SAMPLE_WIDTH);
 
     SecondTile &tile = *secondTilesRingBuffer[tileIndex];
 
     float volumeToSet = volData.volumeLevel;
-    if (volumeToSet > MAX_SHOWABLE_RMS_VOLUME)
-    {
-        volumeToSet = MAX_SHOWABLE_RMS_VOLUME;
-    }
+    volumeToSet = std::min(volumeToSet, MAX_SHOWABLE_RMS_VOLUME);
 
-    int chan = volData.channelIdentifier; // 0 for left, 1 for right, 2 for both
+    int const chan = volData.channelIdentifier; // 0 for left, 1 for right, 2 for both
 
     // get or create trackIdentifier within tile
-    auto existingTrackData = tile.trackVolumes.find(volData.trackIdentifier);
+    auto const existingTrackData = tile.trackVolumes.find(volData.trackIdentifier);
     if (existingTrackData == tile.trackVolumes.end())
     {
         tile.trackVolumes[volData.trackIdentifier] = std::array<float, BARS_PER_TILE * 2>();
@@ -454,12 +452,12 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
     // in pixels, then lastStackedValueTop[2] = 30, and the next drawn
     // stacked bar for bar 3 will start being drawn 30 pixels away fron center.
 
-    std::array<int, BARS_PER_TILE> lastStackedValueTop;
-    std::array<int, BARS_PER_TILE> lastStackedValueBottom;
+    std::array<int, BARS_PER_TILE> lastStackedValueTop{};
+    std::array<int, BARS_PER_TILE> lastStackedValueBottom{};
 
     std::optional<uint64_t> localSelectedTrack;
     {
-        std::lock_guard lock(selectedTrackMutex);
+        std::scoped_lock const lock(selectedTrackMutex);
         localSelectedTrack = selectedTrack;
     }
 
@@ -481,12 +479,15 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
             // create a lock chain that will ultimately wait for the openGL thread
             // and create a deadlock.
             auto col = trackInfoStore.getTrackColor(trackData.first);
-            float r = 0.0f, g = 0.0f, b = 0.0f, a = 1.0f;
+            float r = 0.0f;
+            float g = 0.0f;
+            float b = 0.0f;
+            float a = 1.0f;
             if (col.has_value())
             {
-                r = ((float)(col->red) / 255.0f);
-                g = ((float)(col->green) / 255.0f);
-                b = ((float)(col->blue) / 255.0f);
+                r = (static_cast<float>(col->red) / 255.0f);
+                g = (static_cast<float>(col->green) / 255.0f);
+                b = (static_cast<float>(col->blue) / 255.0f);
             }
             if (localSelectedTrack.has_value() && localSelectedTrack.value() != trackData.first)
             {
@@ -495,23 +496,23 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
 
             for (size_t i = 0; i < BARS_PER_TILE; i++)
             {
-                int barX = i * TILE_BAR_PIXEL_WIDTH;
-                int barWidth = TILE_BAR_PIXEL_WIDTH;
+                int const barX = i * TILE_BAR_PIXEL_WIDTH;
+                int const barWidth = TILE_BAR_PIXEL_WIDTH;
 
                 // left channel (drawn in top half)
                 if (trackData.second[i] > MIN_SHOWABLE_RMS_VOLUME)
                 {
-                    int barPixelHeight = (int)((float)(MAX_SECOND_TILE_TRACK_PIXEL_SIZE) *
-                                               (trackData.second[i] / MAX_SHOWABLE_RMS_VOLUME));
+                    int const barPixelHeight = static_cast<int>((MAX_SECOND_TILE_TRACK_PIXEL_SIZE) *
+                                                                (trackData.second[i] / MAX_SHOWABLE_RMS_VOLUME));
                     if (barPixelHeight > 0)
                     {
-                        int barYStart = (TILE_PIXEL_HEIGHT / 2) - lastStackedValueTop[i];
+                        int const barYStart = (TILE_PIXEL_HEIGHT / 2) - lastStackedValueTop[i];
                         if (barYStart < 0)
                         {
                             // we skip this track bar if it goes over drawable limits
                             continue;
                         }
-                        int barYStop = barYStart - (barPixelHeight - 1);
+                        int const barYStop = barYStart - (barPixelHeight - 1);
                         if (barYStop < 0)
                         {
                             // we skip this track bar if it goes over drawable limits
@@ -524,17 +525,18 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
 
                 if (trackData.second[BARS_PER_TILE + i] > MIN_SHOWABLE_RMS_VOLUME)
                 {
-                    int barPixelHeight = (int)((float)(MAX_SECOND_TILE_TRACK_PIXEL_SIZE) *
-                                               (trackData.second[BARS_PER_TILE + i] / MAX_SHOWABLE_RMS_VOLUME));
+                    int const barPixelHeight =
+                        static_cast<int>((MAX_SECOND_TILE_TRACK_PIXEL_SIZE) *
+                                         (trackData.second[BARS_PER_TILE + i] / MAX_SHOWABLE_RMS_VOLUME));
                     if (barPixelHeight > 0)
                     {
-                        int barYStart = (TILE_PIXEL_HEIGHT / 2) + lastStackedValueBottom[i];
+                        int const barYStart = (TILE_PIXEL_HEIGHT / 2) + lastStackedValueBottom[i];
                         if (barYStart >= TILE_PIXEL_HEIGHT)
                         {
                             // we skip this track bar if it goes over drawable limits
                             continue;
                         }
-                        int barYStop = barYStart + barPixelHeight - 1;
+                        int const barYStop = barYStart + barPixelHeight - 1;
                         if (barYStop >= TILE_PIXEL_HEIGHT)
                         {
                             // we skip this track bar if it goes over drawable limits
@@ -550,12 +552,12 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
         for (size_t i = 0; i < BARS_PER_TILE; i++)
         {
             // count the max
-            int64_t maxStackedValue = std::max(lastStackedValueTop[i], lastStackedValueBottom[i]);
+            int64_t const maxStackedValue = std::max(lastStackedValueTop[i], lastStackedValueBottom[i]);
             tile.maxDrawnPixel = std::max(tile.maxDrawnPixel, maxStackedValue);
 
             // overwrite the remaining space on top of the bars
-            int barX = i * TILE_BAR_PIXEL_WIDTH;
-            int barWidth = TILE_BAR_PIXEL_WIDTH;
+            int const barX = i * TILE_BAR_PIXEL_WIDTH;
+            int const barWidth = TILE_BAR_PIXEL_WIDTH;
             // draw the top alpha region
             int barHeight = (TILE_PIXEL_HEIGHT / 2) - lastStackedValueTop[i];
             if (barHeight > 0)
@@ -563,7 +565,7 @@ void VolumeOverTimeGraph::drawUpdatedTileBars()
                 tile.mesh->setRectangle(barX, 0, barWidth, barHeight, 0, 0, 0, 0);
             }
             // draw the bottom alpha region
-            int barYStart = (TILE_PIXEL_HEIGHT / 2) + lastStackedValueBottom[i];
+            int const barYStart = (TILE_PIXEL_HEIGHT / 2) + lastStackedValueBottom[i];
             barHeight = TILE_PIXEL_HEIGHT - barYStart;
             if (barHeight > 0)
             {
@@ -585,7 +587,7 @@ void VolumeOverTimeGraph::eventuallyRefreshGPUTextures()
     {
         for (const auto &entry : secondTilesIndexMap)
         {
-            size_t tileIndex = entry.second;
+            size_t const tileIndex = entry.second;
             secondTilesRingBuffer[tileIndex]->mesh->refreshGpuTextureIfChanged();
         }
     }
@@ -598,7 +600,7 @@ void VolumeOverTimeGraph::drawGlMeshes()
 
     for (const auto &entry : secondTilesIndexMap)
     {
-        size_t tileIndex = entry.second;
+        size_t const tileIndex = entry.second;
         if (secondTilesRingBuffer[tileIndex]->tileIndexPosition >= 0)
         {
             secondTilesRingBuffer[tileIndex]->mesh->drawGlObjects();
@@ -643,9 +645,9 @@ void VolumeOverTimeGraph::glLoopDrawOverGrid()
 
 void VolumeOverTimeGraph::deallocateOpenGlResources()
 {
-    for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+    for (auto &i : secondTilesRingBuffer)
     {
-        secondTilesRingBuffer[i]->mesh->freeGlObjects();
+        i->mesh->freeGlObjects();
     }
     texturedPositionedShader->release();
 }

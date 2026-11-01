@@ -38,7 +38,7 @@ class AudioDataWorker : public TaskListener
                              std::shared_ptr<juce::AudioSampleBuffer> audioBuffer);
     void processTrackInfo(std::shared_ptr<AudioTransport::TrackInfo> trackInfo);
     void processDawInfo(std::shared_ptr<AudioTransport::DawInfo> dawInfo);
-    bool shouldStop;            /**< This will switch to true if we are waiting to stop the task processing */
+    bool shouldStop{false};     /**< This will switch to true if we are waiting to stop the task processing */
     std::mutex shouldStopMutex; /**< Mutex to protect concurrent access of shouldStop variable */
     std::vector<std::thread> dataProcessingThreads; /**< threads that read data from server and emit tasks from it */
     std::mutex audioWorkerThreadMutex;              /**< protectd variables shared between audio processing threads */

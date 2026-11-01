@@ -11,9 +11,9 @@ void ColorBytesTestSuite::runAll()
 
 void ColorBytesTestSuite::testColorConversion()
 {
-    AudioTransport::ColorContainer cc(10, 20, 50, 60);
-    uint32_t colorBytes = cc.toColorBytes();
-    AudioTransport::ColorContainer cc2(colorBytes);
+    AudioTransport::ColorContainer const cc(10, 20, 50, 60);
+    uint32_t const colorBytes = cc.toColorBytes();
+    AudioTransport::ColorContainer const cc2(colorBytes);
     if (!(cc == cc2))
     {
         std::runtime_error("color bytes conversion failed");
@@ -22,7 +22,7 @@ void ColorBytesTestSuite::testColorConversion()
 
 void ColorBytesTestSuite::testColorConversion2()
 {
-    AudioTransport::ColorContainer cc(10, 20, 30, 40);
+    AudioTransport::ColorContainer const cc(10, 20, 30, 40);
     if (cc.toColorBytes() != 0x281e140a)
     {
         throw std::runtime_error("ColorContainer(10, 20, 50, 60) bytes are not 0x281e140a");
@@ -31,7 +31,7 @@ void ColorBytesTestSuite::testColorConversion2()
 
 void ColorBytesTestSuite::testColorConversion3()
 {
-    AudioTransport::ColorContainer cc(0x281e140a);
+    AudioTransport::ColorContainer const cc(0x281e140a);
     if (cc.red != 10)
     {
         throw std::runtime_error("red wrong");

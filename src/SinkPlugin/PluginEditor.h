@@ -16,9 +16,10 @@
 class AudioPluginAudioProcessorEditor : public juce::AudioProcessorEditor
 {
   public:
-    explicit AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &, TaskingManager &, juce::Colour, std::string);
+    explicit AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor & /*p*/, TaskingManager & /*tm*/,
+                                             juce::Colour /*currentlySelectedColor*/, std::string /*currentTrackName*/);
     ~AudioPluginAudioProcessorEditor() override;
-    void paint(juce::Graphics &) override;
+    void paint(juce::Graphics & /*g*/) override;
     void resized() override;
     void mouseDrag(const juce::MouseEvent &ev) override;
     void mouseDown(const juce::MouseEvent &ev) override;

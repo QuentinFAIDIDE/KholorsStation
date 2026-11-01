@@ -14,7 +14,7 @@ class ServerPortText : public juce::Component, public TaskListener
      *
      * @param tm tasking manager to register handler to.
      */
-    ServerPortText(TaskingManager &tm);
+    explicit ServerPortText(TaskingManager &tm);
 
     /**
      * @brief Paint the text reading the port.

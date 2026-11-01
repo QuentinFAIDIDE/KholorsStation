@@ -24,7 +24,7 @@ class NewFftDataTask : public SilentTask
         segmentStartSample = _segmentStartSample;
         segmentSampleLength = _segmentSampleLength;
         noFFTs = _noFFTs;
-        fftData = _data;
+        fftData = std::move(_data);
         sentTimeUnixMs = _sentTimeUnixMs;
         skip = false;
     }
@@ -34,19 +34,21 @@ class NewFftDataTask : public SilentTask
     */
     std::string marshal() override
     {
-        nlohmann::json taskj = {{"object", "task"},
-                                {"task", "new_fft_data_task"},
-                                {"is_completed", isCompleted()},
-                                {"failed", hasFailed()},
-                                {"track_identifier", trackIdentifier},
-                                {"total_no_channels", totalNoChannels},
-                                {"channel_index", channelIndex},
-                                {"sample_rate", sampleRate},
-                                {"segment_start_sample", segmentStartSample},
-                                {"segment_sample_length", segmentSampleLength},
-                                {"no_ffts", noFFTs},
-                                {"recordable_in_history", recordableInHistory},
-                                {"is_part_of_reversion", isPartOfReversion}};
+        nlohmann::json const taskj = {
+            {"object", "task"},
+            {"task", "new_fft_data_task"},
+            {"is_completed", isCompleted()},
+            {"failed", hasFailed()},
+            {"track_identifier", trackIdentifier},
+            {"total_no_channels", totalNoChannels},
+            {"channel_index", channelIndex},
+            {"sample_rate", sampleRate},
+            {"segment_start_sample", segmentStartSample},
+            {"segment_sample_length", segmentSampleLength},
+            {"no_ffts", noFFTs},
+            {"recordable_in_history", recordableInHistory},
+            {"is_part_of_reversion", isPartOfReversion},
+        };
         return taskj.dump();
     }
 

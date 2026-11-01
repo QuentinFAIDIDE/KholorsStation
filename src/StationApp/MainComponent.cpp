@@ -21,7 +21,7 @@
 MainComponent::MainComponent()
     : trackInfoStore(taskManager), dashboardView(trackInfoStore, taskManager),
       audioDataWorker(audioDataServer, taskManager), infoBar(taskManager), clearButton(taskManager),
-      volumeSensitivitySlider(taskManager), showTipsAtStartup(true)
+      volumeSensitivitySlider(taskManager)
 {
     addAndMakeVisible(dashboardView);
     addAndMakeVisible(infoBar);
@@ -49,7 +49,7 @@ MainComponent::MainComponent()
     {
         juce::DialogWindow::LaunchOptions options;
         options.dialogTitle = "Usage Tips";
-        juce::OptionalScopedPointer<HelpDialogContent> contentContainer;
+        juce::OptionalScopedPointer<HelpDialogContent> const contentContainer;
         options.resizable = false;
         options.useNativeTitleBar = false;
         options.content.set(new HelpDialogContent(), true);
@@ -74,17 +74,17 @@ void MainComponent::paint(juce::Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
-    int middlePadding = 6;
-    int versionPadding = 3;
+    int const middlePadding = 6;
+    int const versionPadding = 3;
 
-    int mainTitleWidth =
+    int const mainTitleWidth =
         juce::GlyphArrangement::getStringWidthInt(sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT), "KHOLORS");
-    int subTitleWidth =
+    int const subTitleWidth =
         juce::GlyphArrangement::getStringWidthInt(sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT), "STATION");
-    int versionWidth = juce::GlyphArrangement::getStringWidthInt(sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT),
-                                                                 GIT_DESCRIBE_VERSION);
+    int const versionWidth = juce::GlyphArrangement::getStringWidthInt(
+        sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT), GIT_DESCRIBE_VERSION);
 
-    int totalWidth = mainTitleWidth + middlePadding + subTitleWidth + versionPadding + versionWidth;
+    int const totalWidth = mainTitleWidth + middlePadding + subTitleWidth + versionPadding + versionWidth;
 
     auto bounds = getLocalBounds();
     g.setFont(sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT));
@@ -93,10 +93,10 @@ void MainComponent::paint(juce::Graphics &g)
     auto topspace = bounds.removeFromTop(MENU_BAR_HEIGHT);
     topspace.removeFromLeft(TOPBAR_RIGHT_PADDING);
     auto titleSpace = topspace.removeFromLeft(totalWidth);
-    auto leftTitleSpace = titleSpace.removeFromLeft(mainTitleWidth);
+    auto const leftTitleSpace = titleSpace.removeFromLeft(mainTitleWidth);
 
     titleSpace.removeFromLeft(middlePadding);
-    auto subTitleSpace = titleSpace.removeFromLeft(subTitleWidth);
+    auto const subTitleSpace = titleSpace.removeFromLeft(subTitleWidth);
 
     titleSpace.removeFromLeft(versionPadding);
     auto versionArea = titleSpace.removeFromLeft(versionWidth);
@@ -115,7 +115,7 @@ void MainComponent::paint(juce::Graphics &g)
     {
         g.setFont(sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT - 4));
         g.setColour(KHOLORS_COLOR_NOTIF_ERROR.withAlpha(0.75f));
-        auto updateTipArea = versionArea.translated(0, -VERSION_FONT_HEIGHT + 6);
+        auto const updateTipArea = versionArea.translated(0, -VERSION_FONT_HEIGHT + 6);
         g.drawText("NEW VERSION AVAILABLE", updateTipArea, juce::Justification::topLeft, false);
     }
 
@@ -135,8 +135,8 @@ void MainComponent::paint(juce::Graphics &g)
             SENSITIVITY_SLIDER_PICTOGRAM_PADDING + SENSITIVITY_SLIDER_PICTOGRAM_WIDTH)
     {
 
-        auto leftSliderPicto = sliderWithPictogramsArea.removeFromLeft(SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
-        auto rightSliderPicto = sliderWithPictogramsArea.removeFromRight(SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
+        auto const leftSliderPicto = sliderWithPictogramsArea.removeFromLeft(SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
+        auto const rightSliderPicto = sliderWithPictogramsArea.removeFromRight(SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
 
         sharedSvgs->lowWaveIcon->drawWithin(g, leftSliderPicto.toFloat(), juce::RectanglePlacement::centred, 1.0f);
         sharedSvgs->highWaveIcon->drawWithin(g, rightSliderPicto.toFloat(), juce::RectanglePlacement::centred, 1.0f);
@@ -146,28 +146,28 @@ void MainComponent::paint(juce::Graphics &g)
 void MainComponent::resized()
 {
     juce::Rectangle<int> localBounds = getLocalBounds();
-    auto topBar = localBounds.removeFromTop(MENU_BAR_HEIGHT);
+    auto const topBar = localBounds.removeFromTop(MENU_BAR_HEIGHT);
     infoBar.setBounds(localBounds.removeFromBottom(BOTTOM_INFO_LINE_HEIGHT));
     dashboardView.setBounds(localBounds);
 
     auto buttonsArea = topBar.withTrimmedRight(TOPBAR_RIGHT_PADDING + TOP_LOGO_WIDTH + TOPBAR_BUTTONS_RIGHT_MARGIN);
     buttonsArea.reduce(0, (buttonsArea.getHeight() - TOPBAR_BUTTON_HEIGHT) / 2);
 
-    auto helpButtonArea = buttonsArea.removeFromRight(HELP_BUTTON_WIDTH);
+    auto const helpButtonArea = buttonsArea.removeFromRight(HELP_BUTTON_WIDTH);
     helpButton.setBounds(helpButtonArea);
 
-    auto clearButtonArea = buttonsArea.removeFromRight(CLEAR_BUTTON_WIDTH);
+    auto const clearButtonArea = buttonsArea.removeFromRight(CLEAR_BUTTON_WIDTH);
     clearButton.setBounds(clearButtonArea);
 
-    int middlePadding = 6;
-    int versionPadding = 3;
-    int mainTitleWidth =
+    int const middlePadding = 6;
+    int const versionPadding = 3;
+    int const mainTitleWidth =
         juce::GlyphArrangement::getStringWidthInt(sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT), "KHOLORS");
-    int subTitleWidth =
+    int const subTitleWidth =
         juce::GlyphArrangement::getStringWidthInt(sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT), "STATION");
-    int versionWidth = juce::GlyphArrangement::getStringWidthInt(sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT),
-                                                                 GIT_DESCRIBE_VERSION);
-    int totalTextWidth =
+    int const versionWidth = juce::GlyphArrangement::getStringWidthInt(
+        sharedFonts->roboto.withHeight(VERSION_FONT_HEIGHT), GIT_DESCRIBE_VERSION);
+    int const totalTextWidth =
         TOPBAR_RIGHT_PADDING + mainTitleWidth + middlePadding + subTitleWidth + versionPadding + versionWidth;
     buttonsArea.removeFromLeft(totalTextWidth);
 
@@ -184,14 +184,14 @@ void MainComponent::resized()
         buttonsArea.removeFromRight(TOPBAR_BUTTONS_PADDING * 2);
         buttonsArea.removeFromRight(SENSITIVITY_SLIDER_PICTOGRAM_WIDTH);
         buttonsArea.removeFromRight(SENSITIVITY_SLIDER_PICTOGRAM_PADDING);
-        auto sensitivitySliderArea = buttonsArea.removeFromRight(SENSITIVITY_SLIDER_WIDTH);
+        auto const sensitivitySliderArea = buttonsArea.removeFromRight(SENSITIVITY_SLIDER_WIDTH);
         volumeSensitivitySlider.setBounds(sensitivitySliderArea);
     }
 }
 
 bool MainComponent::taskHandler(std::shared_ptr<Task> task)
 {
-    auto quitTask = std::dynamic_pointer_cast<QuittingTask>(task);
+    auto const quitTask = std::dynamic_pointer_cast<QuittingTask>(task);
     if (quitTask != nullptr)
     {
         juce::JUCEApplicationBase::quit();
@@ -205,23 +205,23 @@ bool MainComponent::taskHandler(std::shared_ptr<Task> task)
 juce::Path MainComponent::getShadowPath()
 {
     // coordinates of the freqview top left angle bottom
-    auto topLeftAngleBottom = getLocalBounds()
-                                  .withTrimmedTop(MENU_BAR_HEIGHT)
-                                  .withTrimmedLeft(FREQUENCY_GRID_WIDTH)
-                                  .getTopLeft()
-                                  .translated(FREQVIEW_BORDER_WIDTH, FREQVIEW_ROUNDED_CORNERS_WIDTH / 2);
+    auto const topLeftAngleBottom = getLocalBounds()
+                                        .withTrimmedTop(MENU_BAR_HEIGHT)
+                                        .withTrimmedLeft(FREQUENCY_GRID_WIDTH)
+                                        .getTopLeft()
+                                        .translated(FREQVIEW_BORDER_WIDTH, FREQVIEW_ROUNDED_CORNERS_WIDTH / 2);
     // next point is 45 degree angle to left side of the screen (1:1 h/v pixel ratio)
-    auto point1 = topLeftAngleBottom.withX(getLocalBounds().getX()).translated(0, topLeftAngleBottom.getX());
-    auto point2 = getLocalBounds().getBottomLeft();
-    auto point3 = getLocalBounds()
-                      .withTrimmedRight(TRACK_LIST_WIDTH)
-                      .getBottomRight()
-                      .translated(-(BOTTOM_INFO_LINE_HEIGHT + TIME_GRID_HEIGHT), 0);
-    auto point4 = getLocalBounds()
-                      .withTrimmedRight(TRACK_LIST_WIDTH)
-                      .withTrimmedBottom((BOTTOM_INFO_LINE_HEIGHT + TIME_GRID_HEIGHT))
-                      .getBottomRight()
-                      .translated(-FREQVIEW_ROUNDED_CORNERS_WIDTH / 2, 0);
+    auto const point1 = topLeftAngleBottom.withX(getLocalBounds().getX()).translated(0, topLeftAngleBottom.getX());
+    auto const point2 = getLocalBounds().getBottomLeft();
+    auto const point3 = getLocalBounds()
+                            .withTrimmedRight(TRACK_LIST_WIDTH)
+                            .getBottomRight()
+                            .translated(-(BOTTOM_INFO_LINE_HEIGHT + TIME_GRID_HEIGHT), 0);
+    auto const point4 = getLocalBounds()
+                            .withTrimmedRight(TRACK_LIST_WIDTH)
+                            .withTrimmedBottom((BOTTOM_INFO_LINE_HEIGHT + TIME_GRID_HEIGHT))
+                            .getBottomRight()
+                            .translated(-FREQVIEW_ROUNDED_CORNERS_WIDTH / 2, 0);
 
     juce::Path shadowPath;
     shadowPath.startNewSubPath(topLeftAngleBottom.toFloat());

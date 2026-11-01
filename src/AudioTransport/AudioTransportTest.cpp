@@ -2,7 +2,7 @@
 #include "ColorBytesTest.h"
 #include "SyncServerTest.h"
 
-int main(int, char **)
+int main(int /*unused*/, char ** /*unused*/)
 {
     ColorBytesTestSuite suite1;
     suite1.runAll();

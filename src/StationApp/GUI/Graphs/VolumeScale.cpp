@@ -10,9 +10,7 @@ VolumeScale::VolumeScale()
     setOpaque(true);
 }
 
-VolumeScale::~VolumeScale()
-{
-}
+VolumeScale::~VolumeScale() = default;
 
 void VolumeScale::paint(juce::Graphics &g)
 {
@@ -29,14 +27,14 @@ void VolumeScale::paint(juce::Graphics &g)
 
 void VolumeScale::drawRotatedTitle(juce::Graphics &g)
 {
-    int distanceFromLeft = getWidth() - (AXIS_TITLE_PIXELS_HEIGHT * 2) - 12;
+    int const distanceFromLeft = getWidth() - (AXIS_TITLE_PIXELS_HEIGHT * 2) - 12;
 
     juce::GlyphArrangement ga;
     ga.addLineOfText(juce::Font(AXIS_TITLE_PIXELS_HEIGHT), TRANS("Stacked Volumes").toUpperCase(), 0, 0);
     juce::Path p;
     ga.createPath(p);
 
-    auto pathBounds = p.getBounds();
+    auto const pathBounds = p.getBounds();
 
     p.applyTransform(
         juce::AffineTransform()
@@ -50,7 +48,7 @@ void VolumeScale::drawRotatedTitle(juce::Graphics &g)
 
 void VolumeScale::drawRotatedChannelNames(juce::Graphics &g)
 {
-    int distanceFromLeft = getWidth() - AXIS_TITLE_PIXELS_HEIGHT - 6;
+    int const distanceFromLeft = getWidth() - AXIS_TITLE_PIXELS_HEIGHT - 6;
 
     juce::GlyphArrangement ga;
     ga.addLineOfText(juce::Font(AXIS_TITLE_PIXELS_HEIGHT), TRANS("Left").toUpperCase(), 0, 0);

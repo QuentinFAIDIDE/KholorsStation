@@ -15,17 +15,17 @@ void TrackInfo::parseFromApiPayload(const AudioSegmentPayload *payload)
     }
 
     identifier = payload->track_identifier();
-    size_t nameSize = std::min(payload->track_name().size(), (size_t)MAXIMUM_TRACK_NAME_LENGTH);
+    size_t const nameSize = std::min(payload->track_name().size(), static_cast<size_t>(MAXIMUM_TRACK_NAME_LENGTH));
     name = payload->track_name().substr(0, nameSize);
 
-    ColorContainer colorBytesContainer(payload->track_color());
+    ColorContainer const colorBytesContainer(payload->track_color());
     redColorLevel = colorBytesContainer.red;
     greenColorLevel = colorBytesContainer.green;
     blueColorLevel = colorBytesContainer.blue;
     alphaColorLevel = colorBytesContainer.alpha;
 }
 
-bool TrackInfo::operator!=(const TrackInfo &o)
+bool TrackInfo::operator!=(const TrackInfo &o) const
 {
     return name != o.name || redColorLevel != o.redColorLevel || greenColorLevel != o.greenColorLevel ||
            blueColorLevel != o.blueColorLevel || alphaColorLevel != o.alphaColorLevel;

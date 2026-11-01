@@ -14,7 +14,7 @@ class LabeledLineContainer : public juce::Component
     LabeledLineContainer(std::string label, std::shared_ptr<juce::Component> content, int maxLabelWidth,
                          int contentWidth);
     std::shared_ptr<juce::Component> getContent();
-    void paint(juce::Graphics &) override;
+    void paint(juce::Graphics & /*g*/) override;
     void resized() override;
 
   private:

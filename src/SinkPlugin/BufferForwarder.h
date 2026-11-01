@@ -29,7 +29,7 @@
 class BufferForwarder
 {
   public:
-    BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps);
+    explicit BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps);
     ~BufferForwarder();
 
     /**
@@ -87,7 +87,7 @@ class BufferForwarder
      * @return true The audio segment payload does not yet include data
      * @return false The audio segment payload already include some audio data
      */
-    static bool payloadIsEmpty(std::shared_ptr<AudioTransport::AudioSegmentPayload>);
+    static bool payloadIsEmpty(std::shared_ptr<AudioTransport::AudioSegmentPayload> /*payload*/);
 
     /**
      * @brief Tells if the audio segment payload is full or not.
@@ -95,7 +95,7 @@ class BufferForwarder
      * @return true The audio segment payload has all its samples filled, it should be sent.
      * @return false The audio segment payload still has room for more audio data, we'll keep filling it.
      */
-    static bool payloadIsFull(std::shared_ptr<AudioTransport::AudioSegmentPayload>);
+    static bool payloadIsFull(std::shared_ptr<AudioTransport::AudioSegmentPayload> /*payload*/);
 
     /**
      * @brief Tells if the payloads is too old to be kept in here.
@@ -105,13 +105,13 @@ class BufferForwarder
      * @return true The payload is too old and should be sent padded with zeros.
      * @return false The paylod is not too old and can be filled with more data.
      */
-    bool payloadIsOld(std::shared_ptr<AudioTransport::AudioSegmentPayload>);
+    bool payloadIsOld(std::shared_ptr<AudioTransport::AudioSegmentPayload> /*payload*/);
 
     /**
      * @brief Clear the audio samples.
      *
      */
-    void clearPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload>);
+    void clearPayload(std::shared_ptr<AudioTransport::AudioSegmentPayload> /*payload*/);
 
     /**
      * @brief Copy metadata from src to dest, and also add some track info from this class.

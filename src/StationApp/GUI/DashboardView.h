@@ -40,8 +40,8 @@
 class DashboardView : public juce::Component, public TaskListener, public juce::Timer
 {
   public:
-    DashboardView(TrackInfoStore &, TaskingManager &);
-    ~DashboardView();
+    DashboardView(TrackInfoStore & /*tis*/, TaskingManager & /*tm*/);
+    ~DashboardView() override;
 
     void paint(juce::Graphics &g) override;
     void paintOverChildren(juce::Graphics &g) override;
@@ -112,9 +112,9 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
     NormalizedUnitTransformer intensityTransformer;           /**< Transformer for the intensity displayed */
     std::shared_ptr<FftOverTimeGraph> freqOverTimeGraph;      /**< Juce component that draws FFTs on screen */
     std::shared_ptr<VolumeOverTimeGraph> volumeOverTimeGraph; /**< Juce component that draws volumes on screen */
-    TrackInfoStore &trackInfoStore;         /**< Store track names and color for FftDrawingBackend to access */
-    int64_t lastMouseDragX, lastMouseDragY; /**< Last position of the mouse cursor at last drag iteration */
-    int64_t lastFftDrawTimeMs;              /**< Last millisecond timestamp at when something was drawn */
+    TrackInfoStore &trackInfoStore;             /**< Store track names and color for FftDrawingBackend to access */
+    int64_t lastMouseDragX{}, lastMouseDragY{}; /**< Last position of the mouse cursor at last drag iteration */
+    int64_t lastFftDrawTimeMs{};                /**< Last millisecond timestamp at when something was drawn */
     std::mutex lastFftDrawTimeMutex;
 
     int64_t lastTimerCallMs; /**< time since last timer call */
@@ -122,9 +122,9 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
     bool isViewMoving; /**< tells if user is dragging the view around. Beware not to access outside of juce message
                           thread */
 
-    std::mutex viewMutex; /**< Mutex for view position and scale */
-    int64_t viewPosition; /**< View position in samples */
-    int64_t viewScale;    /**< View scale in samples per pixels */
+    std::mutex viewMutex;    /**< Mutex for view position and scale */
+    int64_t viewPosition{0}; /**< View position in samples */
+    int64_t viewScale{150};  /**< View scale in samples per pixels */
 
     FrequencyScale frequencyScale;
     VolumeScale volumeScale;
@@ -141,5 +141,5 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
     int lastFftMousePosY;
     bool lastCursorShowStatus;
 
-    float lastReceivedBpm;
+    float lastReceivedBpm{};
 };

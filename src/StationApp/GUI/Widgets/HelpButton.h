@@ -6,7 +6,7 @@ class HelpButton : public juce::TextButton
 {
   public:
     HelpButton();
-    ~HelpButton();
+    ~HelpButton() override;
 
     void clicked() override;
 };

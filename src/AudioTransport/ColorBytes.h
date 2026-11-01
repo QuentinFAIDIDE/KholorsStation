@@ -8,7 +8,7 @@ namespace AudioTransport
 
 struct ColorContainer
 {
-    ColorContainer(uint32_t colorBytes)
+    explicit ColorContainer(uint32_t colorBytes)
     {
         uint8_t colors[4];
         memcpy(colors, &colorBytes, sizeof(uint32_t));
@@ -20,14 +20,14 @@ struct ColorContainer
     ColorContainer(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : red(r), green(g), blue(b), alpha(a)
     {
     }
-    uint32_t toColorBytes()
+    uint32_t toColorBytes() const
     {
         uint8_t colors[4];
         colors[0] = red;
         colors[1] = green;
         colors[2] = blue;
         colors[3] = alpha;
-        uint32_t colorBytes;
+        uint32_t colorBytes = 0;
         memcpy(&colorBytes, colors, 4 * sizeof(uint8_t));
         return colorBytes;
     }

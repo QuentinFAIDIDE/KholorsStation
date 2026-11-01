@@ -11,7 +11,7 @@
 class BpmUpdateTask : public SilentTask
 {
   public:
-    BpmUpdateTask(float nbpm)
+    explicit BpmUpdateTask(float nbpm)
     {
         bpm = nbpm;
     }
@@ -21,12 +21,14 @@ class BpmUpdateTask : public SilentTask
     */
     std::string marshal() override
     {
-        nlohmann::json taskj = {{"object", "task"},
-                                {"task", "bpm_update_task"},
-                                {"bpm", bpm},
-                                {"failed", hasFailed()},
-                                {"recordable_in_history", recordableInHistory},
-                                {"is_part_of_reversion", isPartOfReversion}};
+        nlohmann::json const taskj = {
+            {"object", "task"},
+            {"task", "bpm_update_task"},
+            {"bpm", bpm},
+            {"failed", hasFailed()},
+            {"recordable_in_history", recordableInHistory},
+            {"is_part_of_reversion", isPartOfReversion},
+        };
         return taskj.dump();
     }
 

@@ -20,16 +20,18 @@ class TrackColorUpdateTask : public SilentTask
     */
     std::string marshal() override
     {
-        nlohmann::json taskj = {{"object", "task"},
-                                {"task", "track_color_update_task"},
-                                {"track_identifier", identifier},
-                                {"red_color_level", redColorLevel},
-                                {"green_color_level", greenColorLevel},
-                                {"blue_color_level", blueColorLevel},
-                                {"is_completed", isCompleted()},
-                                {"failed", hasFailed()},
-                                {"recordable_in_history", recordableInHistory},
-                                {"is_part_of_reversion", isPartOfReversion}};
+        nlohmann::json const taskj = {
+            {"object", "task"},
+            {"task", "track_color_update_task"},
+            {"track_identifier", identifier},
+            {"red_color_level", redColorLevel},
+            {"green_color_level", greenColorLevel},
+            {"blue_color_level", blueColorLevel},
+            {"is_completed", isCompleted()},
+            {"failed", hasFailed()},
+            {"recordable_in_history", recordableInHistory},
+            {"is_part_of_reversion", isPartOfReversion},
+        };
         return taskj.dump();
     }
 

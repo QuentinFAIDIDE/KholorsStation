@@ -22,15 +22,17 @@ class MouseCursorInfoTask : public SilentTask
     */
     std::string marshal() override
     {
-        nlohmann::json taskj = {{"object", "task"},
-                                {"task", "mouse_cursor_info_task"},
-                                {"is_completed", isCompleted()},
-                                {"failed", hasFailed()},
-                                {"frequency_under_cursor", frequencyUnderMouse},
-                                {"time_under_cursor", timeUnderMouse},
-                                {"cusor_on_sfft_view", cursorOnSfftView},
-                                {"recordable_in_history", recordableInHistory},
-                                {"is_part_of_reversion", isPartOfReversion}};
+        nlohmann::json const taskj = {
+            {"object", "task"},
+            {"task", "mouse_cursor_info_task"},
+            {"is_completed", isCompleted()},
+            {"failed", hasFailed()},
+            {"frequency_under_cursor", frequencyUnderMouse},
+            {"time_under_cursor", timeUnderMouse},
+            {"cusor_on_sfft_view", cursorOnSfftView},
+            {"recordable_in_history", recordableInHistory},
+            {"is_part_of_reversion", isPartOfReversion},
+        };
         return taskj.dump();
     }
 

@@ -9,17 +9,17 @@
 class ClearTask : public Task
 {
   public:
-    ClearTask()
-    {
-    }
+    ClearTask() = default;
 
     std::string marshal() override
     {
-        nlohmann::json taskj = {{"object", "task"},
-                                {"task", "clear_task"},
-                                {"failed", hasFailed()},
-                                {"recordable_in_history", recordableInHistory},
-                                {"is_part_of_reversion", isPartOfReversion}};
+        nlohmann::json const taskj = {
+            {"object", "task"},
+            {"task", "clear_task"},
+            {"failed", hasFailed()},
+            {"recordable_in_history", recordableInHistory},
+            {"is_part_of_reversion", isPartOfReversion},
+        };
         return taskj.dump();
     }
 };

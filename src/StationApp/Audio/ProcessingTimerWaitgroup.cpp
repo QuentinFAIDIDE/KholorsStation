@@ -13,7 +13,7 @@ ProcessingTimerWaitgroup::ProcessingTimerWaitgroup(ProcessingTimer *pt, int64_t 
 
 void ProcessingTimerWaitgroup::reset(int64_t sentTimeMs)
 {
-    std::lock_guard lock(mutex);
+    std::scoped_lock const lock(mutex);
     payloadSentTimeUnixMs = sentTimeMs;
     counter = 0;
     expectedCounts = 0;
@@ -21,11 +21,11 @@ void ProcessingTimerWaitgroup::reset(int64_t sentTimeMs)
 
 void ProcessingTimerWaitgroup::recordCompletion()
 {
-    std::lock_guard lock(mutex);
+    std::scoped_lock const lock(mutex);
     counter++;
     if (counter == expectedCounts)
     {
-        int64_t processingTimeMs = juce::Time::currentTimeMillis() - payloadSentTimeUnixMs;
+        int64_t const processingTimeMs = juce::Time::currentTimeMillis() - payloadSentTimeUnixMs;
         if (parent != nullptr)
         {
             parent->recordCompletion(identifier, processingTimeMs);
@@ -39,12 +39,12 @@ void ProcessingTimerWaitgroup::recordCompletion()
 
 void ProcessingTimerWaitgroup::deactivate()
 {
-    std::lock_guard lock(mutex);
+    std::scoped_lock const lock(mutex);
     parent = nullptr;
 }
 
 void ProcessingTimerWaitgroup::add()
 {
-    std::lock_guard lock(mutex);
+    std::scoped_lock const lock(mutex);
     expectedCounts++;
 }

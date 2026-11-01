@@ -1,16 +1,20 @@
 #include "TexturedMonochromeRectangle.h"
+
+#include <algorithm>
+
 #include "OpenGLHelpers.h"
 #include "juce_opengl/opengl/juce_gl.h"
 #include "spdlog/spdlog.h"
+#include <algorithm>
 
 TexturedMonochromeRectangle::TexturedMonochromeRectangle(int64_t width, int64_t height, juce::Colour col)
     : textureWidth(width), textureHeight(height)
 {
     vertices.reserve(4);
 
-    halfTextureHeight = (size_t)(textureHeight >> 1);
-    rowWidth = (size_t)textureWidth;
-    sideStrafeStep = 2 * (size_t)textureWidth;
+    halfTextureHeight = static_cast<size_t>(textureHeight >> 1);
+    rowWidth = static_cast<size_t>(textureWidth);
+    sideStrafeStep = 2 * static_cast<size_t>(textureWidth);
 
     // TODO: set proper position
 
@@ -40,13 +44,11 @@ TexturedMonochromeRectangle::TexturedMonochromeRectangle(int64_t width, int64_t 
     triangleIds.push_back(1);
     triangleIds.push_back(2);
 
-    texture.resize((size_t)(width * height));
-    std::fill(texture.begin(), texture.end(), 0.0f);
+    texture.resize(static_cast<size_t>(width * height));
+    std::ranges::fill(texture, 0.0f);
 }
 
-TexturedMonochromeRectangle::~TexturedMonochromeRectangle()
-{
-}
+TexturedMonochromeRectangle::~TexturedMonochromeRectangle() = default;
 
 void TexturedMonochromeRectangle::registerGlObjects()
 {
@@ -63,12 +65,13 @@ void TexturedMonochromeRectangle::registerGlObjects()
 
     // register and upload the vertices data
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(Vertex) * vertices.size()), vertices.data(),
+                 GL_STATIC_DRAW);
     // register and upload indices of the vertices to form the triangles
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(unsigned int) * triangleIds.size()), triangleIds.data(),
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(unsigned int) * triangleIds.size()),
+                 triangleIds.data(), GL_STATIC_DRAW);
 
     // register the vertex attribute format
     Vertex::registerVertexFormat();
@@ -89,7 +92,7 @@ void TexturedMonochromeRectangle::registerGlObjects()
     OpenGLHelpers::printAllOpenGlError();
 
     // after everything was uplaoded we can reset the nonce
-    int64_t newNonce = textureNonce;
+    int64_t const newNonce = textureNonce;
     lastUploadedTextureNonce = newNonce;
 }
 
@@ -133,7 +136,7 @@ void TexturedMonochromeRectangle::changeColor(juce::Colour newColor)
 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, (long)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<long>(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
     OpenGLHelpers::printAllOpenGlError();
 }
 
@@ -144,52 +147,46 @@ void TexturedMonochromeRectangle::setPosition(int64_t viewPositionSamples, int64
 
     // upper left corner 0
     vertices[0].position[0] = viewPositionSamples;
-    vertices[0].position[2] = (float)trackIdentifier / (float)maxUint64;
+    vertices[0].position[2] = static_cast<float>(trackIdentifier) / static_cast<float>(maxUint64);
 
     // upper right corner 1
     vertices[1].position[0] = viewPositionSamples + width;
-    vertices[1].position[2] = (float)trackIdentifier / (float)maxUint64;
+    vertices[1].position[2] = static_cast<float>(trackIdentifier) / static_cast<float>(maxUint64);
 
     // lower right corner 2
     vertices[2].position[0] = viewPositionSamples + width;
-    vertices[2].position[2] = (float)trackIdentifier / (float)maxUint64;
+    vertices[2].position[2] = static_cast<float>(trackIdentifier) / static_cast<float>(maxUint64);
 
     // lower left corner 3
     vertices[3].position[0] = viewPositionSamples;
-    vertices[3].position[2] = (float)trackIdentifier / (float)maxUint64;
+    vertices[3].position[2] = static_cast<float>(trackIdentifier) / static_cast<float>(maxUint64);
 
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, (long)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<long>(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
     OpenGLHelpers::printAllOpenGlError();
 }
 
 void TexturedMonochromeRectangle::setPixelAt(int x, int y, float intensity)
 {
     float icorr = intensity;
-    if (icorr < 0.0f)
-    {
-        icorr = 0.0f;
-    }
-    if (icorr > 1.0f)
-    {
-        icorr = 1.0f;
-    }
-    texture[(size_t)((size_t)((y * textureWidth) + x))] = icorr;
+    icorr = std::max(icorr, 0.0f);
+    icorr = std::min(icorr, 1.0f);
+    texture[(static_cast<size_t>((y * textureWidth) + x))] = icorr;
     textureNonce++;
 }
 
 void TexturedMonochromeRectangle::setRepeatedVerticalHalfLine(int channel, size_t startX, size_t endX,
                                                               float *intensities)
 {
-    size_t widthX = (1 + (endX - startX));
+    size_t const widthX = (1 + (endX - startX));
 
     // we start to draw in dst at the top x pixel
     // we start to read from src at the last (highest frequency) intensity
-    float *srcIntensityPtr = intensities + (halfTextureHeight - 1);
+    float const *srcIntensityPtr = intensities + (halfTextureHeight - 1);
     float *dstTexelPtr = texture.data() + startX;
 
-    sideStrafe = ((size_t)textureHeight - 1) * (size_t)textureWidth;
+    sideStrafe = (static_cast<size_t>(textureHeight) - 1) * static_cast<size_t>(textureWidth);
 
     for (size_t i = 0; i < halfTextureHeight; i++)
     {
@@ -226,6 +223,6 @@ void TexturedMonochromeRectangle::setRepeatedVerticalHalfLine(int channel, size_
 
 void TexturedMonochromeRectangle::clearAllData()
 {
-    std::fill(texture.begin(), texture.end(), 0.0f);
+    std::ranges::fill(texture, 0.0f);
     textureNonce++;
 }

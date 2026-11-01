@@ -23,39 +23,39 @@ class FrequencyLinesDrawer : public juce::Component
         frequenciesToDraw.push_back(10000);
     }
 
-    void paint(juce::Graphics &g)
+    void paint(juce::Graphics &g) override
     {
         g.setColour(KHOLORS_COLOR_GRIDS_LEVEL_0);
-        int halfScreen = getHeight() >> 1;
-        for (size_t i = 0; i < frequenciesToDraw.size(); i++)
+        int const halfScreen = getHeight() >> 1;
+        for (long const i : frequenciesToDraw)
         {
-            float freqPosition = float(frequenciesToDraw[i]) / float(maxDrawableFreq);
-            float screenPosition = unitTransformer.transform(freqPosition);
-            float lineCenterOffset = screenPosition * float(halfScreen);
-            float linePos = halfScreen - (int)lineCenterOffset;
-            auto topLine = getLocalBounds().withTrimmedTop(linePos).withHeight(1);
+            float const freqPosition = static_cast<float>(i) / static_cast<float>(maxDrawableFreq);
+            float const screenPosition = unitTransformer.transform(freqPosition);
+            float const lineCenterOffset = screenPosition * static_cast<float>(halfScreen);
+            float linePos = halfScreen - static_cast<int>(lineCenterOffset);
+            auto const topLine = getLocalBounds().withTrimmedTop(linePos).withHeight(1);
             g.fillRect(topLine);
-            if (frequenciesToDraw[i] > 0)
+            if (i > 0)
             {
-                linePos = halfScreen + (int)lineCenterOffset;
-                auto bottomLine = getLocalBounds().withTrimmedTop(linePos).withHeight(1);
+                linePos = halfScreen + static_cast<int>(lineCenterOffset);
+                auto const bottomLine = getLocalBounds().withTrimmedTop(linePos).withHeight(1);
                 g.fillRect(bottomLine);
             }
         }
 
         g.setColour(KHOLORS_COLOR_GRIDS_LEVEL_0);
-        for (size_t i = 0; i < frequenciesToDrawThinner.size(); i++)
+        for (long const i : frequenciesToDrawThinner)
         {
-            float freqPosition = float(frequenciesToDrawThinner[i]) / float(maxDrawableFreq);
-            float screenPosition = unitTransformer.transform(freqPosition);
-            float lineCenterOffset = screenPosition * float(halfScreen);
-            float linePos = halfScreen - (int)lineCenterOffset;
-            auto topLine = getLocalBounds().withTrimmedTop(linePos).withHeight(1);
+            float const freqPosition = static_cast<float>(i) / static_cast<float>(maxDrawableFreq);
+            float const screenPosition = unitTransformer.transform(freqPosition);
+            float const lineCenterOffset = screenPosition * static_cast<float>(halfScreen);
+            float linePos = halfScreen - static_cast<int>(lineCenterOffset);
+            auto const topLine = getLocalBounds().withTrimmedTop(linePos).withHeight(1);
             g.fillRect(topLine);
-            if (frequenciesToDrawThinner[i] > 0)
+            if (i > 0)
             {
-                linePos = halfScreen + (int)lineCenterOffset;
-                auto bottomLine = getLocalBounds().withTrimmedTop(linePos).withHeight(1);
+                linePos = halfScreen + static_cast<int>(lineCenterOffset);
+                auto const bottomLine = getLocalBounds().withTrimmedTop(linePos).withHeight(1);
                 g.fillRect(bottomLine);
             }
         }

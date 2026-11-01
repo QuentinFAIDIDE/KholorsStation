@@ -3,6 +3,7 @@
 #include "TaskManagement/TaskingManager.h"
 #include "absl/strings/str_format.h"
 #include <cstdint>
+#include <format>
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <memory>
 #include <mutex>
@@ -35,9 +36,9 @@ SyncServer::~SyncServer()
 
 ServerStartError SyncServer::setServerToListenOnPort(uint32_t port)
 {
-    bool serverIsRunning;
+    bool serverIsRunning = false;
     {
-        std::lock_guard lock(serverThreadMutex);
+        std::scoped_lock const lock(serverThreadMutex);
         // if we are already in desired state, abort
         desiredServerState.first = true;
         desiredServerState.second = port;
@@ -53,27 +54,25 @@ ServerStartError SyncServer::setServerToListenOnPort(uint32_t port)
         stopServer();
     }
     // restart it on a specific port
-    bool worked = runServerOnPort(port);
+    bool const worked = runServerOnPort(port);
     if (!worked)
     {
         return SERV_ERROR;
     }
-    else
-    {
-        return SERV_NO_ERROR;
-    }
+
+    return SERV_NO_ERROR;
 }
 
 bool SyncServer::isRunning()
 {
-    std::lock_guard lock(serverThreadMutex);
+    std::scoped_lock const lock(serverThreadMutex);
     return actualServerState.first;
 }
 
 void SyncServer::stopServer()
 {
     {
-        std::lock_guard lock(serverThreadMutex);
+        std::scoped_lock const lock(serverThreadMutex);
         desiredServerState.first = false;
         if (!actualServerState.first)
         {
@@ -88,7 +87,7 @@ void SyncServer::stopServer()
 
 bool SyncServer::runServerOnPort(size_t port)
 {
-    std::lock_guard lock(serverThreadMutex);
+    std::scoped_lock const lock(serverThreadMutex);
     // we first ensure that the server is stopped.
     if (actualServerState.first)
     {
@@ -99,7 +98,7 @@ bool SyncServer::runServerOnPort(size_t port)
     desiredServerState.first = true;
     desiredServerState.second = port;
     // then we setup the server
-    std::string server_address = absl::StrFormat("127.0.0.1:%d", port);
+    std::string const server_address = std::format("127.0.0.1:{}", port);
     grpc::ServerBuilder builder;
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
     builder.RegisterService(&service);
@@ -126,7 +125,7 @@ void SyncServer::waitForServerShutdown()
 {
     server->Wait();
     spdlog::info("Server has stopped");
-    std::lock_guard lock(serverThreadMutex);
+    std::scoped_lock const lock(serverThreadMutex);
     actualServerState.first = false;
     if (taskingManager != nullptr)
     {
@@ -136,7 +135,7 @@ void SyncServer::waitForServerShutdown()
 
 void SyncServer::setTaskManager(TaskingManager *tm)
 {
-    std::lock_guard lock(serverThreadMutex);
+    std::scoped_lock const lock(serverThreadMutex);
     taskingManager = tm;
     taskingManager->broadcastTask(std::make_shared<ServerStatusTask>(actualServerState));
 }

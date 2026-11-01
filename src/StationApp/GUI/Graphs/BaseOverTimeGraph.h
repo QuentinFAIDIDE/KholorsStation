@@ -11,8 +11,8 @@
 class BaseOverTimeGraph : public juce::Component, juce::OpenGLRenderer
 {
   public:
-    BaseOverTimeGraph(TrackInfoStore &tis);
-    ~BaseOverTimeGraph();
+    explicit BaseOverTimeGraph(TrackInfoStore &tis);
+    ~BaseOverTimeGraph() override;
 
     void paint(juce::Graphics &g) override;
     void paintOverChildren(juce::Graphics &g) override;
@@ -106,7 +106,7 @@ class BaseOverTimeGraph : public juce::Component, juce::OpenGLRenderer
      */
     int64_t getViewPosition()
     {
-        std::lock_guard lock(glThreadUniformsMutex);
+        std::scoped_lock const lock(glThreadUniformsMutex);
         return viewPosition;
     }
 
@@ -115,7 +115,7 @@ class BaseOverTimeGraph : public juce::Component, juce::OpenGLRenderer
      */
     int64_t getViewScale()
     {
-        std::lock_guard lock(glThreadUniformsMutex);
+        std::scoped_lock const lock(glThreadUniformsMutex);
         return viewScale;
     }
 
@@ -124,14 +124,14 @@ class BaseOverTimeGraph : public juce::Component, juce::OpenGLRenderer
      */
     int64_t getViewWidth()
     {
-        std::lock_guard lock(glThreadUniformsMutex);
+        std::scoped_lock const lock(glThreadUniformsMutex);
         return viewWidth;
     }
 
     /**
      * @brief Get current view position without locking (use when mutex is already locked).
      */
-    int64_t getViewPositionLockFree()
+    int64_t getViewPositionLockFree() const
     {
         return viewPosition;
     }
@@ -139,7 +139,7 @@ class BaseOverTimeGraph : public juce::Component, juce::OpenGLRenderer
     /**
      * @brief Get current view scale without locking (use when mutex is already locked).
      */
-    int64_t getViewScaleLockFree()
+    int64_t getViewScaleLockFree() const
     {
         return viewScale;
     }
@@ -147,7 +147,7 @@ class BaseOverTimeGraph : public juce::Component, juce::OpenGLRenderer
     /**
      * @brief Get current view width without locking (use when mutex is already locked).
      */
-    int64_t getViewWidthLockFree()
+    int64_t getViewWidthLockFree() const
     {
         return viewWidth;
     }
@@ -168,24 +168,25 @@ class BaseOverTimeGraph : public juce::Component, juce::OpenGLRenderer
     BeatGridMesh timeSignatureGrid, topBeatGrid; /**< OpenGL Mesh for background */
 
     std::atomic<bool> ignoreNewData; /**< after the openGL thread closes, prevent access to openGL resources */
-    int64_t viewPosition, viewScale, viewHeight, viewWidth; /*< read by gl thread to update uniforms and view */
-    float bpm;                                /**< values read by openGL thread to update uniforms and view */
+    int64_t viewPosition{0}, viewScale{150}, viewHeight{},
+        viewWidth{};                          /*< read by gl thread to update uniforms and view */
+    float bpm{120};                           /**< values read by openGL thread to update uniforms and view */
     mutable std::mutex glThreadUniformsMutex; /**< to lock modifications of position, scale or bpm */
-    int64_t glThreadUniformsNonce;            /**< to know if we need to update position and  */
-    int64_t lastUsedGlThreadUnifNonce;        /**< the last nonce value when the uniforms got updated*/
+    int64_t glThreadUniformsNonce{};          /**< to know if we need to update position and  */
+    int64_t lastUsedGlThreadUnifNonce{};      /**< the last nonce value when the uniforms got updated*/
 
     std::mutex openGlThreadColorsMutex; /**< Locking color updates queues and color map for the openGL thread */
     std::queue<std::pair<uint64_t, juce::Colour>>
         colorUpdatesToApply; /**< track colors to be applied by openGL thread, need the lock */
     std::map<uint64_t, juce::Colour> knownTrackColors; /**< track colors known to the openGL thread */
 
-    bool needToResetTiles;      /**< true when the openGL thread is expected to clear all tiles */
-    std::mutex tilesResetMutex; /**< mutex to protect acces to clearAllTiles */
+    bool needToResetTiles{false}; /**< true when the openGL thread is expected to clear all tiles */
+    std::mutex tilesResetMutex;   /**< mutex to protect acces to clearAllTiles */
 
     int lastMouseX, lastMouseY;
     bool mouseOnComponent;
 
-    int64_t renderOpenGlIter; /**< a simple counter which is iterated at each render to track even/odd rendering */
+    int64_t renderOpenGlIter{}; /**< a simple counter which is iterated at each render to track even/odd rendering */
 
     /**
      * @brief Build all OpenGL shader programs.

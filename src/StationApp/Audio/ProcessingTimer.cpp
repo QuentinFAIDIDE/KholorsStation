@@ -11,7 +11,7 @@ ProcessingTimer::ProcessingTimer(TaskingManager &tm) : taskingManager(tm)
 {
     for (size_t i = 0; i < DEFAULT_PREALLOCATED_PROC_TIMER_WAITGROUPS; i++)
     {
-        auto newWg = std::make_shared<ProcessingTimerWaitgroup>(this, i);
+        auto const newWg = std::make_shared<ProcessingTimerWaitgroup>(this, i);
         waitgroups.push_back(newWg);
         idleWaitgroups.push(i);
     }
@@ -19,48 +19,48 @@ ProcessingTimer::ProcessingTimer(TaskingManager &tm) : taskingManager(tm)
 
 ProcessingTimer::~ProcessingTimer()
 {
-    for (size_t i = 0; i < waitgroups.size(); i++)
+    for (auto &waitgroup : waitgroups)
     {
-        waitgroups[i]->deactivate();
+        waitgroup->deactivate();
     }
 }
 
 void ProcessingTimer::recordCompletion(int64_t processingTimerWgIdentifier, int64_t processingTimeMs)
 {
-    std::lock_guard lock(mutex);
+    std::scoped_lock const lock(mutex);
     if (processingTimerWgIdentifier >= 0)
     {
-        idleWaitgroups.push((size_t)processingTimerWgIdentifier);
+        idleWaitgroups.push(static_cast<size_t>(processingTimerWgIdentifier));
     }
     nextProcessingTimes.push_back(processingTimeMs);
     if (nextProcessingTimes.size() >= AVERAGING_TIMER_SIZE)
     {
         float avgValue = 0.0f;
         int64_t avgValueInt = 0;
-        float proportion = (1.0f / float(AVERAGING_TIMER_SIZE));
+        float const proportion = (1.0f / static_cast<float>(AVERAGING_TIMER_SIZE));
         for (size_t i = 0; i < AVERAGING_TIMER_SIZE; i++)
         {
             avgValueInt += nextProcessingTimes[i];
         }
-        avgValue = float(avgValueInt) * proportion;
+        avgValue = static_cast<float>(avgValueInt) * proportion;
         nextProcessingTimes.resize(0);
-        auto task = std::make_shared<ProcessingTimeUpdateTask>(avgValue);
+        auto const task = std::make_shared<ProcessingTimeUpdateTask>(avgValue);
         taskingManager.broadcastTask(task);
     }
 }
 
 std::shared_ptr<ProcessingTimerWaitgroup> ProcessingTimer::getNewProcessingTimerWaitgroup(int64_t processingStartUnixMs)
 {
-    std::lock_guard lock(mutex);
+    std::scoped_lock const lock(mutex);
 
     // if all processing timers are in use, it means that we are
     // on overload and we'll use that as a hint to ignore the FFT to draw
-    if (idleWaitgroups.size() == 0)
+    if (idleWaitgroups.empty())
     {
         return nullptr;
     }
 
-    size_t index = idleWaitgroups.front();
+    size_t const index = idleWaitgroups.front();
     idleWaitgroups.pop();
     waitgroups[index]->reset(processingStartUnixMs);
     return waitgroups[index];
@@ -75,12 +75,14 @@ ProcessingTimeUpdateTask::ProcessingTimeUpdateTask(float msTime)
 
 std::string ProcessingTimeUpdateTask::marshal()
 {
-    nlohmann::json taskj = {{"object", "task"},
-                            {"task", "processing_time_update_task"},
-                            {"is_completed", isCompleted()},
-                            {"failed", hasFailed()},
-                            {"average_processing_time_ms", averageProcesingTimeMs},
-                            {"recordable_in_history", recordableInHistory},
-                            {"is_part_of_reversion", isPartOfReversion}};
+    nlohmann::json const taskj = {
+        {"object", "task"},
+        {"task", "processing_time_update_task"},
+        {"is_completed", isCompleted()},
+        {"failed", hasFailed()},
+        {"average_processing_time_ms", averageProcesingTimeMs},
+        {"recordable_in_history", recordableInHistory},
+        {"is_part_of_reversion", isPartOfReversion},
+    };
     return taskj.dump();
 }

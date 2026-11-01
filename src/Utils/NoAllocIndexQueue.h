@@ -4,6 +4,7 @@
 #include <mutex>
 #include <optional>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 /**
@@ -15,7 +16,7 @@
 class NoAllocIndexQueue
 {
   public:
-    NoAllocIndexQueue(size_t queueSize)
+    explicit NoAllocIndexQueue(size_t queueSize)
     {
         ringBuffer.resize(queueSize);
         queueStartIndex = 0;
@@ -32,11 +33,11 @@ class NoAllocIndexQueue
         std::string message;
 
       public:
-        NoMoreSpaceException(const std::string &msg) : message(msg)
+        explicit NoMoreSpaceException(std::string msg) : message(std::move(msg))
         {
         }
 
-        virtual const char *what() const throw()
+        const char *what() const noexcept override
         {
             return message.c_str();
         }
@@ -44,7 +45,7 @@ class NoAllocIndexQueue
 
     void queue(size_t indexToInsert)
     {
-        std::lock_guard lock(queueMutex);
+        std::scoped_lock const lock(queueMutex);
         if (size == ringBuffer.size())
         {
             throw NoMoreSpaceException("no more memory in the NoAllocIndexQueue");
@@ -64,7 +65,7 @@ class NoAllocIndexQueue
 
     std::optional<size_t> dequeue()
     {
-        std::lock_guard lock(queueMutex);
+        std::scoped_lock const lock(queueMutex);
         if (size == 0)
         {
             return std::nullopt;
@@ -86,7 +87,7 @@ class NoAllocIndexQueue
 
     size_t getSize()
     {
-        std::lock_guard lock(queueMutex);
+        std::scoped_lock const lock(queueMutex);
         return size;
     }
 

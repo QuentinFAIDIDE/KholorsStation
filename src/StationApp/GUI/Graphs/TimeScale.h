@@ -34,9 +34,9 @@ class TimeScale : public juce::Component
                        int pixelStepShift, int firstBarIndex);
     juce::Rectangle<int> getTickTextArea(int height) const;
 
-    int width, lastPaintedWidth;
+    int width{}, lastPaintedWidth{};
     std::mutex mutex;
-    int64_t viewPosition, viewScale;
-    float bpm;
+    int64_t viewPosition{}, viewScale{};
+    float bpm{};
     std::unordered_map<std::string, juce::GlyphArrangement> glyphCache;
 };

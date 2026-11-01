@@ -19,7 +19,7 @@ class MockedAudioSegmentPayloadSender : public AudioSegmentPayloadSender
 
     bool sendAudioSegment(const AudioSegmentPayload *payload) override
     {
-        std::lock_guard lock(mutex);
+        std::scoped_lock const lock(mutex);
         receivedAudioSegments.emplace_back(std::make_shared<AudioSegmentPayload>());
         receivedAudioSegments[receivedAudioSegments.size() - 1]->CopyFrom(*payload);
         spdlog::debug("Appended a payload to the mocked buffer");
@@ -29,7 +29,7 @@ class MockedAudioSegmentPayloadSender : public AudioSegmentPayloadSender
     std::vector<std::shared_ptr<AudioSegmentPayload>> getAllReceivedSegments()
     {
         spdlog::debug("Querying a copy of mocked sent payloads");
-        std::lock_guard lock(mutex);
+        std::scoped_lock const lock(mutex);
         spdlog::debug("Got lock for a copy of mocked sent payloads");
         return receivedAudioSegments;
     }

@@ -1,7 +1,7 @@
 #include "NoAllocIndexQueue.h"
 #include <stdexcept>
 
-int main(int, char **)
+int main(int /*unused*/, char ** /*unused*/)
 {
     NoAllocIndexQueue queue(10);
 
@@ -22,7 +22,7 @@ int main(int, char **)
 
         auto deq1 = queue.dequeue();
         auto deq2 = queue.dequeue();
-        auto deq3 = queue.dequeue();
+        auto const deq3 = queue.dequeue();
 
         if (queue.getSize() != 0)
         {

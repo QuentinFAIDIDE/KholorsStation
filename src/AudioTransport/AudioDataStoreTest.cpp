@@ -88,14 +88,14 @@ void AudioDataStoreTestSuite::testPreallocation01()
     // drain all available audio buffers and assert it works
     for (size_t i = 0; i < 10; i++)
     {
-        auto reservedSegment = store.reserveAudioSegment();
+        auto const reservedSegment = store.reserveAudioSegment();
         if (!reservedSegment.has_value())
         {
             throw std::runtime_error("Unable to drain as much audio segments as there is available");
         }
     }
     // assert that the next alloc fail
-    auto reservedSegment = store.reserveAudioSegment();
+    auto const reservedSegment = store.reserveAudioSegment();
     if (reservedSegment.has_value())
     {
         throw std::runtime_error("Drained all available AudioSegment but still could allocate");
@@ -104,7 +104,7 @@ void AudioDataStoreTestSuite::testPreallocation01()
     // drain all available audio buffers and assert it works
     for (size_t i = 0; i < 10; i++)
     {
-        auto reservedInfo = store.reserveDawInfo();
+        auto const reservedInfo = store.reserveDawInfo();
         if (!reservedInfo.has_value())
         {
             throw std::runtime_error("Unable to drain as much daw info as there is available");
@@ -120,7 +120,7 @@ void AudioDataStoreTestSuite::testPreallocation01()
     // drain all available audio buffers and assert it works
     for (size_t i = 0; i < 10; i++)
     {
-        auto reservedInfo = store.reserveTrackInfo();
+        auto const reservedInfo = store.reserveTrackInfo();
         if (!reservedInfo.has_value())
         {
             throw std::runtime_error("Unable to drain as much track info as there is available");
@@ -142,7 +142,7 @@ void AudioDataStoreTestSuite::testParse01()
     std::vector<float> data(2000 * 2);
     for (size_t i = 0; i < 4000; i++)
     {
-        data[i] = (float)i;
+        data[i] = static_cast<float>(i);
     }
 
     ColorContainer a = ColorContainer(10, 20, 30, 40);
@@ -169,8 +169,8 @@ void AudioDataStoreTestSuite::testParse01()
 
     // assert that there is nothing in the queue
     {
-        std::lock_guard<std::mutex> lock(store.pendingAudioDataMutex);
-        if (store.pendingAudioData.size() != 0)
+        std::scoped_lock const lock(store.pendingAudioDataMutex);
+        if (!store.pendingAudioData.empty())
         {
             throw std::runtime_error("queue is not empty");
         }
@@ -184,14 +184,14 @@ void AudioDataStoreTestSuite::testParse01()
     auto datum4 = store.waitForDatum();
 
     {
-        std::lock_guard<std::mutex> lock(store.pendingAudioDataMutex);
-        if (store.pendingAudioData.size() != 0)
+        std::scoped_lock const lock(store.pendingAudioDataMutex);
+        if (!store.pendingAudioData.empty())
         {
             throw std::runtime_error("Size of queue is not 3 after the 3 first events");
         }
     }
 
-    auto datum1Segment = std::dynamic_pointer_cast<AudioSegment>(datum1->datum);
+    auto const datum1Segment = std::dynamic_pointer_cast<AudioSegment>(datum1->datum);
     if (datum1Segment == nullptr)
     {
         throw std::runtime_error("d1 not an AudioSegment");
@@ -222,13 +222,13 @@ void AudioDataStoreTestSuite::testParse01()
     }
     for (size_t i = 0; i < 2000; i++)
     {
-        if (std::abs((float)i - datum1Segment->audioSamples[i]) > std::numeric_limits<float>::epsilon())
+        if (std::abs(static_cast<float>(i) - datum1Segment->audioSamples[i]) > std::numeric_limits<float>::epsilon())
         {
             throw std::runtime_error("samples don't match");
         }
     }
 
-    auto datum2Segment = std::dynamic_pointer_cast<AudioSegment>(datum2->datum);
+    auto const datum2Segment = std::dynamic_pointer_cast<AudioSegment>(datum2->datum);
     if (datum2Segment == nullptr)
     {
         throw std::runtime_error("d2 not AudioSegment");
@@ -259,18 +259,19 @@ void AudioDataStoreTestSuite::testParse01()
     }
     for (size_t i = 0; i < 2000; i++)
     {
-        if (std::abs((float)(i + 2000) - datum2Segment->audioSamples[i]) > std::numeric_limits<float>::epsilon())
+        if (std::abs(static_cast<float>(i + 2000) - datum2Segment->audioSamples[i]) >
+            std::numeric_limits<float>::epsilon())
         {
             throw std::runtime_error("samples don't match");
         }
     }
 
-    auto dawInfo = std::dynamic_pointer_cast<DawInfo>(datum3->datum);
+    auto const dawInfo = std::dynamic_pointer_cast<DawInfo>(datum3->datum);
     if (dawInfo == nullptr)
     {
         throw std::runtime_error("3rd thing is not dawInfo");
     }
-    if (dawInfo->isLooping != false)
+    if (dawInfo->isLooping)
     {
         throw std::runtime_error("dawInfo wrong isLooping");
     }
@@ -299,7 +300,7 @@ void AudioDataStoreTestSuite::testParse01()
         throw std::runtime_error("dawInfo wrong timeSignatureDenominator");
     }
 
-    auto trackInfo = std::dynamic_pointer_cast<TrackInfo>(datum4->datum);
+    auto const trackInfo = std::dynamic_pointer_cast<TrackInfo>(datum4->datum);
     if (trackInfo == nullptr)
     {
         throw std::runtime_error("datum4 is not a TrackInfo");
@@ -337,8 +338,8 @@ void AudioDataStoreTestSuite::testParse01()
 
     // assert that there is nothing in the queue
     {
-        std::lock_guard<std::mutex> lock(store.pendingAudioDataMutex);
-        if (store.pendingAudioData.size() != 0)
+        std::scoped_lock const lock(store.pendingAudioDataMutex);
+        if (!store.pendingAudioData.empty())
         {
             throw std::runtime_error("queue is not empty");
         }
@@ -355,22 +356,22 @@ void AudioDataStoreTestSuite::testParse01()
     auto datum7 = store.waitForDatum();
     auto datum8 = store.waitForDatum();
 
-    auto datum5AudioSegment = std::dynamic_pointer_cast<AudioSegment>(datum5->datum);
+    auto const datum5AudioSegment = std::dynamic_pointer_cast<AudioSegment>(datum5->datum);
     if (datum5AudioSegment == nullptr)
     {
         throw std::runtime_error("datum5AudioSegment nullptr");
     }
-    auto datum6AudioSegment = std::dynamic_pointer_cast<AudioSegment>(datum6->datum);
+    auto const datum6AudioSegment = std::dynamic_pointer_cast<AudioSegment>(datum6->datum);
     if (datum6AudioSegment == nullptr)
     {
         throw std::runtime_error("datum6AudioSegment nullptr");
     }
-    auto datum7AudioSegment = std::dynamic_pointer_cast<AudioSegment>(datum7->datum);
+    auto const datum7AudioSegment = std::dynamic_pointer_cast<AudioSegment>(datum7->datum);
     if (datum7AudioSegment == nullptr)
     {
         throw std::runtime_error("datum7AudioSegment nullptr");
     }
-    auto datum8AudioSegment = std::dynamic_pointer_cast<AudioSegment>(datum8->datum);
+    auto const datum8AudioSegment = std::dynamic_pointer_cast<AudioSegment>(datum8->datum);
     if (datum8AudioSegment == nullptr)
     {
         throw std::runtime_error("datum8AudioSegment nullptr");
@@ -404,7 +405,8 @@ void AudioDataStoreTestSuite::testParse01()
     }
     for (size_t i = 0; i < 2000; i++)
     {
-        if (std::abs((float)i - datum5AudioSegment->audioSamples[i]) > std::numeric_limits<float>::epsilon())
+        if (std::abs(static_cast<float>(i) - datum5AudioSegment->audioSamples[i]) >
+            std::numeric_limits<float>::epsilon())
         {
             throw std::runtime_error("samples don't match");
         }
@@ -436,7 +438,8 @@ void AudioDataStoreTestSuite::testParse01()
     }
     for (size_t i = 0; i < 2000; i++)
     {
-        if (std::abs((float)(i + 2000) - datum6AudioSegment->audioSamples[i]) > std::numeric_limits<float>::epsilon())
+        if (std::abs(static_cast<float>(i + 2000) - datum6AudioSegment->audioSamples[i]) >
+            std::numeric_limits<float>::epsilon())
         {
             throw std::runtime_error("samples don't match");
         }
@@ -449,8 +452,8 @@ void AudioDataStoreTestSuite::testParse01()
 
     // assert that there is nothing in the queue
     {
-        std::lock_guard<std::mutex> lock(store.pendingAudioDataMutex);
-        if (store.pendingAudioData.size() != 0)
+        std::scoped_lock const lock(store.pendingAudioDataMutex);
+        if (!store.pendingAudioData.empty())
         {
             throw std::runtime_error("queue is not empty");
         }
@@ -471,17 +474,17 @@ void AudioDataStoreTestSuite::testParse01()
 
     // assert that there is nothing in the queue
     {
-        std::lock_guard<std::mutex> lock(store.pendingAudioDataMutex);
-        if (store.pendingAudioData.size() != 0)
+        std::scoped_lock const lock(store.pendingAudioDataMutex);
+        if (!store.pendingAudioData.empty())
         {
             throw std::runtime_error("queue is not empty");
         }
     }
 
-    auto AudioSeg9 = std::dynamic_pointer_cast<AudioSegment>(datum9->datum);
-    auto AudioSeg10 = std::dynamic_pointer_cast<AudioSegment>(datum10->datum);
-    auto AudioSeg12 = std::dynamic_pointer_cast<AudioSegment>(datum12->datum);
-    auto AudioSeg13 = std::dynamic_pointer_cast<AudioSegment>(datum13->datum);
+    auto const AudioSeg9 = std::dynamic_pointer_cast<AudioSegment>(datum9->datum);
+    auto const AudioSeg10 = std::dynamic_pointer_cast<AudioSegment>(datum10->datum);
+    auto const AudioSeg12 = std::dynamic_pointer_cast<AudioSegment>(datum12->datum);
+    auto const AudioSeg13 = std::dynamic_pointer_cast<AudioSegment>(datum13->datum);
     if (AudioSeg9 == nullptr)
     {
         throw std::runtime_error("datum not audio seg");
@@ -499,7 +502,7 @@ void AudioDataStoreTestSuite::testParse01()
         throw std::runtime_error("datum not audio seg");
     }
 
-    auto datum11TrackInfo = std::dynamic_pointer_cast<TrackInfo>(datum11->datum);
+    auto const datum11TrackInfo = std::dynamic_pointer_cast<TrackInfo>(datum11->datum);
     if (datum11TrackInfo == nullptr)
     {
         throw std::runtime_error("datum not track info");
@@ -529,17 +532,17 @@ void AudioDataStoreTestSuite::testParse01()
 
     // assert that there is nothing in the queue
     {
-        std::lock_guard<std::mutex> lock(store.pendingAudioDataMutex);
-        if (store.pendingAudioData.size() != 0)
+        std::scoped_lock const lock(store.pendingAudioDataMutex);
+        if (!store.pendingAudioData.empty())
         {
             throw std::runtime_error("queue is not empty");
         }
     }
 
-    auto AudioSeg14 = std::dynamic_pointer_cast<AudioSegment>(datum14->datum);
-    auto AudioSeg15 = std::dynamic_pointer_cast<AudioSegment>(datum15->datum);
-    auto AudioSeg17 = std::dynamic_pointer_cast<AudioSegment>(datum17->datum);
-    auto AudioSeg18 = std::dynamic_pointer_cast<AudioSegment>(datum18->datum);
+    auto const AudioSeg14 = std::dynamic_pointer_cast<AudioSegment>(datum14->datum);
+    auto const AudioSeg15 = std::dynamic_pointer_cast<AudioSegment>(datum15->datum);
+    auto const AudioSeg17 = std::dynamic_pointer_cast<AudioSegment>(datum17->datum);
+    auto const AudioSeg18 = std::dynamic_pointer_cast<AudioSegment>(datum18->datum);
     if (AudioSeg14 == nullptr)
     {
         throw std::runtime_error("datum not audio seg");
@@ -557,7 +560,7 @@ void AudioDataStoreTestSuite::testParse01()
         throw std::runtime_error("datum not audio seg");
     }
 
-    auto dawInfo16 = std::dynamic_pointer_cast<DawInfo>(datum16->datum);
+    auto const dawInfo16 = std::dynamic_pointer_cast<DawInfo>(datum16->datum);
     if (dawInfo16 == nullptr)
     {
         throw std::runtime_error("daw info 16 not a DawInfo");

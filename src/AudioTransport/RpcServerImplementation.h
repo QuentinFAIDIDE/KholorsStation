@@ -12,7 +12,7 @@ namespace AudioTransport
 class RpcServerImplementation final : public KholorsAudioTransport::Service
 {
   public:
-    RpcServerImplementation(AudioDataStore &);
+    explicit RpcServerImplementation(AudioDataStore & /*storeToUse*/);
 
   private:
     /**

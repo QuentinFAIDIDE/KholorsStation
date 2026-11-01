@@ -5,14 +5,14 @@
 
 void WaitGroup::Add(int i)
 {
-    std::unique_lock<std::mutex> l(mu_);
+    std::unique_lock<std::mutex> const l(mu_);
     counter_ += i;
 }
 
 void WaitGroup::Done()
 {
     {
-        std::unique_lock<std::mutex> l(mu_);
+        std::unique_lock<std::mutex> const l(mu_);
         counter_--;
     }
     cv_.notify_all();

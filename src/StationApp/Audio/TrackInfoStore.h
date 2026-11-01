@@ -16,20 +16,20 @@
 class TrackInfoStore : public TaskListener
 {
   public:
-    TrackInfoStore(TaskingManager &tm) : taskingManager(tm)
+    explicit TrackInfoStore(TaskingManager &tm) : taskingManager(tm)
     {
     }
 
-    bool taskHandler(std::shared_ptr<Task> task)
+    bool taskHandler(std::shared_ptr<Task> task) override
     {
-        auto trackinfoUpdate = std::dynamic_pointer_cast<TrackInfoUpdateTask>(task);
+        auto const trackinfoUpdate = std::dynamic_pointer_cast<TrackInfoUpdateTask>(task);
         if (trackinfoUpdate != nullptr && !trackinfoUpdate->isCompleted() && !trackinfoUpdate->hasFailed())
         {
             {
-                std::lock_guard lock(mutex);
+                std::scoped_lock const lock(mutex);
 
                 // update name
-                if (namesPerTrack.find(trackinfoUpdate->identifier) != namesPerTrack.end())
+                if (namesPerTrack.contains(trackinfoUpdate->identifier))
                 {
                     if (trackinfoUpdate->name != namesPerTrack.find(trackinfoUpdate->identifier)->second)
                     {
@@ -42,12 +42,12 @@ class TrackInfoStore : public TaskListener
                 }
 
                 // update color
-                if (colorsPerTrack.find(trackinfoUpdate->identifier) != colorsPerTrack.end())
+                if (colorsPerTrack.contains(trackinfoUpdate->identifier))
                 {
                     colorsPerTrack.erase(trackinfoUpdate->identifier);
                 }
 
-                auto emplacement_tuple = colorsPerTrack.emplace(
+                auto const emplacement_tuple = colorsPerTrack.emplace(
                     std::piecewise_construct, std::forward_as_tuple(trackinfoUpdate->identifier),
                     std::forward_as_tuple(trackinfoUpdate->redColorLevel, trackinfoUpdate->greenColorLevel,
                                           trackinfoUpdate->blueColorLevel, 0));
@@ -56,7 +56,7 @@ class TrackInfoStore : public TaskListener
                     throw std::runtime_error("failed to insert color into TrackInfoStore");
                 }
 
-                auto colorUpdateTask = std::make_shared<TrackColorUpdateTask>(
+                auto const colorUpdateTask = std::make_shared<TrackColorUpdateTask>(
                     trackinfoUpdate->identifier, trackinfoUpdate->redColorLevel, trackinfoUpdate->greenColorLevel,
                     trackinfoUpdate->blueColorLevel);
                 taskingManager.broadcastNestedTaskNow(colorUpdateTask);
@@ -70,26 +70,22 @@ class TrackInfoStore : public TaskListener
 
     std::optional<AudioTransport::ColorContainer> getTrackColor(uint64_t trackId)
     {
-        if (colorsPerTrack.find(trackId) != colorsPerTrack.end())
+        if (colorsPerTrack.contains(trackId))
         {
             return colorsPerTrack.find(trackId)->second;
         }
-        else
-        {
-            return std::nullopt;
-        }
+
+        return std::nullopt;
     }
 
     std::optional<std::string> getTrackName(uint64_t trackId)
     {
-        if (namesPerTrack.find(trackId) != namesPerTrack.end())
+        if (namesPerTrack.contains(trackId))
         {
             return namesPerTrack.find(trackId)->second;
         }
-        else
-        {
-            return std::nullopt;
-        }
+
+        return std::nullopt;
     }
 
   private:

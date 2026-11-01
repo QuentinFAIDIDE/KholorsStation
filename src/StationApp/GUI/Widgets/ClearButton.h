@@ -6,8 +6,8 @@
 class ClearButton : public juce::TextButton
 {
   public:
-    ClearButton(TaskingManager &tm);
-    ~ClearButton();
+    explicit ClearButton(TaskingManager &tm);
+    ~ClearButton() override;
 
     void clicked() override;
 

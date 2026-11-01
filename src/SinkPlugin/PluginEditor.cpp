@@ -64,8 +64,8 @@ void AudioPluginAudioProcessorEditor::paint(juce::Graphics &g)
     leftArea.reduce(HEADER_INNER_PADDING, 0);
     rightArea.removeFromRight(HEADER_INNER_PADDING);
 
-    auto leftAreaHeader = leftArea.removeFromTop(SECTIONS_HEADER_HEIGHT);
-    auto rightAreaHeader = rightArea.removeFromTop(SECTIONS_HEADER_HEIGHT);
+    auto const leftAreaHeader = leftArea.removeFromTop(SECTIONS_HEADER_HEIGHT);
+    auto const rightAreaHeader = rightArea.removeFromTop(SECTIONS_HEADER_HEIGHT);
 
     g.setColour(KHOLORS_COLOR_TEXT);
     g.setFont(juce::Font(SECTIONS_HEADER_TITLE_FONT_SIZE));
@@ -75,19 +75,19 @@ void AudioPluginAudioProcessorEditor::paint(juce::Graphics &g)
 
 void AudioPluginAudioProcessorEditor::drawHeader(juce::Graphics &g)
 {
-    int middlePadding = 5;
+    int const middlePadding = 5;
     auto topHeaderArea = getLocalBounds().removeFromTop(HEADER_HEIGHT).reduced(HEADER_INNER_PADDING, 0);
-    auto logoArea = topHeaderArea.removeFromRight(LOGO_WIDTH);
+    auto const logoArea = topHeaderArea.removeFromRight(LOGO_WIDTH);
     sharedSvgs->artifaktNdLogo->drawWithin(g, logoArea.toFloat(), juce::RectanglePlacement::centred, 1.0f);
 
-    int mainTitleWidth = juce::GlyphArrangement::getStringWidthInt(
+    int const mainTitleWidth = juce::GlyphArrangement::getStringWidthInt(
         sharedFonts->robotoBlack.withHeight(APP_NAME_FONT_HEIGHT), "KHOLORS II");
-    int subTitleWidth =
+    int const subTitleWidth =
         juce::GlyphArrangement::getStringWidthInt(sharedFonts->roboto.withHeight(APP_NAME_FONT_HEIGHT), "SINK");
-    int totalWidth = mainTitleWidth + middlePadding + subTitleWidth;
+    int const totalWidth = mainTitleWidth + middlePadding + subTitleWidth;
 
     auto titleArea = topHeaderArea.removeFromLeft(totalWidth);
-    auto boldTitleArea = titleArea.removeFromLeft(mainTitleWidth);
+    auto const boldTitleArea = titleArea.removeFromLeft(mainTitleWidth);
     titleArea.removeFromLeft(middlePadding);
 
     g.setColour(KHOLORS_COLOR_TEXT);
@@ -99,15 +99,15 @@ void AudioPluginAudioProcessorEditor::drawHeader(juce::Graphics &g)
     g.drawText("SINK", titleArea, juce::Justification::centredRight, false);
 }
 
-void AudioPluginAudioProcessorEditor::mouseDrag(const juce::MouseEvent &)
+void AudioPluginAudioProcessorEditor::mouseDrag(const juce::MouseEvent & /*event*/)
 {
 }
 
-void AudioPluginAudioProcessorEditor::mouseDown(const juce::MouseEvent &)
+void AudioPluginAudioProcessorEditor::mouseDown(const juce::MouseEvent & /*event*/)
 {
 }
 
-void AudioPluginAudioProcessorEditor::mouseUp(const juce::MouseEvent &)
+void AudioPluginAudioProcessorEditor::mouseUp(const juce::MouseEvent & /*event*/)
 {
 }
 

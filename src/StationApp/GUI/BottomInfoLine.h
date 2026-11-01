@@ -16,12 +16,12 @@
 class BottomInfoLine : public juce::Component, public TaskListener
 {
   public:
-    BottomInfoLine(TaskingManager &tm);
+    explicit BottomInfoLine(TaskingManager &tm);
     void paint(juce::Graphics &g) override;
     bool taskHandler(std::shared_ptr<Task> task) override;
 
   private:
-    std::string noteFromFreq(float freq);
+    static std::string noteFromFreq(float freq);
 
     TaskingManager &taskingManager;
     std::atomic<float> lastFrequency;

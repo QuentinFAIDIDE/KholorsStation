@@ -2,6 +2,7 @@
 
 #include "TaskManagement/Task.h"
 #include <nlohmann/json.hpp>
+#include <utility>
 
 /**
  * @brief This job is emmited once we finished using the result array
@@ -11,7 +12,8 @@
 class FftResultVectorReuseTask : public SilentTask
 {
   public:
-    FftResultVectorReuseTask(std::shared_ptr<std::vector<float>> vectorToReuse) : resultArray(vectorToReuse)
+    explicit FftResultVectorReuseTask(std::shared_ptr<std::vector<float>> vectorToReuse)
+        : resultArray(std::move(vectorToReuse))
     {
     }
 
@@ -20,12 +22,14 @@ class FftResultVectorReuseTask : public SilentTask
      */
     std::string marshal() override
     {
-        nlohmann::json taskj = {{"object", "task"},
-                                {"task", "fft_result_vector_reuse_task"},
-                                {"is_completed", isCompleted()},
-                                {"failed", hasFailed()},
-                                {"recordable_in_history", recordableInHistory},
-                                {"is_part_of_reversion", isPartOfReversion}};
+        nlohmann::json const taskj = {
+            {"object", "task"},
+            {"task", "fft_result_vector_reuse_task"},
+            {"is_completed", isCompleted()},
+            {"failed", hasFailed()},
+            {"recordable_in_history", recordableInHistory},
+            {"is_part_of_reversion", isPartOfReversion},
+        };
         return taskj.dump();
     }
 

@@ -16,27 +16,30 @@ void OpenGLHelpers::enableBlending()
     juce::gl::glBlendFunc(juce::gl::GL_SRC_ALPHA, juce::gl::GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void OpenGLHelpers::logOpenGLInfo(juce::OpenGLContext &)
+void OpenGLHelpers::logOpenGLInfo(juce::OpenGLContext & /*unused*/)
 {
-    int major = 0, minor = 0;
+    int major = 0;
+    int minor = 0;
     juce::gl::glGetIntegerv(juce::gl::GL_MAJOR_VERSION, &major);
     juce::gl::glGetIntegerv(juce::gl::GL_MINOR_VERSION, &minor);
 
     juce::String stats;
     stats << "---------------------------" << juce::newLine << "=== OpenGL/GPU Information ===" << juce::newLine
-          << "Vendor: " << juce::String((const char *)juce::gl::glGetString(juce::gl::GL_VENDOR)) << juce::newLine
-          << "Renderer: " << juce::String((const char *)juce::gl::glGetString(juce::gl::GL_RENDERER)) << juce::newLine
-          << "OpenGL Version: " << juce::String((const char *)juce::gl::glGetString(juce::gl::GL_VERSION))
-          << juce::newLine << "OpenGL Major: " << juce::String(major) << juce::newLine
-          << "OpenGL Minor: " << juce::String(minor) << juce::newLine << "OpenGL Shading Language Version: "
-          << juce::String((const char *)juce::gl::glGetString(juce::gl::GL_SHADING_LANGUAGE_VERSION)) << juce::newLine
-          << "---------------------------" << juce::newLine;
+          << "Vendor: " << juce::String(reinterpret_cast<const char *>(juce::gl::glGetString(juce::gl::GL_VENDOR)))
+          << juce::newLine
+          << "Renderer: " << juce::String(reinterpret_cast<const char *>(juce::gl::glGetString(juce::gl::GL_RENDERER)))
+          << juce::newLine << "OpenGL Version: "
+          << juce::String(reinterpret_cast<const char *>(juce::gl::glGetString(juce::gl::GL_VERSION))) << juce::newLine
+          << "OpenGL Major: " << juce::String(major) << juce::newLine << "OpenGL Minor: " << juce::String(minor)
+          << juce::newLine << "OpenGL Shading Language Version: "
+          << juce::String(reinterpret_cast<const char *>(juce::gl::glGetString(juce::gl::GL_SHADING_LANGUAGE_VERSION)))
+          << juce::newLine << "---------------------------" << juce::newLine;
 
     spdlog::debug(stats.toStdString());
 }
 
-void OpenGLHelpers::logOpenGLErrorCallback(GLenum, GLenum type, GLuint, GLenum severity, GLsizei, const GLchar *message,
-                                           const void *)
+void OpenGLHelpers::logOpenGLErrorCallback(GLenum /*unused*/, GLenum type, GLuint /*unused*/, GLenum severity,
+                                           GLsizei /*unused*/, const GLchar *message, const void * /*unused*/)
 {
     char s[1024];
     snprintf(s, 1024, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
@@ -72,7 +75,7 @@ void OpenGLHelpers::enableOpenGLErrorLogging()
 
 void OpenGLHelpers::printAllOpenGlError()
 {
-    GLenum err;
+    GLenum err = 0;
     while ((err = juce::gl::glGetError()) != juce::gl::GL_NO_ERROR)
     {
         spdlog::error(std::string("got following open gl error code after registering vertices data: ") +

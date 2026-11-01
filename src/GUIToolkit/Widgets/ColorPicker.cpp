@@ -10,35 +10,34 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <utility>
 
 #define COLOR_SQUARE_WIDTH 30
 #define COLOR_SQUARE_PADDING 10
 #define CROSS_SQUARE_PADDING 4
 #define CROSS_SQUARE_LINE_WIDTH 4
 
-ColorPicker::ColorPicker(std::string id, TaskingManager &tm) : identifier(id), taskManager(tm)
+ColorPicker::ColorPicker(std::string id, TaskingManager &tm) : identifier(std::move(id)), taskManager(tm)
 {
     colors = getDefaultColours();
     colorSquaresPosition.resize(colors.size() + 1);
     pickedColorId = 0;
 }
 
-ColorPicker::~ColorPicker()
-{
-}
+ColorPicker::~ColorPicker() = default;
 
 void ColorPicker::paint(juce::Graphics &g)
 {
-    size_t currentlySelectedColor;
+    size_t currentlySelectedColor = 0;
     juce::Colour selectedColor;
     {
-        std::lock_guard lock(selectedColorMutex);
+        std::scoped_lock const lock(selectedColorMutex);
         currentlySelectedColor = pickedColorId;
         selectedColor = currentColor;
     }
 
-    int baseX = getLocalBounds().getX();
-    int squarePixelJump = COLOR_SQUARE_WIDTH + COLOR_SQUARE_PADDING;
+    int const baseX = getLocalBounds().getX();
+    int const squarePixelJump = COLOR_SQUARE_WIDTH + COLOR_SQUARE_PADDING;
     auto rectBounds = juce::Rectangle<int>(COLOR_SQUARE_WIDTH, COLOR_SQUARE_WIDTH);
     rectBounds.setX(baseX);
     rectBounds.setY(getLocalBounds().getY());
@@ -71,10 +70,10 @@ void ColorPicker::paint(juce::Graphics &g)
             }
 
             g.setColour(KHOLORS_COLOR_WHITE);
-            auto horizontalLine = rectBounds.withHeight(CROSS_SQUARE_LINE_WIDTH)
-                                      .translated(0, (COLOR_SQUARE_WIDTH - CROSS_SQUARE_LINE_WIDTH) / 2);
-            auto verticalLine = rectBounds.withWidth(CROSS_SQUARE_LINE_WIDTH)
-                                    .translated((COLOR_SQUARE_WIDTH - CROSS_SQUARE_LINE_WIDTH) / 2, 0);
+            auto const horizontalLine = rectBounds.withHeight(CROSS_SQUARE_LINE_WIDTH)
+                                            .translated(0, (COLOR_SQUARE_WIDTH - CROSS_SQUARE_LINE_WIDTH) / 2);
+            auto const verticalLine = rectBounds.withWidth(CROSS_SQUARE_LINE_WIDTH)
+                                          .translated((COLOR_SQUARE_WIDTH - CROSS_SQUARE_LINE_WIDTH) / 2, 0);
             g.fillRect(horizontalLine.reduced(CROSS_SQUARE_PADDING, 0));
             g.fillRect(verticalLine.reduced(0, CROSS_SQUARE_PADDING));
 
@@ -122,8 +121,8 @@ void ColorPicker::mouseDown(const juce::MouseEvent &me)
             // TODO: stop ignoring the custom color button
             if (i != colorSquaresPosition.size() - 1)
             {
-                auto colorToSet = colors[i];
-                auto colorUpdateTask = std::make_shared<ColorPickerUpdateTask>(
+                auto const colorToSet = colors[i];
+                auto const colorUpdateTask = std::make_shared<ColorPickerUpdateTask>(
                     identifier, colorToSet.getRed(), colorToSet.getGreen(), colorToSet.getBlue());
                 taskManager.broadcastTask(colorUpdateTask);
             }
@@ -150,7 +149,7 @@ std::vector<juce::Colour> ColorPicker::getDefaultColours()
 
 bool ColorPicker::taskHandler(std::shared_ptr<Task> task)
 {
-    auto colorUpdateTask = std::dynamic_pointer_cast<ColorPickerUpdateTask>(task);
+    auto const colorUpdateTask = std::dynamic_pointer_cast<ColorPickerUpdateTask>(task);
     // either we update based on completed task, or either we process a color update request
     if (colorUpdateTask != nullptr && colorUpdateTask->colorPickerIdentifier == identifier &&
         !colorUpdateTask->hasFailed() && !colorUpdateTask->isCompleted())
@@ -164,8 +163,8 @@ bool ColorPicker::taskHandler(std::shared_ptr<Task> task)
         colorUpdateTask->setCompleted(true);
 
         {
-            juce::MessageManager::Lock mmLock;
-            juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+            juce::MessageManager::Lock const mmLock;
+            juce::MessageManager::Lock::ScopedTryLockType const tryLock(mmLock);
             while (!tryLock.isLocked())
             {
                 if (task->getTaskingManager()->shutdownWasCalled())
@@ -192,11 +191,11 @@ void ColorPicker::setColour(uint8_t r, uint8_t g, uint8_t b)
     {
         if (r == colors[i].getRed() && g == colors[i].getGreen() && b == colors[i].getBlue())
         {
-            colorId = (int64_t)i;
+            colorId = static_cast<int64_t>(i);
             break;
         }
     }
-    std::lock_guard lock(selectedColorMutex);
+    std::scoped_lock const lock(selectedColorMutex);
     if (colorId == -1)
     {
         pickedColorId = colors.size();
@@ -204,16 +203,16 @@ void ColorPicker::setColour(uint8_t r, uint8_t g, uint8_t b)
     }
     else
     {
-        pickedColorId = (size_t)colorId;
-        currentColor = colors[(size_t)colorId];
+        pickedColorId = static_cast<size_t>(colorId);
+        currentColor = colors[static_cast<size_t>(colorId)];
     }
 }
 
 //////////////////////////////////////////////////////////////////////:
 
 ColorPickerDialog::ColorPickerDialog(std::string id, TaskingManager &tm)
-    : colorPickerIdentifier(id), colorSelector(juce::ColourSelector::ColourSelectorOptions::showColourspace |
-                                               juce::ColourSelector::ColourSelectorOptions::showColourAtTop),
+    : colorPickerIdentifier(std::move(id)), colorSelector(juce::ColourSelector::ColourSelectorOptions::showColourspace |
+                                                          juce::ColourSelector::ColourSelectorOptions::showColourAtTop),
       taskManager(tm)
 {
     setSize(500, 350);
@@ -249,7 +248,7 @@ void ColorPickerDialog::resized()
 
 void ColorPickerDialog::closeDialog()
 {
-    if (juce::DialogWindow *dw = findParentComponentOfClass<juce::DialogWindow>())
+    if (auto *dw = findParentComponentOfClass<juce::DialogWindow>())
     {
         dw->exitModalState(0);
     }
@@ -259,8 +258,8 @@ void ColorPickerDialog::buttonClicked(juce::Button *clickedButton)
 {
     if (clickedButton == &confirmButton)
     {
-        auto col = colorSelector.getCurrentColour();
-        auto colorUpdateTask =
+        auto const col = colorSelector.getCurrentColour();
+        auto const colorUpdateTask =
             std::make_shared<ColorPickerUpdateTask>(colorPickerIdentifier, col.getRed(), col.getGreen(), col.getBlue());
         taskManager.broadcastTask(colorUpdateTask);
     }

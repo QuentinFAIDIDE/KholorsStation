@@ -12,14 +12,15 @@ GraphBorders::~GraphBorders()
 
 uint64_t GraphBorders::getBorderCacheKey(juce::Rectangle<int> bounds, bool drawMiddleLine)
 {
-    return ((uint64_t)bounds.getWidth() << 32) | ((uint64_t)bounds.getHeight() << 16) | (drawMiddleLine ? 1 : 0);
+    return (static_cast<uint64_t>(bounds.getWidth()) << 32) | (static_cast<uint64_t>(bounds.getHeight()) << 16) |
+           (drawMiddleLine ? 1 : 0);
 }
 
 void GraphBorders::draw(juce::Graphics &g, juce::Rectangle<int> bounds, bool drawMiddleLine)
 {
-    uint64_t cacheKey = getBorderCacheKey(bounds, drawMiddleLine);
+    uint64_t const cacheKey = getBorderCacheKey(bounds, drawMiddleLine);
 
-    auto cached = borderCache.find(cacheKey);
+    auto const cached = borderCache.find(cacheKey);
     if (cached != borderCache.end())
     {
         g.drawImageAt(cached->second, bounds.getX(), bounds.getY());
@@ -33,11 +34,11 @@ void GraphBorders::draw(juce::Graphics &g, juce::Rectangle<int> bounds, bool dra
     }
 
     // Render to cached image
-    juce::Image cachedBorder(juce::Image::ARGB, bounds.getWidth(), bounds.getHeight(), true);
+    juce::Image const cachedBorder(juce::Image::ARGB, bounds.getWidth(), bounds.getHeight(), true);
     juce::Graphics cacheGraphics(cachedBorder);
 
     // Adjust bounds for local coordinate system
-    auto localBounds = juce::Rectangle<int>(0, 0, bounds.getWidth(), bounds.getHeight());
+    auto const localBounds = juce::Rectangle<int>(0, 0, bounds.getWidth(), bounds.getHeight());
     // we fill two sub path, one for the borders that are to the left
     // of the middle vertical line, and one for the borders that are to the right
     // of it.
@@ -99,12 +100,12 @@ void GraphBorders::draw(juce::Graphics &g, juce::Rectangle<int> bounds, bool dra
     cacheGraphics.fillPath(fillPath);
 
     cacheGraphics.setColour(KHOLORS_COLOR_GRIDS_LEVEL_0);
-    int borders2Width = 2;
+    int const borders2Width = 2;
     cacheGraphics.drawRoundedRectangle(localBounds.toFloat(), FREQVIEW_ROUNDED_CORNERS_WIDTH, borders2Width);
 
     if (drawMiddleLine)
     {
-        auto middleLine = localBounds.withY(localBounds.getHeight() / 2).withHeight(1);
+        auto const middleLine = localBounds.withY(localBounds.getHeight() / 2).withHeight(1);
         cacheGraphics.setColour(KHOLORS_COLOR_GRIDS_LEVEL_0);
         cacheGraphics.fillRect(middleLine);
     }

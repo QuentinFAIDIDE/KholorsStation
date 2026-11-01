@@ -15,7 +15,7 @@ Client::Client(uint32_t portToUse) : lastPortUsed(portToUse)
 {
     grpc::ChannelArguments channelArgs;
 
-    std::string serviceConfigJSON =
+    std::string const serviceConfigJSON =
         R"(
 
 {
@@ -49,36 +49,36 @@ Client::Client(uint32_t portToUse) : lastPortUsed(portToUse)
 
     channelArgs.SetServiceConfigJSON(serviceConfigJSON);
 
-    auto chan = grpc::CreateCustomChannel("127.0.0.1:" + std::to_string(portToUse), grpc::InsecureChannelCredentials(),
-                                          channelArgs);
+    auto const chan = grpc::CreateCustomChannel("127.0.0.1:" + std::to_string(portToUse),
+                                                grpc::InsecureChannelCredentials(), channelArgs);
     stub = KholorsAudioTransport::NewStub(chan);
 }
 
 void Client::changeDestinationPort(uint32_t port)
 {
-    std::unique_lock lock(portChangeMutex);
+    std::unique_lock const lock(portChangeMutex);
     if (lastPortUsed == port)
     {
         return;
     }
     lastPortUsed = port;
 
-    auto chan =
+    auto const chan =
         grpc::CreateCustomChannel("127.0.0.1:" + std::to_string(port), grpc::InsecureChannelCredentials(), channelArgs);
     stub = KholorsAudioTransport::NewStub(chan);
 }
 
 void Client::tryReconnect()
 {
-    std::unique_lock lock(portChangeMutex);
-    auto chan = grpc::CreateCustomChannel("127.0.0.1:" + std::to_string(lastPortUsed),
-                                          grpc::InsecureChannelCredentials(), channelArgs);
+    std::unique_lock const lock(portChangeMutex);
+    auto const chan = grpc::CreateCustomChannel("127.0.0.1:" + std::to_string(lastPortUsed),
+                                                grpc::InsecureChannelCredentials(), channelArgs);
     stub = KholorsAudioTransport::NewStub(chan);
 }
 
 bool Client::sendAudioSegment(const AudioSegmentPayload *payload)
 {
-    std::shared_lock lock(portChangeMutex);
+    std::shared_lock const lock(portChangeMutex);
 
     // Context for the client. It could be used to convey extra information to
     // the server and/or tweak certain RPC behaviors.
@@ -86,6 +86,6 @@ bool Client::sendAudioSegment(const AudioSegmentPayload *payload)
 
     AudioSegmentUploadResponse reply;
 
-    grpc::Status status = stub->UploadAudioSegment(&context, *payload, &reply);
+    grpc::Status const status = stub->UploadAudioSegment(&context, *payload, &reply);
     return status.ok();
 }

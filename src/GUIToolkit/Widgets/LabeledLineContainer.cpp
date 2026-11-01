@@ -1,10 +1,12 @@
 #include "LabeledLineContainer.h"
 
+#include <utility>
+
 #include "../Consts.h"
 
 LabeledLineContainer::LabeledLineContainer(std::string lab, std::shared_ptr<juce::Component> widget, int maxLabWidth,
                                            int contentWidthDesired)
-    : content(widget), label(lab), maxLabelWidth(maxLabWidth), contentWidth(contentWidthDesired)
+    : content(std::move(widget)), label(std::move(lab)), maxLabelWidth(maxLabWidth), contentWidth(contentWidthDesired)
 {
     addAndMakeVisible(*content);
 }
@@ -16,7 +18,7 @@ std::shared_ptr<juce::Component> LabeledLineContainer::getContent()
 
 void LabeledLineContainer::paint(juce::Graphics &g)
 {
-    auto bounds = g.getClipBounds();
+    auto const bounds = g.getClipBounds();
     g.setColour(KHOLORS_COLOR_BACKGROUND);
     g.fillRect(bounds);
 

@@ -5,6 +5,7 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <memory>
 #include <mutex>
+#include <utility>
 
 #define TEXT_INPUT_INNER_PADDING 8
 #define INPUT_LABEL_WIDTH 100
@@ -17,7 +18,8 @@ TextEntry::NameFilter::NameFilter()
 
 TextEntry::TextEntry(TaskingManager &tm, std::string id, std::string shownName, std::string def, TextFilterId filter,
                      int minCharacters)
-    : identifier(id), name(shownName), lastTextSendToTask(def), minSizeForTask(minCharacters), taskManager(tm)
+    : identifier(std::move(id)), name(std::move(shownName)), lastTextSendToTask(def), minSizeForTask(minCharacters),
+      taskManager(tm)
 {
     if (filter == NameTextFilter)
     {
@@ -50,8 +52,8 @@ void TextEntry::resized()
 void TextEntry::setText(std::string newText)
 {
     {
-        juce::MessageManager::Lock mmLock;
-        juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+        juce::MessageManager::Lock const mmLock;
+        juce::MessageManager::Lock::ScopedTryLockType const tryLock(mmLock);
         while (!tryLock.isLocked())
         {
             if (taskManager.shutdownWasCalled())
@@ -66,12 +68,12 @@ void TextEntry::setText(std::string newText)
     }
 }
 
-void TextEntry::textEditorTextChanged(juce::TextEditor &te)
+void TextEntry::textEditorTextChanged(juce::TextEditor & /*te*/)
 {
-    auto txt = textEditor.getText();
+    auto const txt = textEditor.getText();
     if (txt.toStdString() != lastTextSendToTask)
     {
-        auto newTask = std::make_shared<TextEntryUpdateTask>(identifier, txt.toStdString());
+        auto const newTask = std::make_shared<TextEntryUpdateTask>(identifier, txt.toStdString());
         newTask->previousText = lastTextSendToTask;
         newTask->setCompleted(true);
         lastTextSendToTask = txt.toStdString();
@@ -81,13 +83,13 @@ void TextEntry::textEditorTextChanged(juce::TextEditor &te)
 
 bool TextEntry::taskHandler(std::shared_ptr<Task> task)
 {
-    auto textUpdateTask = std::dynamic_pointer_cast<TextEntryUpdateTask>(task);
+    auto const textUpdateTask = std::dynamic_pointer_cast<TextEntryUpdateTask>(task);
     if (textUpdateTask != nullptr && !textUpdateTask->isCompleted() &&
         textUpdateTask->textEntryIdentifier == identifier)
     {
         {
-            juce::MessageManager::Lock mmLock;
-            juce::MessageManager::Lock::ScopedTryLockType tryLock(mmLock);
+            juce::MessageManager::Lock const mmLock;
+            juce::MessageManager::Lock::ScopedTryLockType const tryLock(mmLock);
             while (!tryLock.isLocked())
             {
                 if (taskManager.shutdownWasCalled())

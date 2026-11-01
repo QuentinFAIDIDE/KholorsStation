@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace AudioTransport
 {
@@ -11,7 +12,7 @@ namespace AudioTransport
 class ServerStatusTask : public Task
 {
   public:
-    ServerStatusTask(std::pair<bool, uint32_t> status) : runningAndPort(status)
+    explicit ServerStatusTask(std::pair<bool, uint32_t> status) : runningAndPort(std::move(status))
     {
     }
 
@@ -20,14 +21,16 @@ class ServerStatusTask : public Task
     */
     std::string marshal() override
     {
-        nlohmann::json taskj = {{"object", "task"},
-                                {"task", "server_status_update"},
-                                {"is_running", runningAndPort.first},
-                                {"port", runningAndPort.second},
-                                {"is_completed", isCompleted()},
-                                {"failed", hasFailed()},
-                                {"recordable_in_history", recordableInHistory},
-                                {"is_part_of_reversion", isPartOfReversion}};
+        nlohmann::json const taskj = {
+            {"object", "task"},
+            {"task", "server_status_update"},
+            {"is_running", runningAndPort.first},
+            {"port", runningAndPort.second},
+            {"is_completed", isCompleted()},
+            {"failed", hasFailed()},
+            {"recordable_in_history", recordableInHistory},
+            {"is_part_of_reversion", isPartOfReversion},
+        };
         return taskj.dump();
     }
 

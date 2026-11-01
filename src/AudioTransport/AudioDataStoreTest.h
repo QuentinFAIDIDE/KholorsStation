@@ -10,13 +10,13 @@ class AudioDataStoreTestSuite
      * @brief Testing that the AudioSegmentPayloads are properly parsed,
      * within a single thread.
      */
-    void testParse01();
+    static void testParse01();
 
     /**
      * @brief Testing that the structs are properly reused.
      *
      */
-    void testPreallocation01();
+    static void testPreallocation01();
 
     // run all tests
     void runAll();

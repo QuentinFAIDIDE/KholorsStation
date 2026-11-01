@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include "StationApp/Audio/NewFftDataTask.h"
 #include "StationApp/Audio/ProcessingTimerWaitgroup.h"
 #include "StationApp/GUI/ClearTrackInfoRange.h"
@@ -20,7 +22,7 @@ class FftOverTimeGraph : public BaseOverTimeGraph
 {
   public:
     FftOverTimeGraph(TrackInfoStore &tis, NormalizedUnitTransformer &ft, NormalizedUnitTransformer &it);
-    ~FftOverTimeGraph();
+    ~FftOverTimeGraph() override;
 
     struct TrackSecondTile
     {
@@ -31,23 +33,21 @@ class FftOverTimeGraph : public BaseOverTimeGraph
             tileIndexPosition = -1;
         }
         std::shared_ptr<TexturedMonochromeRectangle> mesh;
-        uint64_t trackIdentifer;   /**< Identifier of the track this tile is for */
-        int64_t samplePosition;    /**< Position of the tile in samples */
+        uint64_t trackIdentifer{}; /**< Identifier of the track this tile is for */
+        int64_t samplePosition{};  /**< Position of the tile in samples */
         int64_t tileIndexPosition; /**< Position of the tile in second-tile index */
     };
 
     struct FftToDraw
     {
-        FftToDraw()
-        {
-        }
+        FftToDraw() = default;
 
         FftToDraw(uint64_t _trackIdentifier, int64_t _secondTileIndex, int64_t _begin, int64_t _end, int fftSize,
-                  float *data, int _channel, uint32_t _sampleRate,
+                  const float *data, int _channel, uint32_t _sampleRate,
                   std::shared_ptr<ProcessingTimerWaitgroup> _procTimeWg)
         {
-            fftData.resize((size_t)fftSize);
-            for (size_t i = 0; i < (size_t)fftSize; i++)
+            fftData.resize(static_cast<size_t>(fftSize));
+            for (size_t i = 0; std::cmp_less(i, fftSize); i++)
             {
                 fftData[i] = data[i];
             }
@@ -57,17 +57,17 @@ class FftOverTimeGraph : public BaseOverTimeGraph
             begin = _begin;
             end = _end;
             sampleRate = _sampleRate;
-            procTimeWg = _procTimeWg;
+            procTimeWg = std::move(_procTimeWg);
         }
 
         void repurpose(uint64_t _trackIdentifier, int64_t _secondTileIndex, int64_t _begin, int64_t _end, int fftSize,
-                       float *data, int _channel, uint32_t _sampleRate,
+                       const float *data, int _channel, uint32_t _sampleRate,
                        std::shared_ptr<ProcessingTimerWaitgroup> _procTimeWg)
         {
-            fftData.resize((size_t)fftSize);
-            float *srcData = data;
+            fftData.resize(static_cast<size_t>(fftSize));
+            float const *srcData = data;
             float *dstData = fftData.data();
-            for (size_t i = 0; i < (size_t)fftSize; ++i)
+            for (size_t i = 0; std::cmp_less(i, fftSize); ++i)
             {
                 *dstData = *srcData;
                 dstData++;
@@ -79,15 +79,15 @@ class FftOverTimeGraph : public BaseOverTimeGraph
             begin = _begin;
             end = _end;
             sampleRate = _sampleRate;
-            procTimeWg = _procTimeWg;
+            procTimeWg = std::move(_procTimeWg);
         }
 
         std::vector<float> fftData; /**< data to draw inside the tile */
-        uint64_t trackIdentifier;   /**< identifier of the track tied to the track */
-        int64_t secondTileIndex;    /**< index of the tile to draw in */
-        int64_t begin, end;         /**< begin and end horizontal pixel coordinates */
-        int channel;                /**< 0 for left, 1 for right, 2 for both */
-        uint32_t sampleRate;        /**< sample rate of the fft tile */
+        uint64_t trackIdentifier{}; /**< identifier of the track tied to the track */
+        int64_t secondTileIndex{};  /**< index of the tile to draw in */
+        int64_t begin{}, end{};     /**< begin and end horizontal pixel coordinates */
+        int channel{};              /**< 0 for left, 1 for right, 2 for both */
+        uint32_t sampleRate{};      /**< sample rate of the fft tile */
         std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg;
     };
 
@@ -263,7 +263,7 @@ class FftOverTimeGraph : public BaseOverTimeGraph
      */
     float *getFftPixelIntensitiesLine(std::shared_ptr<FftToDraw> fftData, float sampleRateRatio);
 
-    float computeAudioToVisualSampleRateRatio(uint32_t sampleRate);
+    static float computeAudioToVisualSampleRateRatio(uint32_t sampleRate);
 
     /**
      * @brief handle updates when the component is resized.
@@ -366,7 +366,7 @@ class FftOverTimeGraph : public BaseOverTimeGraph
     NormalizedUnitTransformer &freqTransformer;
     NormalizedUnitTransformer &intensityTransformer;
 
-    int64_t tilesNonce;          /**< A nonce that is incremented when the tiles are updated */
+    int64_t tilesNonce{0};       /**< A nonce that is incremented when the tiles are updated */
     std::mutex imageAccessMutex; /**< Mutex to protect image access */
 
     FrequencyLinesDrawer freqLines; /**< A frequency line drawer object */
@@ -379,11 +379,12 @@ class FftOverTimeGraph : public BaseOverTimeGraph
     std::list<std::pair<uint64_t, std::list<size_t>>>
         trackTilesInDrawingOrder; /**< list of ordered tracks with their tiles lists used to construct
                                      trackTilesDrawOrder */
-    uint64_t trackDrawOrderNonce, lastTrackDrawOrderNonce; /**< nonce to know when to regenerate trackTilesDrawOrder */
-    std::vector<size_t> trackTilesDrawOrder;               /**< tile indices in ring buffer to draw in order */
+    uint64_t trackDrawOrderNonce{1},
+        lastTrackDrawOrderNonce{0};          /**< nonce to know when to regenerate trackTilesDrawOrder */
+    std::vector<size_t> trackTilesDrawOrder; /**< tile indices in ring buffer to draw in order */
 
     std::vector<TrackSecondTile> secondTilesRingBuffer; /**< Array of tiles that represent one second of track signal */
-    size_t secondTileNextIndex; /**< Index of the next tile to create in the secondTilesRingBuffer */
+    size_t secondTileNextIndex{0}; /**< Index of the next tile to create in the secondTilesRingBuffer */
 
     struct PairHash
     {
@@ -397,11 +398,12 @@ class FftOverTimeGraph : public BaseOverTimeGraph
         tileIndexByTrackIdAndPosition; /**< Index of tiles in secondTilesRingBuffer per track id and second tile index
                                         std::pair(track_id, tile_index) */
 
-    int64_t lastDrawTilesNonce; /**< The last nonce tilesNonce drawn */
+    int64_t lastDrawTilesNonce{}; /**< The last nonce tilesNonce drawn */
 
     std::unique_ptr<juce::OpenGLShaderProgram> texturedPositionedShader; /**< shader to draw ffts */
 
-    GpuConvolutionId convolutionId; /**< Identifier of the GLSL convolution to apply with GPU */
+    GpuConvolutionId convolutionId{
+        GpuConvolutionId::Emboss}; /**< Identifier of the GLSL convolution to apply with GPU */
 
     std::queue<std::shared_ptr<FftToDraw>>
         fftsToDrawQueue;        /**< queue of FFT to be drawn. Depends on the fftsToDrawLock */
@@ -414,8 +416,8 @@ class FftOverTimeGraph : public BaseOverTimeGraph
         colorUpdatesToApply; /**< track colors to be applied by openGL thread, need the lock */
     std::unordered_map<uint64_t, juce::Colour> knownTrackColors; /**< track colors known to the openGL thread */
 
-    bool needToResetTiles;      /**< true when the openGL thread is expected to clear all tiles */
-    std::mutex tilesResetMutex; /**< mutex to protect acces to clearAllTiles */
+    bool needToResetTiles{false}; /**< true when the openGL thread is expected to clear all tiles */
+    std::mutex tilesResetMutex;   /**< mutex to protect acces to clearAllTiles */
 
     std::mutex clearedRangesMutex;
     std::queue<ClearTrackInfoRange> clearedRanges; /**< A list of ranges on which specific tracks were cleared. Here to
@@ -425,7 +427,7 @@ class FftOverTimeGraph : public BaseOverTimeGraph
     std::optional<uint64_t> currentlySelectedTrack;
     std::mutex selectedTrackMutex;
 
-    int64_t renderOpenGlIter; /**< a simple counter which is iterated at each render to track even/odd rendering */
+    int64_t renderOpenGlIter{0}; /**< a simple counter which is iterated at each render to track even/odd rendering */
 
     std::vector<float> fftIntensitiesBuffer; /**< a buffer to set FFT intensities and pass to the textured rectangles */
 };

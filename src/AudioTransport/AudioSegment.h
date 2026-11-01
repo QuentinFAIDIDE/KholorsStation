@@ -10,7 +10,7 @@
 namespace AudioTransport
 {
 
-typedef std::shared_ptr<std::vector<float>> AudioBufferVector;
+using AudioBufferVector = std::shared_ptr<std::vector<float>>;
 
 /**
  * @brief Holds a segment of audio samples as well
@@ -30,14 +30,14 @@ struct AudioSegment : public AudioTransportData
      */
     void parseFromApiPayload(const AudioSegmentPayload *payload, size_t channel);
 
-    float audioSamples[AUDIO_SEGMENTS_BLOCK_SIZE]; /**< buffer of AUDIO_SEGMENTS_BLOCK_SIZE audio samples of the
+    float audioSamples[AUDIO_SEGMENTS_BLOCK_SIZE]{}; /**< buffer of AUDIO_SEGMENTS_BLOCK_SIZE audio samples of the
                              track channel (used size is noAudioSamples) */
-    uint64_t trackIdentifier;                      /**< Identifier of the track the data comes from */
-    uint32_t channel;                              /**< Index of the channel the data comes from */
-    uint32_t noChannels;                           /**< Total number of channels */
-    uint32_t sampleRate;                           /**< Sample rate of the data */
-    uint32_t segmentStartSample;                   /**< Start sample of the audio segment position */
-    uint64_t noAudioSamples;                       /**< How many audio samples there are in this audio segment */
-    int64_t payloadSentTimeMs;                     /**< time at which the payload was sent by the plugin */
+    uint64_t trackIdentifier{};                      /**< Identifier of the track the data comes from */
+    uint32_t channel{};                              /**< Index of the channel the data comes from */
+    uint32_t noChannels{};                           /**< Total number of channels */
+    uint32_t sampleRate{};                           /**< Sample rate of the data */
+    uint32_t segmentStartSample{};                   /**< Start sample of the audio segment position */
+    uint64_t noAudioSamples{};                       /**< How many audio samples there are in this audio segment */
+    int64_t payloadSentTimeMs{};                     /**< time at which the payload was sent by the plugin */
 };
 } // namespace AudioTransport

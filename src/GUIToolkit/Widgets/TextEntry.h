@@ -6,6 +6,7 @@
 #include "juce_core/juce_core.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <nlohmann/json.hpp>
+#include <utility>
 
 class TextEntry : public juce::Component, public juce::TextEditor::Listener, public TaskListener
 {
@@ -17,7 +18,7 @@ class TextEntry : public juce::Component, public juce::TextEditor::Listener, pub
     enum TextFilterId
     {
         NoTextFilter = 0,
-        NameTextFilter = 1
+        NameTextFilter = 1,
     };
 
     TextEntry(TaskingManager &tm, std::string identifier, std::string name, std::string defaultValue,
@@ -64,7 +65,7 @@ class TextEntryUpdateTask : public Task
 {
   public:
     TextEntryUpdateTask(std::string identifier, std::string newTextP)
-        : textEntryIdentifier(identifier), newText(newTextP)
+        : textEntryIdentifier(std::move(identifier)), newText(std::move(newTextP))
     {
         undoable = true;
     }
@@ -74,14 +75,16 @@ class TextEntryUpdateTask : public Task
     */
     std::string marshal() override
     {
-        nlohmann::json taskj = {{"object", "task"},
-                                {"task", "text_entry_update"},
-                                {"is_completed", isCompleted()},
-                                {"failed", hasFailed()},
-                                {"previous_text", previousText},
-                                {"new_text", newText},
-                                {"recordable_in_history", recordableInHistory},
-                                {"is_part_of_reversion", isPartOfReversion}};
+        nlohmann::json const taskj = {
+            {"object", "task"},
+            {"task", "text_entry_update"},
+            {"is_completed", isCompleted()},
+            {"failed", hasFailed()},
+            {"previous_text", previousText},
+            {"new_text", newText},
+            {"recordable_in_history", recordableInHistory},
+            {"is_part_of_reversion", isPartOfReversion},
+        };
         return taskj.dump();
     }
 
@@ -90,7 +93,7 @@ class TextEntryUpdateTask : public Task
         std::vector<std::shared_ptr<Task>> response;
         if (undoable)
         {
-            auto rev = std::make_shared<TextEntryUpdateTask>(textEntryIdentifier, previousText);
+            auto const rev = std::make_shared<TextEntryUpdateTask>(textEntryIdentifier, previousText);
             rev->previousText = newText;
             response.push_back(rev);
         }

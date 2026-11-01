@@ -33,7 +33,7 @@ class TaskingManager : public TaskListener
      their callback called with the tasks when they are broadcasted.
      Returns an id that must be used later if using purgeTaskListener.
      */
-    int64_t registerTaskListener(TaskListener *);
+    int64_t registerTaskListener(TaskListener * /*newListener*/);
 
     /**
      * Tries to find the task listener and delete it from the list.
@@ -56,13 +56,13 @@ class TaskingManager : public TaskListener
      Push a task in the queue for it to be picked and broadcasted by the
      tasking thread if it's started.
      */
-    void broadcastTask(std::shared_ptr<Task>);
+    void broadcastTask(std::shared_ptr<Task> /*submittedTask*/);
 
     /**
      This should only be called from an already running taskHandler.
      Will call another taskHandler and jump the queue of tasks.
      */
-    void broadcastNestedTaskNow(std::shared_ptr<Task>);
+    void broadcastNestedTaskNow(std::shared_ptr<Task> /*priorityTask*/);
 
     /**
      * @brief Task handler responsible for task related tasks.
@@ -105,7 +105,7 @@ class TaskingManager : public TaskListener
     /**
      Append this task to history ring buffer.
      */
-    void recordTaskInHistory(std::shared_ptr<Task>);
+    void recordTaskInHistory(std::shared_ptr<Task> /*taskToRecord*/);
 
     /**
      * @brief This can be used to throw a std::runtime_error when the caller is not
@@ -153,7 +153,7 @@ class TaskingManager : public TaskListener
     std::mutex taskingThreadStartMutex; /**< Used to secure start and stop being called concurrently, and reading of
                                            thread ids and nullity in other functions */
     std::condition_variable taskingThreadCV; /**< Used to wake up the background thread */
-    int64_t lastUsedTaskListenerId;          /**< used to incrementally generate task listeners ids */
+    int64_t lastUsedTaskListenerId{-1};      /**< used to incrementally generate task listeners ids */
 
     std::atomic<bool> backgroundThreadIsRunning;
 };

@@ -14,7 +14,7 @@
 class SensitivitySlider : public juce::Slider
 {
   public:
-    SensitivitySlider(TaskingManager &tm);
+    explicit SensitivitySlider(TaskingManager &tm);
     void valueChanged() override;
 
   private:

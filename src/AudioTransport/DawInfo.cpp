@@ -21,7 +21,7 @@ void DawInfo::parseFromApiPayload(const AudioSegmentPayload *payload)
     isLooping = payload->daw_is_looping();
 }
 
-bool DawInfo::operator!=(const DawInfo &o)
+bool DawInfo::operator!=(const DawInfo &o) const
 {
     return std::abs(loopEndQuarterNotePos - o.loopEndQuarterNotePos) > std::numeric_limits<double>::epsilon() ||
            std::abs(loopStartQuarterNotePos - o.loopStartQuarterNotePos) > std::numeric_limits<double>::epsilon() ||

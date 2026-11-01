@@ -11,9 +11,7 @@ FrequencyScale::FrequencyScale(NormalizedUnitTransformer &ut, float maxDrawableF
     setOpaque(true);
 }
 
-FrequencyScale::~FrequencyScale()
-{
-}
+FrequencyScale::~FrequencyScale() = default;
 
 void FrequencyScale::paint(juce::Graphics &g)
 {
@@ -30,34 +28,35 @@ void FrequencyScale::paint(juce::Graphics &g)
     // generate necessary labels
     std::vector<LabelBox> labelsToDraw;
     auto labs0Hz = generateLabelBox(0, "0", "Hz");
-    for (size_t i = 0; i < labs0Hz.size(); i++)
+    labelsToDraw.reserve(labs0Hz.size());
+    for (const auto &i : labs0Hz)
     {
-        labelsToDraw.push_back(labs0Hz[i]);
+        labelsToDraw.push_back(i);
     }
     auto labs100Hz = generateLabelBox(100, "100", "Hz");
-    for (size_t i = 0; i < labs100Hz.size(); i++)
+    for (const auto &i : labs100Hz)
     {
-        labelsToDraw.push_back(labs100Hz[i]);
+        labelsToDraw.push_back(i);
     }
     auto labs350Hz = generateLabelBox(350, "350", "Hz");
-    for (size_t i = 0; i < labs350Hz.size(); i++)
+    for (const auto &i : labs350Hz)
     {
-        labelsToDraw.push_back(labs350Hz[i]);
+        labelsToDraw.push_back(i);
     }
     auto labs1kHz = generateLabelBox(1000, "1", "kHz");
-    for (size_t i = 0; i < labs1kHz.size(); i++)
+    for (const auto &i : labs1kHz)
     {
-        labelsToDraw.push_back(labs1kHz[i]);
+        labelsToDraw.push_back(i);
     }
     auto labs35kHz = generateLabelBox(3500, "3.5", "kHz");
-    for (size_t i = 0; i < labs35kHz.size(); i++)
+    for (const auto &i : labs35kHz)
     {
-        labelsToDraw.push_back(labs35kHz[i]);
+        labelsToDraw.push_back(i);
     }
     auto labs10kHz = generateLabelBox(10000, "10", "kHz");
-    for (size_t i = 0; i < labs10kHz.size(); i++)
+    for (const auto &i : labs10kHz)
     {
-        labelsToDraw.push_back(labs10kHz[i]);
+        labelsToDraw.push_back(i);
     }
 
     drawLabels(g, labelsToDraw);
@@ -72,7 +71,7 @@ void FrequencyScale::drawRotatedTitle(juce::Graphics &g)
     juce::Path p;
     ga.createPath(p);
 
-    auto pathBounds = p.getBounds();
+    auto const pathBounds = p.getBounds();
 
     p.applyTransform(
         juce::AffineTransform()
@@ -116,7 +115,7 @@ std::vector<FrequencyScale::LabelBox> FrequencyScale::generateLabelBox(float fre
 {
 
     // convert the frequency to a ratio of position from center
-    float positionRatioLinearRange = float(frequencyHz) / maxDrawableFreq;
+    float const positionRatioLinearRange = frequencyHz / maxDrawableFreq;
     float positionRatioOnScreenRange = positionRatioLinearRange;
     if (positionRatioLinearRange > std::numeric_limits<float>::epsilon() && positionRatioLinearRange < 1.0f)
     {
@@ -125,18 +124,18 @@ std::vector<FrequencyScale::LabelBox> FrequencyScale::generateLabelBox(float fre
     // ignore data that is too close to borders
     if (positionRatioOnScreenRange > MAXIMUM_DRAWABLE_LABEL_POSITION_RATIO)
     {
-        return std::vector<LabelBox>();
+        return {};
     }
 
-    float halfScreen = (float)getHeight() / 2.0f;
-    auto upperTextBox = getLocalBounds()
-                            .withY(halfScreen - (positionRatioOnScreenRange * halfScreen) - (LABEL_HEIGHT >> 1))
-                            .withHeight(LABEL_HEIGHT)
-                            .withTrimmedRight(LABEL_RIGHT_PADDING);
-    auto lowerTextBox = getLocalBounds()
-                            .withY(halfScreen + (positionRatioOnScreenRange * halfScreen) - (LABEL_HEIGHT >> 1))
-                            .withHeight(LABEL_HEIGHT)
-                            .withTrimmedRight(LABEL_RIGHT_PADDING);
+    float const halfScreen = static_cast<float>(getHeight()) / 2.0f;
+    auto const upperTextBox = getLocalBounds()
+                                  .withY(halfScreen - (positionRatioOnScreenRange * halfScreen) - (LABEL_HEIGHT >> 1))
+                                  .withHeight(LABEL_HEIGHT)
+                                  .withTrimmedRight(LABEL_RIGHT_PADDING);
+    auto const lowerTextBox = getLocalBounds()
+                                  .withY(halfScreen + (positionRatioOnScreenRange * halfScreen) - (LABEL_HEIGHT >> 1))
+                                  .withHeight(LABEL_HEIGHT)
+                                  .withTrimmedRight(LABEL_RIGHT_PADDING);
 
     std::vector<LabelBox> result;
 
@@ -154,13 +153,13 @@ void FrequencyScale::drawLabels(juce::Graphics &g, std::vector<LabelBox> &labs)
 {
     std::vector<juce::Rectangle<int>> drawnAreas;
 
-    for (size_t i = 0; i < labs.size(); i++)
+    for (auto &lab : labs)
     {
         bool goodToDraw = true;
         // abort if it intersect already drawn Areas
-        for (size_t j = 0; j < drawnAreas.size(); j++)
+        for (auto drawnArea : drawnAreas)
         {
-            if (drawnAreas[j].intersects(labs[i].bounds))
+            if (drawnArea.intersects(lab.bounds))
             {
                 goodToDraw = false;
             }
@@ -170,16 +169,16 @@ void FrequencyScale::drawLabels(juce::Graphics &g, std::vector<LabelBox> &labs)
             continue;
         }
 
-        juce::Font unitFont(LABEL_FONT_HEIGHT);
-        juce::Font valueFont(LABEL_FONT_HEIGHT);
+        juce::Font const unitFont(LABEL_FONT_HEIGHT);
+        juce::Font const valueFont(LABEL_FONT_HEIGHT);
 
         // extract area to draw units
-        std::string fullUnitText = " " + labs[i].unit;
-        int unitAreaWidth = juce::GlyphArrangement::getStringWidthInt(unitFont, fullUnitText);
-        auto unitDrawArea = labs[i].bounds.withLeft(unitAreaWidth);
-        auto valueDrawArea = labs[i].bounds.withTrimmedRight(unitAreaWidth);
+        std::string const fullUnitText = " " + lab.unit;
+        int const unitAreaWidth = juce::GlyphArrangement::getStringWidthInt(unitFont, fullUnitText);
+        auto const unitDrawArea = lab.bounds.withLeft(unitAreaWidth);
+        auto const valueDrawArea = lab.bounds.withTrimmedRight(unitAreaWidth);
 
-        int valueTextWidth = juce::GlyphArrangement::getStringWidthInt(valueFont, labs[i].text);
+        int const valueTextWidth = juce::GlyphArrangement::getStringWidthInt(valueFont, lab.text);
         // ignore drawing if there is no horizontal space left for the text
         if (valueTextWidth >= valueDrawArea.getWidth())
         {
@@ -188,12 +187,12 @@ void FrequencyScale::drawLabels(juce::Graphics &g, std::vector<LabelBox> &labs)
 
         g.setFont(unitFont);
         g.setColour(KHOLORS_COLOR_UNITS);
-        g.drawText(labs[i].unit, unitDrawArea, juce::Justification::centredRight, false);
+        g.drawText(lab.unit, unitDrawArea, juce::Justification::centredRight, false);
 
         g.setFont(valueFont);
         g.setColour(KHOLORS_COLOR_WHITE);
-        g.drawText(labs[i].text, valueDrawArea, juce::Justification::centredRight, false);
+        g.drawText(lab.text, valueDrawArea, juce::Justification::centredRight, false);
 
-        drawnAreas.push_back(labs[i].bounds);
+        drawnAreas.push_back(lab.bounds);
     }
 }

@@ -15,6 +15,6 @@ class GraphPlayCursor
     void submitNewPlayCursorPosition(int64_t samplePosition, uint32_t sampleRate);
 
   private:
-    int64_t playCursorPosition;
+    int64_t playCursorPosition{0};
     std::mutex playCursorMutex;
 };

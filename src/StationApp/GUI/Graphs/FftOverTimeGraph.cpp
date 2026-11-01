@@ -1,37 +1,35 @@
 #include "FftOverTimeGraph.h"
+
 #include "StationApp/GUI/AudioConstants.h"
 #include "StationApp/GUI/Graphs/FrequencyLinesDrawer.h"
 #include "StationApp/GUI/Graphs/SamplePositionUtils.h"
 #include "StationApp/OpenGL/OpenGlShaders.h"
 #include "StationApp/OpenGL/ShaderHelpers.h"
 #include "spdlog/spdlog.h"
+#include <memory>
 
 FftOverTimeGraph::FftOverTimeGraph(TrackInfoStore &tis, NormalizedUnitTransformer &ft, NormalizedUnitTransformer &it)
-    : BaseOverTimeGraph(tis), freqTransformer(ft), intensityTransformer(it), tilesNonce(0),
-      freqLines(ft, VISUAL_SAMPLE_RATE >> 1), backgroundColor(KHOLORS_COLOR_BACKGROUND), tmpFreqTransformer(ft),
-      tmpIntensityTransformer(it), trackDrawOrderNonce(1), lastTrackDrawOrderNonce(0), secondTileNextIndex(0),
-      convolutionId(GpuConvolutionId::Emboss), needToResetTiles(false), renderOpenGlIter(0)
+    : BaseOverTimeGraph(tis), freqTransformer(ft), intensityTransformer(it), freqLines(ft, VISUAL_SAMPLE_RATE >> 1),
+      backgroundColor(KHOLORS_COLOR_BACKGROUND), tmpFreqTransformer(ft), tmpIntensityTransformer(it)
 {
     setInterceptsMouseClicks(false, false);
     addAndMakeVisible(freqLines);
 }
 
-FftOverTimeGraph::~FftOverTimeGraph()
-{
-}
+FftOverTimeGraph::~FftOverTimeGraph() = default;
 
 void FftOverTimeGraph::clear()
 {
-    std::lock_guard lock(tilesResetMutex);
+    std::scoped_lock const lock(tilesResetMutex);
     needToResetTiles = true;
 }
 
 std::vector<ClearTrackInfoRange> FftOverTimeGraph::getClearedTrackRanges()
 {
-    std::lock_guard lock(clearedRangesMutex);
+    std::scoped_lock const lock(clearedRangesMutex);
     std::vector<ClearTrackInfoRange> response;
     response.reserve(clearedRanges.size());
-    while (clearedRanges.size() > 0)
+    while (!clearedRanges.empty())
     {
         response.push_back(clearedRanges.front());
         clearedRanges.pop();
@@ -39,10 +37,10 @@ std::vector<ClearTrackInfoRange> FftOverTimeGraph::getClearedTrackRanges()
     return response;
 }
 
-void FftOverTimeGraph::setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager *tm)
+void FftOverTimeGraph::setSelectedTrack(std::optional<uint64_t> selectedTrack, TaskingManager * /*tm*/)
 {
     {
-        std::lock_guard lock(selectedTrackMutex);
+        std::scoped_lock const lock(selectedTrackMutex);
         currentlySelectedTrack = selectedTrack;
     }
 }
@@ -50,22 +48,23 @@ void FftOverTimeGraph::setSelectedTrack(std::optional<uint64_t> selectedTrack, T
 void FftOverTimeGraph::displayNewFftData(std::shared_ptr<NewFftDataTask> fftData,
                                          std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
 {
-    int fftSize = fftData->fftData->size() / fftData->noFFTs;
-    int64_t fftSampleWidth = (int64_t)fftData->segmentSampleLength / (int64_t)fftData->noFFTs;
+    int const fftSize = fftData->fftData->size() / fftData->noFFTs;
+    int64_t const fftSampleWidth =
+        static_cast<int64_t>(fftData->segmentSampleLength) / static_cast<int64_t>(fftData->noFFTs);
     // for each fft in the received set
     for (size_t i = 0; i < fftData->noFFTs; i++)
     {
         // pointer to the raw data for this fft
-        float *fftDataPointer = fftData->fftData->data() + ((size_t)fftSize * i);
+        float *fftDataPointer = fftData->fftData->data() + (static_cast<size_t>(fftSize) * i);
         // compute its position and tile index
-        int64_t startSample = fftData->segmentStartSample + ((int64_t)i * fftSampleWidth);
+        int64_t startSample = fftData->segmentStartSample + (static_cast<int64_t>(i) * fftSampleWidth);
         int64_t endSample = startSample + fftSampleWidth;
 
         SamplePositionUtils::toVisualSampleRate(startSample, endSample, fftData->sampleRate);
         SamplePositionUtils::shiftToAlignWithOrigin(startSample, endSample);
 
-        int64_t secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
-        int64_t secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
+        int64_t const secondTileIndexStartSample = startSample / VISUAL_SAMPLE_RATE;
+        int64_t const secondTileIndexEndSample = endSample / VISUAL_SAMPLE_RATE;
         // NOTE: we suppose that single FFT will never be larger than one second (tile width)
 
         // fill the tile (one or two if overlaps) with the fft data
@@ -110,8 +109,8 @@ void FftOverTimeGraph::displayNewFftData(std::shared_ptr<NewFftDataTask> fftData
 
 void FftOverTimeGraph::setTrackColor(uint64_t trackIdentifier, juce::Colour col)
 {
-    std::pair<uint64_t, juce::Colour> colorToPush(trackIdentifier, col);
-    std::lock_guard lock(openGlThreadColorsMutex);
+    std::pair<uint64_t, juce::Colour> const colorToPush(trackIdentifier, col);
+    std::scoped_lock const lock(openGlThreadColorsMutex);
     colorUpdatesToApply.push(colorToPush);
 }
 
@@ -121,16 +120,14 @@ int64_t FftOverTimeGraph::getTileIndexIfExists(uint64_t trackIdentifier, int64_t
     {
         return -1;
     }
-    auto searchTerms = std::pair<uint64_t, int64_t>(trackIdentifier, secondTileIndex);
-    auto tileSearched = tileIndexByTrackIdAndPosition.find(searchTerms);
+    auto const searchTerms = std::pair<uint64_t, int64_t>(trackIdentifier, secondTileIndex);
+    auto const tileSearched = tileIndexByTrackIdAndPosition.find(searchTerms);
     if (tileSearched != tileIndexByTrackIdAndPosition.end())
     {
-        return (int64_t)tileSearched->second;
+        return static_cast<int64_t>(tileSearched->second);
     }
-    else
-    {
-        return -1;
-    }
+
+    return -1;
 }
 
 size_t FftOverTimeGraph::createSecondTile(uint64_t trackIdentifier, int64_t secondTileIndex)
@@ -141,13 +138,13 @@ size_t FftOverTimeGraph::createSecondTile(uint64_t trackIdentifier, int64_t seco
         return 0;
     }
     // throw invalid argument error if the tile already exist at that position for this track
-    auto existingTile =
+    auto const existingTile =
         tileIndexByTrackIdAndPosition.find(std::pair<uint64_t, int64_t>(trackIdentifier, secondTileIndex));
     if (existingTile != tileIndexByTrackIdAndPosition.end())
     {
         throw std::invalid_argument("called createSecondTile for an already existing tile");
     }
-    size_t newTileIndex;
+    size_t newTileIndex = 0;
     // if the ring buffer is not full, expand it with a new datum, clear it and return it
     if (secondTilesRingBuffer.size() < IMAGES_RING_BUFFER_SIZE)
     {
@@ -171,12 +168,12 @@ size_t FftOverTimeGraph::createSecondTile(uint64_t trackIdentifier, int64_t seco
             secondTilesRingBuffer[newTileIndex].trackIdentifer, secondTilesRingBuffer[newTileIndex].tileIndexPosition));
         // notify FreqView that a range was cleared for a track
         // in order for related components to keep up with what's on screen
-        ClearTrackInfoRange clearedRange;
+        ClearTrackInfoRange clearedRange{};
         clearedRange.startSample = VISUAL_SAMPLE_RATE * secondTilesRingBuffer[newTileIndex].tileIndexPosition;
         clearedRange.length = VISUAL_SAMPLE_RATE;
         clearedRange.trackIdentifier = secondTilesRingBuffer[newTileIndex].trackIdentifer;
         {
-            std::lock_guard lock(clearedRangesMutex);
+            std::scoped_lock const lock(clearedRangesMutex);
             clearedRanges.push(clearedRange);
         }
         // remove the tile from the drawing order tracking
@@ -192,7 +189,7 @@ size_t FftOverTimeGraph::createSecondTile(uint64_t trackIdentifier, int64_t seco
     addTrackTileToDrawingOrder(secondTilesRingBuffer[newTileIndex].trackIdentifer, newTileIndex);
 
     juce::Colour col = KHOLORS_COLOR_WHITE;
-    auto optionalColor = knownTrackColors.find(trackIdentifier);
+    auto const optionalColor = knownTrackColors.find(trackIdentifier);
     if (optionalColor != knownTrackColors.end())
     {
         col = optionalColor->second;
@@ -202,7 +199,7 @@ size_t FftOverTimeGraph::createSecondTile(uint64_t trackIdentifier, int64_t seco
     secondTilesRingBuffer[newTileIndex].mesh->setPosition(secondTilesRingBuffer[newTileIndex].samplePosition,
                                                           VISUAL_SAMPLE_RATE, trackIdentifier);
 
-    auto newIndex = std::pair<uint64_t, int64_t>(trackIdentifier, secondTileIndex);
+    auto const newIndex = std::pair<uint64_t, int64_t>(trackIdentifier, secondTileIndex);
     auto newSetEntry = std::pair<std::pair<uint64_t, int64_t>, size_t>(newIndex, newTileIndex);
     tileIndexByTrackIdAndPosition.insert(newSetEntry);
     // increment the index of the next to be allocated
@@ -216,9 +213,9 @@ size_t FftOverTimeGraph::createSecondTile(uint64_t trackIdentifier, int64_t seco
 
 void FftOverTimeGraph::queueFftForDrawing(uint64_t trackIdentifier, int64_t secondTileIndex, int64_t begin, int64_t end,
                                           int fftSize, float *data, int channel, uint32_t sampleRate,
-                                          TaskingManager *tm, std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
+                                          TaskingManager * /*tm*/, std::shared_ptr<ProcessingTimerWaitgroup> procTimeWg)
 {
-    auto newFftToDraw = getIdleFftToDrawStruct();
+    auto const newFftToDraw = getIdleFftToDrawStruct();
 
     // set the data of the FFT to draw
     newFftToDraw->repurpose(trackIdentifier, secondTileIndex, begin, end, fftSize, data, channel, sampleRate,
@@ -226,7 +223,7 @@ void FftOverTimeGraph::queueFftForDrawing(uint64_t trackIdentifier, int64_t seco
 
     // push to the queue of FFT to draw for the openGL thread to pick it
     {
-        std::lock_guard lock(fftsToDrawMutex);
+        std::scoped_lock const lock(fftsToDrawMutex);
         fftsToDrawQueue.push(newFftToDraw);
     }
 }
@@ -234,13 +231,15 @@ void FftOverTimeGraph::queueFftForDrawing(uint64_t trackIdentifier, int64_t seco
 void FftOverTimeGraph::drawFftToGpuTexture(std::shared_ptr<FftToDraw> fftData)
 {
     syncUnitTransformers();
-    size_t tileIndexToDrawIn = getTextureTileAtTrackPosition(fftData->trackIdentifier, fftData->secondTileIndex);
-    float sampleRateRatio = computeAudioToVisualSampleRateRatio(fftData->sampleRate);
+    size_t const tileIndexToDrawIn = getTextureTileAtTrackPosition(fftData->trackIdentifier, fftData->secondTileIndex);
+    float const sampleRateRatio = computeAudioToVisualSampleRateRatio(fftData->sampleRate);
 
-    float startSecond = (float(fftData->begin) / float(VISUAL_SAMPLE_RATE));
-    float endSecond = (float(fftData->end) / float(VISUAL_SAMPLE_RATE));
-    size_t startPixel = (size_t)juce::jlimit(0, SECOND_TILE_WIDTH - 1, (int)(startSecond * float(SECOND_TILE_WIDTH)));
-    size_t endPixel = (size_t)juce::jlimit(0, SECOND_TILE_WIDTH - 1, (int)(endSecond * float(SECOND_TILE_WIDTH)));
+    float const startSecond = (static_cast<float>(fftData->begin) / static_cast<float>(VISUAL_SAMPLE_RATE));
+    float const endSecond = (static_cast<float>(fftData->end) / static_cast<float>(VISUAL_SAMPLE_RATE));
+    auto const startPixel = static_cast<size_t>(
+        juce::jlimit(0, SECOND_TILE_WIDTH - 1, static_cast<int>(startSecond * static_cast<float>(SECOND_TILE_WIDTH))));
+    auto const endPixel = static_cast<size_t>(
+        juce::jlimit(0, SECOND_TILE_WIDTH - 1, static_cast<int>(endSecond * static_cast<float>(SECOND_TILE_WIDTH))));
 
     float *baseIntensitiesPointer = getFftPixelIntensitiesLine(fftData, sampleRateRatio);
 
@@ -287,15 +286,15 @@ void FftOverTimeGraph::removeTrackTileFromDrawingOrder(uint64_t trackIdentifier,
 {
     trackDrawOrderNonce++;
 
-    for (auto it = trackTilesInDrawingOrder.begin(); it != trackTilesInDrawingOrder.end(); ++it)
+    for (auto &it : trackTilesInDrawingOrder)
     {
-        if (it->first == trackIdentifier)
+        if (it.first == trackIdentifier)
         {
-            for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+            for (auto it2 = it.second.begin(); it2 != it.second.end(); ++it2)
             {
                 if (*it2 == tileIndexInRingBuffer)
                 {
-                    it->second.erase(it2);
+                    it.second.erase(it2);
                     return;
                 }
             }
@@ -309,9 +308,9 @@ void FftOverTimeGraph::ensureTrackTilesDrawOrderIsUpToDate()
     if (trackDrawOrderNonce != lastTrackDrawOrderNonce)
     {
         trackTilesDrawOrder.resize(0);
-        for (auto it = trackTilesInDrawingOrder.begin(); it != trackTilesInDrawingOrder.end(); ++it)
+        for (auto &it : trackTilesInDrawingOrder)
         {
-            for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+            for (auto it2 = it.second.begin(); it2 != it.second.end(); ++it2)
             {
                 trackTilesDrawOrder.push_back(*it2);
             }
@@ -322,23 +321,23 @@ void FftOverTimeGraph::ensureTrackTilesDrawOrderIsUpToDate()
 
 void FftOverTimeGraph::clearAllTilesIfNeeded()
 {
-    std::lock_guard lock(tilesResetMutex);
+    std::scoped_lock const lock(tilesResetMutex);
     if (needToResetTiles)
     {
         {
-            std::lock_guard lock2(clearedRangesMutex);
-            while (clearedRanges.size() > 0)
+            std::scoped_lock const lock2(clearedRangesMutex);
+            while (!clearedRanges.empty())
             {
                 clearedRanges.pop();
             }
         }
 
-        for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+        for (auto &i : secondTilesRingBuffer)
         {
-            if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
+            if (i.tileIndexPosition >= 0)
             {
-                secondTilesRingBuffer[i].mesh->clearAllData();
-                secondTilesRingBuffer[i].mesh->refreshGpuTextureIfChanged();
+                i.mesh->clearAllData();
+                i.mesh->refreshGpuTextureIfChanged();
             }
         }
         needToResetTiles = false;
@@ -349,19 +348,19 @@ void FftOverTimeGraph::drawQueuedFftsToTextures()
 {
     std::vector<std::shared_ptr<FftToDraw>> currentFftsToDraw;
     {
-        std::lock_guard lock(fftsToDrawMutex);
+        std::scoped_lock const lock(fftsToDrawMutex);
         while (!fftsToDrawQueue.empty())
         {
             currentFftsToDraw.push_back(fftsToDrawQueue.front());
             fftsToDrawQueue.pop();
         }
     }
-    for (size_t i = 0; i < currentFftsToDraw.size(); i++)
+    for (const auto &i : currentFftsToDraw)
     {
-        drawFftToGpuTexture(currentFftsToDraw[i]);
+        drawFftToGpuTexture(i);
         {
-            std::lock_guard lock(idleFftToDrawStructMutex);
-            idleFftToDrawStructs.push(currentFftsToDraw[i]);
+            std::scoped_lock const lock(idleFftToDrawStructMutex);
+            idleFftToDrawStructs.push(i);
         }
     }
 }
@@ -370,9 +369,9 @@ void FftOverTimeGraph::eventuallyRefreshGPUTextures()
 {
     if (renderOpenGlIter % 5 == 0)
     {
-        for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+        for (auto &i : secondTilesRingBuffer)
         {
-            secondTilesRingBuffer[i].mesh->refreshGpuTextureIfChanged();
+            i.mesh->refreshGpuTextureIfChanged();
         }
     }
     renderOpenGlIter++;
@@ -382,24 +381,24 @@ void FftOverTimeGraph::applyQueuedColorUpdates()
 {
     std::vector<std::pair<uint64_t, juce::Colour>> colorUpdates;
     {
-        std::lock_guard lock(openGlThreadColorsMutex);
-        while (colorUpdatesToApply.size() > 0)
+        std::scoped_lock const lock(openGlThreadColorsMutex);
+        while (!colorUpdatesToApply.empty())
         {
             colorUpdates.push_back(colorUpdatesToApply.front());
             colorUpdatesToApply.pop();
         }
     }
-    for (size_t i = 0; i < colorUpdates.size(); i++)
+    for (auto &colorUpdate : colorUpdates)
     {
-        auto existingTrackColor = knownTrackColors.find(colorUpdates[i].first);
-        if (existingTrackColor == knownTrackColors.end() || existingTrackColor->second != colorUpdates[i].second)
+        auto const existingTrackColor = knownTrackColors.find(colorUpdate.first);
+        if (existingTrackColor == knownTrackColors.end() || existingTrackColor->second != colorUpdate.second)
         {
-            knownTrackColors[colorUpdates[i].first] = colorUpdates[i].second;
-            for (size_t j = 0; j < secondTilesRingBuffer.size(); j++)
+            knownTrackColors[colorUpdate.first] = colorUpdate.second;
+            for (auto &j : secondTilesRingBuffer)
             {
-                if (secondTilesRingBuffer[j].trackIdentifer == colorUpdates[i].first)
+                if (j.trackIdentifer == colorUpdate.first)
                 {
-                    secondTilesRingBuffer[j].mesh->changeColor(colorUpdates[i].second);
+                    j.mesh->changeColor(colorUpdate.second);
                 }
             }
         }
@@ -410,19 +409,18 @@ void FftOverTimeGraph::drawGlFftTextures()
 {
     std::optional<uint64_t> selection;
     {
-        std::lock_guard lock(selectedTrackMutex);
+        std::scoped_lock const lock(selectedTrackMutex);
         selection = currentlySelectedTrack;
     }
 
     texturedPositionedShader->use();
     ensureTrackTilesDrawOrderIsUpToDate();
 
-    for (size_t i = 0; i < trackTilesDrawOrder.size(); i++)
+    for (unsigned long i : trackTilesDrawOrder)
     {
-        if (secondTilesRingBuffer[trackTilesDrawOrder[i]].tileIndexPosition >= 0)
+        if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
         {
-            if (selection == std::nullopt ||
-                selection.value() == secondTilesRingBuffer[trackTilesDrawOrder[i]].trackIdentifer)
+            if (selection == std::nullopt || selection.value() == secondTilesRingBuffer[i].trackIdentifer)
             {
                 texturedPositionedShader->setUniform("isDimmed", 0);
             }
@@ -430,14 +428,14 @@ void FftOverTimeGraph::drawGlFftTextures()
             {
                 texturedPositionedShader->setUniform("isDimmed", 1);
             }
-            secondTilesRingBuffer[trackTilesDrawOrder[i]].mesh->drawGlObjects();
+            secondTilesRingBuffer[i].mesh->drawGlObjects();
         }
     }
 }
 
 std::shared_ptr<FftOverTimeGraph::FftToDraw> FftOverTimeGraph::getIdleFftToDrawStruct()
 {
-    std::lock_guard lock(idleFftToDrawStructMutex);
+    std::scoped_lock const lock(idleFftToDrawStructMutex);
     if (idleFftToDrawStructs.empty())
     {
         return std::make_shared<FftToDraw>();
@@ -461,32 +459,33 @@ void FftOverTimeGraph::syncUnitTransformers()
 
 size_t FftOverTimeGraph::getTextureTileAtTrackPosition(uint64_t trackIdentifier, int64_t secondTileIndex)
 {
-    auto existingTrackTile = getTileIndexIfExists(trackIdentifier, secondTileIndex);
-    return existingTrackTile >= 0 ? (size_t)existingTrackTile : createSecondTile(trackIdentifier, secondTileIndex);
+    auto const existingTrackTile = getTileIndexIfExists(trackIdentifier, secondTileIndex);
+    return existingTrackTile >= 0 ? static_cast<size_t>(existingTrackTile)
+                                  : createSecondTile(trackIdentifier, secondTileIndex);
 }
 
 // TODO: rename to something more meaningfull
 float *FftOverTimeGraph::getFftPixelIntensitiesLine(std::shared_ptr<FftToDraw> fftData, float sampleRateRatio)
 {
-    float rateAdjustedNoFreqBins = float(fftData->fftData.size()) / sampleRateRatio;
-    size_t halfTileHeight = (SECOND_TILE_HEIGHT >> 1);
-    float verticalPosStrafe = 1.0f / (float(halfTileHeight) - 1.0f);
+    float const rateAdjustedNoFreqBins = static_cast<float>(fftData->fftData.size()) / sampleRateRatio;
+    size_t const halfTileHeight = (SECOND_TILE_HEIGHT >> 1);
+    float const verticalPosStrafe = 1.0f / (static_cast<float>(halfTileHeight) - 1.0f);
 
     fftIntensitiesBuffer.reserve(halfTileHeight);
     float *baseIntensitiesPointer = fftIntensitiesBuffer.data();
     float *nextIntensityToWrite = baseIntensitiesPointer;
-    float *fftDataPointer = fftData->fftData.data();
-    size_t fftDataSize = fftData->fftData.size();
+    float const *fftDataPointer = fftData->fftData.data();
+    size_t const fftDataSize = fftData->fftData.size();
 
     float vposFloat = 0.0f;
     for (size_t verticalPos = 0; verticalPos < halfTileHeight; verticalPos++)
     {
-        size_t frequencyBinIndex = rateAdjustedNoFreqBins * tmpFreqTransformer.transformInv(vposFloat);
+        size_t const frequencyBinIndex = rateAdjustedNoFreqBins * tmpFreqTransformer.transformInv(vposFloat);
         vposFloat += verticalPosStrafe;
 
-        float intensityDb = (frequencyBinIndex >= fftDataSize) ? MIN_DB : fftDataPointer[frequencyBinIndex];
+        float const intensityDb = (frequencyBinIndex >= fftDataSize) ? MIN_DB : fftDataPointer[frequencyBinIndex];
 
-        float intensityNormalized = (-MIN_DB + intensityDb) / (-MIN_DB);
+        float const intensityNormalized = (-MIN_DB + intensityDb) / (-MIN_DB);
         *nextIntensityToWrite++ = tmpIntensityTransformer.transform(intensityNormalized);
     }
     return baseIntensitiesPointer;
@@ -498,10 +497,8 @@ float FftOverTimeGraph::computeAudioToVisualSampleRateRatio(uint32_t sampleRate)
     {
         return 1.0f;
     }
-    else
-    {
-        return float(sampleRate) / float(VISUAL_SAMPLE_RATE);
-    }
+
+    return static_cast<float>(sampleRate) / static_cast<float>(VISUAL_SAMPLE_RATE);
 }
 
 void FftOverTimeGraph::resizeChildrenComponents()
@@ -511,25 +508,25 @@ void FftOverTimeGraph::resizeChildrenComponents()
 
 void FftOverTimeGraph::resetJuceOpenGLShaders(juce::OpenGLContext &openGLContext)
 {
-    texturedPositionedShader.reset(new juce::OpenGLShaderProgram(openGLContext));
+    texturedPositionedShader = std::make_unique<juce::OpenGLShaderProgram>(openGLContext);
 }
 
 void FftOverTimeGraph::setShadersUniformsAtOpenGlInit()
 {
     texturedPositionedShader->use();
     texturedPositionedShader->setUniform("sfftTexture", 0);
-    texturedPositionedShader->setUniform("isDimmed", false);
+    texturedPositionedShader->setUniform("isDimmed", 0);
 }
 
 void FftOverTimeGraph::loadGlObjectsAtInit()
 {
     // load tiles textures
     texturedPositionedShader->use();
-    for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+    for (auto &i : secondTilesRingBuffer)
     {
-        if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
+        if (i.tileIndexPosition >= 0)
         {
-            secondTilesRingBuffer[i].mesh->registerGlObjects();
+            i.mesh->registerGlObjects();
         }
     }
     spdlog::debug("Tiles textures loaded");
@@ -537,7 +534,8 @@ void FftOverTimeGraph::loadGlObjectsAtInit()
 
 bool FftOverTimeGraph::buildShadersAtInit()
 {
-    bool builtTexturedShader = ShaderHelpers::buildShader(texturedPositionedShader, fftVertexShader, fftFragmentShader);
+    bool const builtTexturedShader =
+        ShaderHelpers::buildShader(texturedPositionedShader, fftVertexShader, fftFragmentShader);
     if (!builtTexturedShader)
     {
         spdlog::error("Failed to build textured positioned shaders");
@@ -550,9 +548,10 @@ bool FftOverTimeGraph::buildShadersAtInit()
 void FftOverTimeGraph::uploadAdditionalShadersUniforms()
 {
     texturedPositionedShader->use();
-    texturedPositionedShader->setUniform("viewPosition", (GLfloat)getViewPositionLockFree());
-    texturedPositionedShader->setUniform("viewWidth", (GLfloat)(getViewWidthLockFree() * getViewScaleLockFree()));
-    texturedPositionedShader->setUniform("convolutionId", (GLint)convolutionId);
+    texturedPositionedShader->setUniform("viewPosition", static_cast<GLfloat>(getViewPositionLockFree()));
+    texturedPositionedShader->setUniform("viewWidth",
+                                         static_cast<GLfloat>(getViewWidthLockFree() * getViewScaleLockFree()));
+    texturedPositionedShader->setUniform("convolutionId", static_cast<GLint>(convolutionId));
 }
 
 void FftOverTimeGraph::glLoopPreDraw()
@@ -570,9 +569,9 @@ void FftOverTimeGraph::glLoopDrawOverGrid()
 
 void FftOverTimeGraph::deallocateOpenGlResources()
 {
-    for (size_t i = 0; i < secondTilesRingBuffer.size(); i++)
+    for (auto &i : secondTilesRingBuffer)
     {
-        secondTilesRingBuffer[i].mesh->freeGlObjects();
+        i.mesh->freeGlObjects();
     }
     texturedPositionedShader->release();
 }

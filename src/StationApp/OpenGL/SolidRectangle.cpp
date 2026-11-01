@@ -9,7 +9,7 @@ using namespace juce::gl;
 SolidRectangle::SolidRectangle()
 {
     vertices.reserve(4);
-    juce::Colour col = KHOLORS_COLOR_BACKGROUND;
+    juce::Colour const col = KHOLORS_COLOR_BACKGROUND;
 
     // NOTE: we use a unified vertex format that includes
     // texture coordinates because we can affort to send
@@ -54,11 +54,12 @@ void SolidRectangle::registerGlObjects()
 
     // register and upload the vertices data (vbo)
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)(sizeof(Vertex) * vertices.size()), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(Vertex) * vertices.size()), vertices.data(),
+                 GL_STATIC_DRAW);
     // register and upload indices of the vertices to form the triangles (ebo)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)(sizeof(unsigned int) * triangleIds.size()), triangleIds.data(),
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(unsigned int) * triangleIds.size()),
+                 triangleIds.data(), GL_STATIC_DRAW);
 
     Vertex::registerVertexFormat();
     OpenGLHelpers::printAllOpenGlError();

@@ -11,7 +11,7 @@
 class TrackSelectionTask : public SilentTask
 {
   public:
-    TrackSelectionTask(std::optional<uint64_t> selectedTrackParam) : selectedTrack(selectedTrackParam)
+    explicit TrackSelectionTask(std::optional<uint64_t> selectedTrackParam) : selectedTrack(selectedTrackParam)
     {
     }
 
@@ -25,13 +25,15 @@ class TrackSelectionTask : public SilentTask
         {
             trackIdentifier = selectedTrack.value();
         }
-        nlohmann::json taskj = {{"object", "task"},
-                                {"task", "track_selection_task"},
-                                {"track_identifier", trackIdentifier},
-                                {"a_track_is_selected", selectedTrack.has_value()},
-                                {"failed", hasFailed()},
-                                {"recordable_in_history", recordableInHistory},
-                                {"is_part_of_reversion", isPartOfReversion}};
+        nlohmann::json const taskj = {
+            {"object", "task"},
+            {"task", "track_selection_task"},
+            {"track_identifier", trackIdentifier},
+            {"a_track_is_selected", selectedTrack.has_value()},
+            {"failed", hasFailed()},
+            {"recordable_in_history", recordableInHistory},
+            {"is_part_of_reversion", isPartOfReversion},
+        };
         return taskj.dump();
     }
 

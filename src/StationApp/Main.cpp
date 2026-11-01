@@ -7,6 +7,8 @@
 #include <spdlog/common.h>
 #include <spdlog/spdlog.h>
 
+#include <memory>
+
 #define WINDOW_MIN_WIDTH 960
 #define WINDOW_MIN_HEIGHT 540
 #define WINDOW_MAX_WIDTH 4000
@@ -18,9 +20,7 @@ class GuiAppApplication final : public juce::JUCEApplication
 {
   public:
     //==============================================================================
-    GuiAppApplication()
-    {
-    }
+    GuiAppApplication() = default;
 
     // We inject these as compile definitions from the CMakeLists.txt
     // If you've enabled the juce header with `juce_generate_juce_header(<thisTarget>)`
@@ -47,19 +47,18 @@ class GuiAppApplication final : public juce::JUCEApplication
         juce::ignoreUnused(commandLine);
 
         // set log level based on envar
-        if (const char *logLevel = std::getenv("KHOLORS_LOG_LEVEL"))
+        if (const char *logLevel = std::getenv("KHOLORS_LOG_LEVEL"); logLevel && (std::strcmp(logLevel, "DEBUG") == 0))
+
         {
-            if (std::strcmp(logLevel, "DEBUG") == 0)
-            {
-                spdlog::set_level(spdlog::level::debug);
-            }
+            spdlog::set_level(spdlog::level::debug);
         }
+
         // Various GUI related initializations
         typeface = juce::Typeface::createSystemTypefaceFor(GUIData::RobotoRegular_ttf, GUIData::RobotoRegular_ttfSize);
         appLookAndFeel.setDefaultSansSerifTypeface(typeface);
         juce::LookAndFeel::setDefaultLookAndFeel(&appLookAndFeel);
 
-        mainWindow.reset(new MainWindow(getApplicationName()));
+        mainWindow = std::make_unique<MainWindow>(getApplicationName());
         mainWindow->setLookAndFeel(&appLookAndFeel);
     }
 
@@ -107,7 +106,7 @@ class GuiAppApplication final : public juce::JUCEApplication
             setResizeLimits(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT, WINDOW_MAX_WIDTH, WINDOW_MAX_HEIGHT);
 
             // generate an image with the logo (actually useless on my Linux window manager
-            juce::Image logo(juce::Image::RGB, WINDOW_ICON_WIDTH, WINDOW_ICON_WIDTH, true);
+            juce::Image const logo(juce::Image::RGB, WINDOW_ICON_WIDTH, WINDOW_ICON_WIDTH, true);
             juce::Graphics g(logo);
             sharedLogos->kholorsLogo->drawWithin(g, logo.getBounds().toFloat(), juce::RectanglePlacement::stretchToFit,
                                                  1.0f);

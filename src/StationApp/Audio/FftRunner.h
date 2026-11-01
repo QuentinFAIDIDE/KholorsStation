@@ -43,7 +43,7 @@
 #define FFT_INPUT_SIZE (FFT_INPUT_NO_INTENSITIES * FFT_ZERO_PADDING_FACTOR)
 
 /**< Minimum DB intensity to consider possible */
-#define MIN_DB -64.0f
+#define MIN_DB (-64.0f)
 
 /**
  * @brief Jobs that are posted in the job queue and picked by threads.
@@ -51,11 +51,11 @@
  */
 struct FftRunnerJob
 {
-    int position;       /**< Position of the fft in the source audio buffer (in index of ffts) */
-    const float *input; /**< Audio intensities as inputs. Must be readable up to input+(sizeof(float)*inputLength) */
-    float output[FFT_OUTPUT_NO_FREQS]; /**< frequency bins as output */
-    float inputLength;                 /**< how many samples in the input are to be picked (from start) */
-    std::shared_ptr<WaitGroup> wg;     /**< Synchronisation utility for batch of jobs across threads */
+    int position{};       /**< Position of the fft in the source audio buffer (in index of ffts) */
+    const float *input{}; /**< Audio intensities as inputs. Must be readable up to input+(sizeof(float)*inputLength) */
+    float output[FFT_OUTPUT_NO_FREQS]{}; /**< frequency bins as output */
+    float inputLength{};                 /**< how many samples in the input are to be picked (from start) */
+    std::shared_ptr<WaitGroup> wg;       /**< Synchronisation utility for batch of jobs across threads */
 };
 
 /**
@@ -120,7 +120,7 @@ class FftRunner
      */
     void fftThreadsLoop();
 
-    bool exiting;                                           /**< Do threads needs to exit ? */
+    bool exiting{false};                                    /**< Do threads needs to exit ? */
     std::mutex queueMutex;                                  /**< Mutex for the job queue */
     std::condition_variable mutexCondition;                 /**< For the thread to poll on jobs or termination */
     std::vector<std::thread> workerThreads;                 /**< list of worker threads */

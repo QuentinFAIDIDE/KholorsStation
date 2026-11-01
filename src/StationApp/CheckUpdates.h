@@ -6,7 +6,7 @@
 struct SemanticVersion
 {
     SemanticVersion(int major, int minor, int patch);
-    SemanticVersion(std::string version);
+    explicit SemanticVersion(std::string version);
     int major;
     int minor;
     int patch;

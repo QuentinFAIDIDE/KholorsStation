@@ -12,8 +12,8 @@ class SyncServerTestSuite
      */
     void runAll();
 
-    void smokeTest01();
-    void testTransport01();
+    static void smokeTest01();
+    static void testTransport01();
 };
 
 } // namespace AudioTransport

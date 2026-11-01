@@ -9,11 +9,11 @@ namespace AudioTransport
 class TooManyRequestsException : public std::exception
 {
   public:
-    TooManyRequestsException(const std::string &message) : msg("Too many requests: " + message)
+    explicit TooManyRequestsException(const std::string &message) : msg("Too many requests: " + message)
     {
     }
 
-    virtual const char *what() const throw()
+    const char *what() const noexcept override
     {
         return msg.c_str();
     }

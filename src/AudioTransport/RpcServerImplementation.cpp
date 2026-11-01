@@ -12,24 +12,25 @@ RpcServerImplementation::RpcServerImplementation(AudioDataStore &storeToUse) : d
 {
 }
 
-grpc::Status RpcServerImplementation::UploadAudioSegment(grpc::ServerContext *, const AudioSegmentPayload *data,
-                                                         AudioSegmentUploadResponse *response)
+grpc::Status RpcServerImplementation::UploadAudioSegment(grpc::ServerContext * /*context*/,
+                                                         const AudioSegmentPayload *data,
+                                                         AudioSegmentUploadResponse * /*response*/)
 {
     try
     {
         dataStore.parseNewData(data);
-        return grpc::Status(grpc::Status::OK);
+        return {grpc::Status::OK};
     }
     catch (TooManyRequestsException &e)
     {
-        return grpc::Status(grpc::StatusCode::RESOURCE_EXHAUSTED, e.what());
+        return {grpc::StatusCode::RESOURCE_EXHAUSTED, e.what()};
     }
     catch (std::invalid_argument &e)
     {
-        return grpc::Status(grpc::StatusCode::INVALID_ARGUMENT, e.what());
+        return {grpc::StatusCode::INVALID_ARGUMENT, e.what()};
     }
     catch (std::exception &e)
     {
-        return grpc::Status(grpc::StatusCode::INTERNAL, e.what());
+        return {grpc::StatusCode::INTERNAL, e.what()};
     }
 }

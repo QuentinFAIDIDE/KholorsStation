@@ -13,6 +13,6 @@ class GraphBorders
     void draw(juce::Graphics &g, juce::Rectangle<int> bounds, bool drawMiddleLine = false);
 
   private:
-    uint64_t getBorderCacheKey(juce::Rectangle<int> bounds, bool drawMiddleLine);
+    static uint64_t getBorderCacheKey(juce::Rectangle<int> bounds, bool drawMiddleLine);
     std::unordered_map<uint64_t, juce::Image> borderCache;
 };

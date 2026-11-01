@@ -64,8 +64,8 @@
 class VolumeOverTimeGraph : public BaseOverTimeGraph
 {
   public:
-    VolumeOverTimeGraph(TrackInfoStore &tis);
-    ~VolumeOverTimeGraph();
+    explicit VolumeOverTimeGraph(TrackInfoStore &tis);
+    ~VolumeOverTimeGraph() override;
 
     struct TrackVolumeData
     {

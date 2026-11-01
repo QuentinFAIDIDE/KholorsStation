@@ -8,10 +8,10 @@ class GraphMouseCursor
     GraphMouseCursor();
     ~GraphMouseCursor();
 
-    void paint(juce::Graphics &g, const juce::Rectangle<int> &bounds);
+    void paint(juce::Graphics &g, const juce::Rectangle<int> &bounds) const;
     void setMouseCursor(bool onComponent, int x, int y);
 
   private:
-    int lastMouseX, lastMouseY;
-    bool mouseOnComponent;
+    int lastMouseX{0}, lastMouseY{0};
+    bool mouseOnComponent{false};
 };

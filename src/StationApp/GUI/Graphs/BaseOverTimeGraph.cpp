@@ -10,9 +10,10 @@
 #include "juce_opengl/juce_opengl.h"
 #include <spdlog/spdlog.h>
 
+#include <memory>
+
 BaseOverTimeGraph::BaseOverTimeGraph(TrackInfoStore &tis)
-    : trackInfoStore(tis), timeSignatureGrid(false), topBeatGrid(true), ignoreNewData(true), viewPosition(0),
-      viewScale(150), bpm(120), needToResetTiles(false)
+    : trackInfoStore(tis), timeSignatureGrid(false), topBeatGrid(true), ignoreNewData(true)
 {
     setInterceptsMouseClicks(false, false);
 
@@ -29,15 +30,14 @@ BaseOverTimeGraph::BaseOverTimeGraph(TrackInfoStore &tis)
     lastMouseY = 0;
 }
 
-BaseOverTimeGraph::~BaseOverTimeGraph()
-{
-}
+BaseOverTimeGraph::~BaseOverTimeGraph() = default;
 
 void BaseOverTimeGraph::paint(juce::Graphics &g)
 {
-    int64_t viewPositionCopy, viewScaleCopy;
+    int64_t viewPositionCopy;
+    int64_t viewScaleCopy;
     {
-        std::lock_guard lock(glThreadUniformsMutex);
+        std::scoped_lock const lock(glThreadUniformsMutex);
         viewPositionCopy = viewPosition;
         viewScaleCopy = viewScale;
     }
@@ -55,7 +55,7 @@ void BaseOverTimeGraph::resized()
 {
     resizeChildrenComponents();
 
-    std::lock_guard lock(glThreadUniformsMutex);
+    std::scoped_lock const lock(glThreadUniformsMutex);
     viewHeight = getLocalBounds().getHeight();
     viewWidth = getLocalBounds().getWidth();
     glThreadUniformsNonce++;
@@ -64,7 +64,7 @@ void BaseOverTimeGraph::resized()
 void BaseOverTimeGraph::updateViewPosition(uint32_t samplePosition)
 {
     {
-        std::lock_guard lock(glThreadUniformsMutex);
+        std::scoped_lock const lock(glThreadUniformsMutex);
         viewPosition = samplePosition;
         glThreadUniformsNonce++;
     }
@@ -73,16 +73,16 @@ void BaseOverTimeGraph::updateViewPosition(uint32_t samplePosition)
 void BaseOverTimeGraph::updateViewScale(uint32_t samplesPerPixel)
 {
     {
-        std::lock_guard lock(glThreadUniformsMutex);
+        std::scoped_lock const lock(glThreadUniformsMutex);
         viewScale = samplesPerPixel;
         glThreadUniformsNonce++;
     }
 }
 
-void BaseOverTimeGraph::updateBpm(float nbpm, TaskingManager *tm)
+void BaseOverTimeGraph::updateBpm(float nbpm, TaskingManager * /*tm*/)
 {
     {
-        std::lock_guard lock(glThreadUniformsMutex);
+        std::scoped_lock const lock(glThreadUniformsMutex);
         bpm = nbpm;
         glThreadUniformsNonce++;
     }
@@ -91,7 +91,7 @@ void BaseOverTimeGraph::updateBpm(float nbpm, TaskingManager *tm)
 void BaseOverTimeGraph::timeSignatureNumeratorUpdate(int numerator)
 {
     {
-        std::lock_guard lock(glThreadUniformsMutex);
+        std::scoped_lock const lock(glThreadUniformsMutex);
         timeSignature = numerator;
     }
 }
@@ -100,7 +100,7 @@ void BaseOverTimeGraph::newOpenGLContextCreated()
 {
     spdlog::info("Initializing OpenGL context...");
     // Instanciate an instance of OpenGLShaderProgram
-    backgroundGridShader.reset(new juce::OpenGLShaderProgram(openGLContext));
+    backgroundGridShader = std::make_unique<juce::OpenGLShaderProgram>(openGLContext);
     resetJuceOpenGLShaders(openGLContext);
     // Compile and link the shader
     if (buildAllShaders())
@@ -142,7 +142,7 @@ void BaseOverTimeGraph::newOpenGLContextCreated()
 
 bool BaseOverTimeGraph::buildAllShaders()
 {
-    bool builtBackgroundShader =
+    bool const builtBackgroundShader =
         ShaderHelpers::buildShader(backgroundGridShader, gridBackgroundVertexShader, gridBackgroundFragmentShader);
     if (!builtBackgroundShader)
     {
@@ -155,7 +155,7 @@ bool BaseOverTimeGraph::buildAllShaders()
 
 void BaseOverTimeGraph::uploadShadersUniforms()
 {
-    std::lock_guard lock(glThreadUniformsMutex);
+    std::scoped_lock const lock(glThreadUniformsMutex);
     if (lastUsedGlThreadUnifNonce != glThreadUniformsNonce)
     {
         uploadAdditionalShadersUniforms();
@@ -184,9 +184,9 @@ void BaseOverTimeGraph::drawGlBackgroundBeatgrid()
     backgroundGridShader->use();
 
     // update time signature of the beat grid if necessary
-    int newTimeSignature;
+    int newTimeSignature = 0;
     {
-        std::lock_guard lock(glThreadUniformsMutex);
+        std::scoped_lock const lock(glThreadUniformsMutex);
         newTimeSignature = timeSignature;
     }
     if (newTimeSignature != lastAppliedTimeSignature)
@@ -196,9 +196,9 @@ void BaseOverTimeGraph::drawGlBackgroundBeatgrid()
         lastAppliedTimeSignature = newTimeSignature;
     }
 
-    int viewScaleCopy;
+    int viewScaleCopy = 0;
     {
-        std::lock_guard lock(glThreadUniformsMutex);
+        std::scoped_lock const lock(glThreadUniformsMutex);
         viewScaleCopy = viewScale;
     }
     timeSignatureGrid.setVisible(viewScaleCopy < MAX_TIME_SIGNATURE_GRID_VIEW_SCALE);
@@ -228,6 +228,6 @@ void BaseOverTimeGraph::submitNewPlayCursorPosition(int64_t samplePosition, uint
 
 void BaseOverTimeGraph::markUniformsAsStale()
 {
-    std::lock_guard lock(glThreadUniformsMutex);
+    std::scoped_lock const lock(glThreadUniformsMutex);
     glThreadUniformsNonce++;
 }

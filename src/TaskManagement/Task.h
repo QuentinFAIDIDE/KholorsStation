@@ -39,12 +39,12 @@ class Task : public Marshalable
     /**
       Parse the task from a string.
      */
-    void unmarshal(std::string &) override;
+    void unmarshal(std::string & /*unused*/) override;
 
     /**
       Has the task been completed already ?
      */
-    bool isCompleted();
+    bool isCompleted() const;
 
     /**
       Set the completion state of the task.
@@ -56,17 +56,17 @@ class Task : public Marshalable
       Set the failed state of the task.
       @param bool true if the task has failed, false otherwise.
      */
-    void setFailed(bool);
+    void setFailed(bool /*f*/);
 
     /**
       Has that task failed ?
      */
-    bool hasFailed();
+    bool hasFailed() const;
 
     /**
       Should this task be recorded in history ?
      */
-    bool goesInTaskHistory();
+    bool goesInTaskHistory() const;
 
     /**
       Get the sequence of opposite task from this one, eg the ones
@@ -105,7 +105,7 @@ class Task : public Marshalable
      *
      * @return     The task group index.
      */
-    int getTaskGroupIndex();
+    int getTaskGroupIndex() const;
 
     /**
      * @brief      Sets the task group index.
@@ -131,7 +131,7 @@ class Task : public Marshalable
     /**
      * @brief For the task manager to set a reference to itself on every task.
      */
-    void setTaskingManager(TaskingManager *);
+    void setTaskingManager(TaskingManager * /*tm*/);
 
     /**
      * @brief To retrieve a reference to the current tasking manager. May be nullptr
@@ -174,7 +174,7 @@ class CancelTask : public SilentTask
     /**
       Convert the task into a string.
      */
-    std::string marshal();
+    std::string marshal() override;
 };
 
 class RestoreTask : public SilentTask
@@ -183,7 +183,7 @@ class RestoreTask : public SilentTask
     /**
       Convert the task into a string.
      */
-    std::string marshal();
+    std::string marshal() override;
 };
 
 class ClearHistoryTask : public SilentTask
@@ -192,7 +192,7 @@ class ClearHistoryTask : public SilentTask
     /**
       Convert the task into a string.
      */
-    std::string marshal();
+    std::string marshal() override;
 };
 
 /**

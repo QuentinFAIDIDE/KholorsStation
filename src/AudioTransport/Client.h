@@ -18,7 +18,7 @@ namespace AudioTransport
 class Client : public AudioSegmentPayloadSender
 {
   public:
-    Client(uint32_t port);
+    explicit Client(uint32_t port);
     void changeDestinationPort(uint32_t port);
     bool sendAudioSegment(const AudioSegmentPayload *payload) override;
     void tryReconnect() override;
