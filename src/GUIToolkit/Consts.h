@@ -21,7 +21,7 @@ inline const juce::Colour KHOLORS_COLOR_HIGHLIGHT = juce::Colour(87, 110, 195);
 inline const juce::Colour KHOLORS_COLOR_BUTTON_HIGHLIGHT = juce::Colour(194, 219, 255);
 inline const juce::Colour KHOLORS_COLOR_SELECTED_BACKGROUND = juce::Colour(33, 45, 90);
 // grid and graph border lines, a neutral grey like the rest of the interface
-inline const juce::Colour KHOLORS_COLOR_GRIDS_LEVEL_0 = juce::Colour(static_cast<juce::uint8>(32), 35, 42, 1.0f);
+inline const juce::Colour KHOLORS_COLOR_GRIDS_LEVEL_0 = juce::Colour(static_cast<juce::uint8>(27), 29, 35, 1.0f);
 inline const juce::Colour KHOLORS_COLOR_GRIDS_LEVEL_1 = KHOLORS_COLOR_GRIDS_LEVEL_0;
 inline const juce::Colour KHOLORS_COLOR_GRIDS_LEVEL_2 = KHOLORS_COLOR_GRIDS_LEVEL_0.withAlpha(0.5f);
 inline const juce::Colour KHOLORS_COLOR_INPUT_BACKGROUND = juce::Colour(211, 222, 222);

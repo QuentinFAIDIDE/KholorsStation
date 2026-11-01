@@ -96,10 +96,6 @@ void GraphBorders::draw(juce::Graphics &g, juce::Rectangle<int> bounds, bool dra
     cacheGraphics.setColour(KHOLORS_COLOR_FREQVIEW_GRADIENT_BORDERS);
     cacheGraphics.fillPath(fillPath);
 
-    cacheGraphics.setColour(KHOLORS_COLOR_GRIDS_LEVEL_0);
-    int const borders2Width = 2;
-    cacheGraphics.drawRoundedRectangle(localBounds.toFloat(), FREQVIEW_ROUNDED_CORNERS_WIDTH, borders2Width);
-
     if (drawMiddleLine)
     {
         auto const middleLine = localBounds.withY(localBounds.getHeight() / 2).withHeight(1);
