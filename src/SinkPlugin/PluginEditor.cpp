@@ -7,15 +7,15 @@
 #include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
 
-#define HEADER_HEIGHT 65
-#define HEADER_INNER_PADDING 16
-#define LOGO_WIDTH 120
-#define APP_NAME_FONT_HEIGHT 42
-#define APP_WIDTH 600
-#define APP_HEIGHT 240
-#define COLOR_AREA_WIDTH 250
-#define SECTIONS_HEADER_HEIGHT 40
-#define SECTIONS_HEADER_TITLE_FONT_SIZE 21
+constexpr int HEADER_HEIGHT = 65;
+constexpr int HEADER_INNER_PADDING = 16;
+constexpr int LOGO_WIDTH = 120;
+constexpr int APP_NAME_FONT_HEIGHT = 42;
+constexpr int APP_WIDTH = 600;
+constexpr int APP_HEIGHT = 240;
+constexpr int COLOR_AREA_WIDTH = 250;
+constexpr int SECTIONS_HEADER_HEIGHT = 40;
+constexpr int SECTIONS_HEADER_TITLE_FONT_SIZE = 21;
 
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &p, TaskingManager &tm,
                                                                  juce::Colour currentlySelectedColor,

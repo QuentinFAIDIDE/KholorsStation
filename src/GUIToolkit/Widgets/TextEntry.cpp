@@ -7,8 +7,8 @@
 #include <mutex>
 #include <utility>
 
-#define TEXT_INPUT_INNER_PADDING 8
-#define INPUT_LABEL_WIDTH 100
+constexpr int TEXT_INPUT_INNER_PADDING = 8;
+constexpr int INPUT_LABEL_WIDTH = 100;
 
 TextEntry::NameFilter::NameFilter()
     : juce::TextEditor::LengthAndCharacterRestriction(

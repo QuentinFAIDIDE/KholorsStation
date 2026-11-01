@@ -3,8 +3,8 @@
 #include "StationApp/GUI/AudioConstants.h"
 #include <cmath>
 
-#define MIN_SAMPLE_PLAY_CURSOR_BACKWARD_MOVEMENT 24000
-#define PLAY_CURSOR_WIDTH 2
+constexpr int MIN_SAMPLE_PLAY_CURSOR_BACKWARD_MOVEMENT = 24000;
+constexpr int PLAY_CURSOR_WIDTH = 2;
 
 GraphPlayCursor::GraphPlayCursor()
 {

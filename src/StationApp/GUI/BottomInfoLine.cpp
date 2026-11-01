@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 
-#define BOTTOM_INFO_LINE_SIDE_PADDING 20
+constexpr int BOTTOM_INFO_LINE_SIDE_PADDING = 20;
 
 BottomInfoLine::BottomInfoLine(TaskingManager &tm)
     : taskingManager(tm), lastFrequency(0), lastSampleTime(0), mouseOverSfftView(false)

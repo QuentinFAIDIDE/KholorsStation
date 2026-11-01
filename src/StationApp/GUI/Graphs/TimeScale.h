@@ -5,13 +5,13 @@
 #include <string>
 #include <unordered_map>
 
-#define TICK_TOP_PADDING 5
-#define TICK_LABEL_MARGIN 4
-#define TICK_LABEL_WIDTH 30
+inline constexpr int TICK_TOP_PADDING = 5;
+inline constexpr int TICK_LABEL_MARGIN = 4;
+inline constexpr int TICK_LABEL_WIDTH = 30;
 
-#define TITLE_PIXELS_FROM_BOTTOM 12
+inline constexpr int TITLE_PIXELS_FROM_BOTTOM = 12;
 
-#define MAXIMUM_GLYPH_CACHE_SIZE 512
+inline constexpr int MAXIMUM_GLYPH_CACHE_SIZE = 512;
 
 /**
  * @brief A component that draws beat bars

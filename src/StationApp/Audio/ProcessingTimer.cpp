@@ -4,8 +4,8 @@
 #include <mutex>
 #include <nlohmann/json.hpp>
 
-#define DEFAULT_PREALLOCATED_PROC_TIMER_WAITGROUPS 128
-#define AVERAGING_TIMER_SIZE 32
+constexpr int DEFAULT_PREALLOCATED_PROC_TIMER_WAITGROUPS = 128;
+constexpr int AVERAGING_TIMER_SIZE = 32;
 
 ProcessingTimer::ProcessingTimer(TaskingManager &tm) : taskingManager(tm)
 {

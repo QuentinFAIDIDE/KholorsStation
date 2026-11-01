@@ -5,10 +5,6 @@
 #include "juce_opengl/opengl/juce_gl.h"
 #include <vector>
 
-// Number of floats that makes a pixel in a texture.
-// There are 4 floats for RGBA.
-#define TEXTURE_PIXEL_FLOAT_LEN 4
-
 /**
  * @brief An opengl mesh for a rectangle with a RGBA texture.
  * This object should only be used within the OpenGL renderer thread.

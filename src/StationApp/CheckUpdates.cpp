@@ -5,9 +5,9 @@
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 
-#define GIT_REPO_RELEASE_URL "https://api.github.com/repos/QuentinFAIDIDE/KholorsStation/releases"
-#define GIT_RELEASE_HEADERS "Accept: application/vnd.github+json\nX-GitHub-Api-Version: 2022-11-28\n"
-#define GIT_REQUEST_TIMEOUT_MS 2000
+constexpr const char *GIT_REPO_RELEASE_URL = "https://api.github.com/repos/QuentinFAIDIDE/KholorsStation/releases";
+constexpr const char *GIT_RELEASE_HEADERS = "Accept: application/vnd.github+json\nX-GitHub-Api-Version: 2022-11-28\n";
+constexpr int GIT_REQUEST_TIMEOUT_MS = 2000;
 
 std::optional<std::string> getLastGitReleaseTag()
 {

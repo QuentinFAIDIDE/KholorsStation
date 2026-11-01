@@ -17,7 +17,7 @@
 #include <new>
 #include <spdlog/spdlog.h>
 
-#define NUM_AUDIO_WORKER_THREADS 2
+constexpr int NUM_AUDIO_WORKER_THREADS = 2;
 
 AudioDataWorker::AudioDataWorker(AudioTransport::SyncServer &server, TaskingManager &tm)
     : taskingManager(tm), audioDataServer(server), processingTimerDelayMs(0), volumeProjection(0.1)

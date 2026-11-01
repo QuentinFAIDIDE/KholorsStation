@@ -19,18 +19,18 @@
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
-#define MAX_SCALE_SAMPLE_PER_PIXEL 400
-#define MIN_SCALE_SAMPLE_PER_PIXEL 80
-#define PIXEL_SCALE_SPEED 0.01f
-#define MAX_IDLE_MS_TIME_BEFORE_CLEAR 2000
-#define MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS 250
-#define MAX_TIME_WITHOUT_TRACK_LIST_PAINT_MS 150
-#define VIEW_MOVE_TIME_INTERVAL_MS 15
-#define FREQUENCY_GRID_WIDTH 90
-#define TIME_GRID_HEIGHT 55
-#define VOLUME_GRAPH_HEIGHT 220
-#define TRACK_LIST_WIDTH 220
-#define TIME_GRAPHS_PADDING 20
+inline constexpr int MAX_SCALE_SAMPLE_PER_PIXEL = 400;
+inline constexpr int MIN_SCALE_SAMPLE_PER_PIXEL = 80;
+inline constexpr float PIXEL_SCALE_SPEED = 0.01f;
+inline constexpr int MAX_IDLE_MS_TIME_BEFORE_CLEAR = 2000;
+inline constexpr int MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS = 250;
+inline constexpr int MAX_TIME_WITHOUT_TRACK_LIST_PAINT_MS = 150;
+inline constexpr int VIEW_MOVE_TIME_INTERVAL_MS = 15;
+inline constexpr int FREQUENCY_GRID_WIDTH = 90;
+inline constexpr int TIME_GRID_HEIGHT = 55;
+inline constexpr int VOLUME_GRAPH_HEIGHT = 220;
+inline constexpr int TRACK_LIST_WIDTH = 220;
+inline constexpr int TIME_GRAPHS_PADDING = 20;
 
 /**
  * @brief Describe a class which displays a timeline, and

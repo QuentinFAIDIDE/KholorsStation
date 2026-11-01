@@ -9,7 +9,7 @@
 #include <mutex>
 #include <shared_mutex>
 
-#define UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE 4096
+inline constexpr int UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE = 4096;
 
 using SharedFloatVectPtr = std::shared_ptr<std::vector<float>>;
 

@@ -4,9 +4,9 @@
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_extra/juce_gui_extra.h"
 
-#define MENU_SEPARATOR_HEIGHT 6
-#define MENU_ITEM_HEIGHT 28
-#define MENU_ITEM_SIDE_PADDING 60 /**< note that it will be divided by two on each side*/
+constexpr int MENU_SEPARATOR_HEIGHT = 6;
+constexpr int MENU_ITEM_HEIGHT = 28;
+constexpr int MENU_ITEM_SIDE_PADDING = 60; /**< note that it will be divided by two on each side*/
 
 KholorsLookAndFeel::KholorsLookAndFeel()
 {

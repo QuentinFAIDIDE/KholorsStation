@@ -1,6 +1,7 @@
 #pragma once
 
 #include "StationApp/Audio/NewTrackVolumeDataTask.h"
+#include "StationApp/GUI/AudioConstants.h"
 #include "StationApp/GUI/Graphs/BaseOverTimeGraph.h"
 #include "StationApp/OpenGL/TexturedMulticoloredRectangle.h"
 #include "spdlog/spdlog.h"
@@ -19,47 +20,47 @@
 
 // Maximum size of queue for volume drawing
 // requests (UI Thread writes / OpenGL thread reads)
-#define MAX_QUEUED_VOLUME_DRAW 256
+inline constexpr int MAX_QUEUED_VOLUME_DRAW = 256;
 // Maximum size of queue for tile clearing
 // requests (UI Thread writes / OpenGL thread reads)
-#define MAX_QUEUED_TILE_REMOVAL 256
+inline constexpr int MAX_QUEUED_TILE_REMOVAL = 256;
 
 // default number of tiles of volumes allocated
-#define DEFAULT_NUM_TILES 16
+inline constexpr int DEFAULT_NUM_TILES = 16;
 
 // number of one-second tiles allocated in memory
-#define MAX_NUM_TILES 256
+inline constexpr int MAX_NUM_TILES = 256;
 
 // Mumber of bars in a one second tile for a channel (left/right).
 // Note that we draw the left and the right channel within each tile
 // in the top (left chan) and bottom (right chan) halves. Therefore there
 // is in practice two times that number of tiles.
-#define BARS_PER_TILE 128
+inline constexpr int BARS_PER_TILE = 128;
 
-#define TILE_PIXEL_HEIGHT 512
-#define TILE_PIXEL_WIDTH BARS_PER_TILE
+inline constexpr int TILE_PIXEL_HEIGHT = 512;
+inline constexpr int TILE_PIXEL_WIDTH = BARS_PER_TILE;
 
 // How many audio samples in visual sample rate one bar contains.
-#define TILE_BAR_SAMPLE_WIDTH (VISUAL_SAMPLE_RATE / BARS_PER_TILE)
+inline constexpr auto TILE_BAR_SAMPLE_WIDTH = (VISUAL_SAMPLE_RATE / BARS_PER_TILE);
 // Width of a bar in pixel
-#define TILE_BAR_PIXEL_WIDTH ((float)(TILE_PIXEL_WIDTH) / BARS_PER_TILE)
+inline constexpr auto TILE_BAR_PIXEL_WIDTH = ((float)(TILE_PIXEL_WIDTH) / BARS_PER_TILE);
 
 // Maximum number of tracks to show in the second tile.
-#define MAX_NUM_TRACKS_PER_TILE 32
+inline constexpr int MAX_NUM_TRACKS_PER_TILE = 32;
 
 // Maximum pixel height of one track within a bar of stacked volumes.
 // There is an issue though, there is too little pixel precision if we allow
 // each of the 32 track to fire at max height. Therefore we only consider possible
 // that a subset of them can fire at maximum and we will truncate whathever would draw futher.
-#define MAX_SECOND_TILE_TRACK_PIXEL_SIZE ((float)(TILE_PIXEL_HEIGHT / 2) / (MAX_NUM_TRACKS_PER_TILE >> 2))
+inline constexpr auto MAX_SECOND_TILE_TRACK_PIXEL_SIZE = ((float)(TILE_PIXEL_HEIGHT / 2) / (MAX_NUM_TRACKS_PER_TILE >> 2));
 
 // Maximum RMS value when stacking all RMS intensity bars from all 32 channels
-#define MAX_TOTAL_TILE_BAR_RMS_VALUE ((float)(MAX_NUM_TRACKS_PER_TILE) * MAX_SHOWABLE_RMS_VOLUME)
+inline constexpr auto MAX_TOTAL_TILE_BAR_RMS_VALUE = ((float)(MAX_NUM_TRACKS_PER_TILE) * MAX_SHOWABLE_RMS_VOLUME);
 
-#define ZOOM_FACTOR_UPDATE_INTERVAL_MS 10
-#define ZOOM_FACTOR_UPDATE_INCREMENT 0.025f
-#define ZOOMOUT_BOOST_FACTOR 30.0f
-#define RECENT_CLEAR_ZOOMIN_BOOST_TIME_MS 1500
+inline constexpr int ZOOM_FACTOR_UPDATE_INTERVAL_MS = 10;
+inline constexpr float ZOOM_FACTOR_UPDATE_INCREMENT = 0.025f;
+inline constexpr float ZOOMOUT_BOOST_FACTOR = 30.0f;
+inline constexpr int RECENT_CLEAR_ZOOMIN_BOOST_TIME_MS = 1500;
 
 class VolumeOverTimeGraph : public BaseOverTimeGraph
 {

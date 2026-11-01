@@ -12,10 +12,10 @@
 #include <mutex>
 #include <utility>
 
-#define COLOR_SQUARE_WIDTH 30
-#define COLOR_SQUARE_PADDING 10
-#define CROSS_SQUARE_PADDING 4
-#define CROSS_SQUARE_LINE_WIDTH 4
+constexpr int COLOR_SQUARE_WIDTH = 30;
+constexpr int COLOR_SQUARE_PADDING = 10;
+constexpr int CROSS_SQUARE_PADDING = 4;
+constexpr int CROSS_SQUARE_LINE_WIDTH = 4;
 
 ColorPicker::ColorPicker(std::string id, TaskingManager &tm) : identifier(std::move(id)), taskManager(tm)
 {
@@ -144,7 +144,7 @@ void ColorPicker::mouseDown(const juce::MouseEvent &me)
 
 std::vector<juce::Colour> ColorPicker::getDefaultColours()
 {
-    return std::vector<juce::Colour> KHOLORS_COLOR_PALETTE;
+    return KHOLORS_COLOR_PALETTE;
 }
 
 bool ColorPicker::taskHandler(std::shared_ptr<Task> task)

@@ -4,11 +4,11 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 
 // pixel size of the space reserved for label at the top
-#define LABELED_LINE_STACK_LABEL_HEIGHT 20
+inline constexpr int LABELED_LINE_STACK_LABEL_HEIGHT = 20;
 // shrinking amount in pixel of the entire widget
-#define LABELED_LINE_STACK_BORDER_PADDING 8
+inline constexpr int LABELED_LINE_STACK_BORDER_PADDING = 8;
 // space above each line (and therefore between each line)
-#define LABELED_LINE_STACK_LINE_TOP_MARGIN 8
+inline constexpr int LABELED_LINE_STACK_LINE_TOP_MARGIN = 8;
 
 /**
  * @brief A label with multiple lines below containing components.

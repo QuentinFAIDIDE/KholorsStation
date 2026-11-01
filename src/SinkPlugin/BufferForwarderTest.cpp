@@ -199,8 +199,8 @@ void testBufferForwarder01()
     blockInfo4->startSample = 483100;
     blockInfo4->numChannels = 2;
     blockInfo4->numTotalSamples = 4096;
-    blockInfo4->firstChannelData.resize(3000);
-    blockInfo4->secondChannelData.resize(3000);
+    blockInfo4->firstChannelData.resize(4096);
+    blockInfo4->secondChannelData.resize(4096);
     for (size_t i = 0; i < 4096; i++)
     {
         blockInfo4->firstChannelData[i] = static_cast<float>(i) / 2.0f;

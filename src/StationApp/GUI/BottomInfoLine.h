@@ -6,7 +6,7 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <memory>
 
-#define BOTTOM_INFO_LINE_HEIGHT 35
+inline constexpr int BOTTOM_INFO_LINE_HEIGHT = 35;
 
 /**
  * @brief A component that is meant to be at the bottom of the

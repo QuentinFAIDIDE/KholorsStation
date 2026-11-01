@@ -13,7 +13,7 @@
 #include <stdexcept>
 #include <string>
 
-#define BUFFERS_CONTINUATION_SAMPLE_TOLERANCE 60
+constexpr int BUFFERS_CONTINUATION_SAMPLE_TOLERANCE = 60;
 
 BufferForwarder::BufferForwarder(AudioTransport::AudioSegmentPayloadSender &ps)
     : payloadSender(ps), freeBlockInfos(NUM_PREALLOCATED_BLOCKINFO), blockInfosToCoalesce(NUM_PREALLOCATED_BLOCKINFO)

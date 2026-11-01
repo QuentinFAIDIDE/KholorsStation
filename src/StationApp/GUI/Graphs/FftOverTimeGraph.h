@@ -10,13 +10,13 @@
 #include "StationApp/GUI/NormalizedUnitTransformer.h"
 #include "StationApp/OpenGL/TexturedMonochromeRectangle.h"
 
-#define IMAGES_RING_BUFFER_SIZE 128
+inline constexpr int IMAGES_RING_BUFFER_SIZE = 128;
 // Dimensions of a one-second tile.
 // Warning! It is hardcoded as well in the openGL shaders
 // for now, but I should soon rely on textureSize instead
 // and remove this comment. If I forget well, do it!
-#define SECOND_TILE_WIDTH 64
-#define SECOND_TILE_HEIGHT 512
+inline constexpr int SECOND_TILE_WIDTH = 64;
+inline constexpr int SECOND_TILE_HEIGHT = 512;
 
 class FftOverTimeGraph : public BaseOverTimeGraph
 {

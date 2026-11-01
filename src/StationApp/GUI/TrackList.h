@@ -7,27 +7,26 @@
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
-#define MAX_TRACKS_PER_TILE 16
-#define TILES_RING_BUFFER_SIZE 128 // it's better if matches FftDrawingBackend bufsize
+inline constexpr int MAX_TRACKS_PER_TILE = 16;
+inline constexpr int TILES_RING_BUFFER_SIZE = 128; // it's better if matches FftDrawingBackend bufsize
 // thresold between 0 and 1 corresponding to range from MIN_DB to 0
-#define ACTIVE_TRACK_THRESOLD_PER_BIN 0.0001
-#define BALANCE_SWITCH_THRESOLD 0.5
+inline constexpr double ACTIVE_TRACK_THRESOLD_PER_BIN = 0.0001;
+inline constexpr double BALANCE_SWITCH_THRESOLD = 0.5;
 
-#define LABELS_AREA_X_PADDING 6
-#define LABELS_AREA_Y_PADDING 2
-#define LABEL_HEIGHT 40
-#define LABELS_INNER_PADDING 6
-#define LABELS_BOX_CORNER_SIZE 3
-#define LABELS_CIRCLE_TEXT_PADDING 10
-#define CIRCLE_PADDING 2
-#define LABELS_FONT_HEIGHT 18
+inline constexpr int LABELS_AREA_X_PADDING = 6;
+inline constexpr int LABELS_AREA_Y_PADDING = 2;
+inline constexpr int LABELS_INNER_PADDING = 6;
+inline constexpr int LABELS_BOX_CORNER_SIZE = 3;
+inline constexpr int LABELS_CIRCLE_TEXT_PADDING = 10;
+inline constexpr int CIRCLE_PADDING = 2;
+inline constexpr int LABELS_FONT_HEIGHT = 18;
 
 // max proportion (between 0 and 1) of screen height taken
 // by labels we allow to be drawn with one label per stereo
 // channel before switching to only allow one.
-#define MAX_CONFORTABLE_LABELS_PROPORTION 0.7
+inline constexpr double MAX_CONFORTABLE_LABELS_PROPORTION = 0.7;
 
-#define MAX_ITER_LABEL_POSITIONING 20
+inline constexpr int MAX_ITER_LABEL_POSITIONING = 20;
 
 /**
  * @brief Component that shows a list of tracks

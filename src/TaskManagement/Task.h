@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#define MAX_TASK_INDEX 1048576
+inline constexpr int MAX_TASK_INDEX = 1048576;
 
 class TaskingManager;
 

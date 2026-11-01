@@ -5,6 +5,12 @@
 #include <optional>
 #include <vector>
 
+constexpr int AXIS_TITLE_PIXELS_FROM_LEFT = 14;
+constexpr double MAXIMUM_DRAWABLE_LABEL_POSITION_RATIO = 0.93;
+constexpr int LABEL_HEIGHT = 16;
+constexpr auto LABEL_FONT_HEIGHT = (KHOLORS_DEFAULT_FONT_SIZE - 2);
+constexpr int LABEL_RIGHT_PADDING = 10;
+
 FrequencyScale::FrequencyScale(NormalizedUnitTransformer &ut, float maxDrawableFreqArg)
     : unitTransformer(ut), maxDrawableFreq(maxDrawableFreqArg)
 {

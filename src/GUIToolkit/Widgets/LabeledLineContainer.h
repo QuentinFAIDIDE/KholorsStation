@@ -3,10 +3,10 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <memory>
 
-#define LABELED_LINE_CONTAINER_DEFAULT_HEIGHT KHOLORS_TABS_HEIGHT
-#define LABELED_LINE_CONTAINER_PADDING 12
-#define LABELED_LINE_CONTAINER_SPACING 8
-#define DEFAULT_LABELED_LINE_WIDTH 260
+inline constexpr int LABELED_LINE_CONTAINER_DEFAULT_HEIGHT = KHOLORS_TABS_HEIGHT;
+inline constexpr int LABELED_LINE_CONTAINER_PADDING = 12;
+inline constexpr int LABELED_LINE_CONTAINER_SPACING = 8;
+inline constexpr int DEFAULT_LABELED_LINE_WIDTH = 260;
 
 class LabeledLineContainer : public juce::Component
 {

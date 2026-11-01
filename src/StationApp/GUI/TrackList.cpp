@@ -18,10 +18,11 @@
 #include <utility>
 
 // this is the number of tiles per seconds
-#define SECOND_TILE_RATIO 10
-#define TRACK_NOT_SELECTED_ALPHA 0.35f
+constexpr int SECOND_TILE_RATIO = 10;
+constexpr float TRACK_NOT_SELECTED_ALPHA = 0.35f;
 
-#define TILE_WIDTH (VISUAL_SAMPLE_RATE / 4)
+constexpr auto TILE_WIDTH = (VISUAL_SAMPLE_RATE / 4);
+constexpr int LABEL_HEIGHT = 40;
 
 TrackList::TrackList(TrackInfoStore &tis, NormalizedUnitTransformer &nut, TaskingManager &tm)
     : taskingManager(tm), trackInfoStore(tis), frequencyTransformer(nut)

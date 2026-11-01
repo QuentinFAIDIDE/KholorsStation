@@ -14,22 +14,22 @@
 #include "juce_core/juce_core.h"
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#define MENU_BAR_HEIGHT 80
-#define TOP_LOGO_WIDTH 140
-#define DEFAULT_WINDOW_WIDTH 1440
-#define DEFAULT_WINDOW_HEIGHT 800
-#define APP_NAME_FONT_HEIGHT 40
-#define VERSION_FONT_HEIGHT 18
-#define FREQVIEW_OUTER_BORDER_WIDTH 2
-#define TOPBAR_RIGHT_PADDING 25
-#define HELP_BUTTON_WIDTH 75
-#define CLEAR_BUTTON_WIDTH 90
-#define TOPBAR_BUTTON_HEIGHT 55
-#define TOPBAR_BUTTONS_PADDING 6
-#define TOPBAR_BUTTONS_RIGHT_MARGIN 45
-#define SENSITIVITY_SLIDER_WIDTH 200
-#define SENSITIVITY_SLIDER_PICTOGRAM_WIDTH 32
-#define SENSITIVITY_SLIDER_PICTOGRAM_PADDING 4
+inline constexpr int MENU_BAR_HEIGHT = 80;
+inline constexpr int TOP_LOGO_WIDTH = 140;
+inline constexpr int DEFAULT_WINDOW_WIDTH = 1440;
+inline constexpr int DEFAULT_WINDOW_HEIGHT = 800;
+inline constexpr int APP_NAME_FONT_HEIGHT = 40;
+inline constexpr int VERSION_FONT_HEIGHT = 18;
+inline constexpr int FREQVIEW_OUTER_BORDER_WIDTH = 2;
+inline constexpr int TOPBAR_RIGHT_PADDING = 25;
+inline constexpr int HELP_BUTTON_WIDTH = 75;
+inline constexpr int CLEAR_BUTTON_WIDTH = 90;
+inline constexpr int TOPBAR_BUTTON_HEIGHT = 55;
+inline constexpr int TOPBAR_BUTTONS_PADDING = 6;
+inline constexpr int TOPBAR_BUTTONS_RIGHT_MARGIN = 45;
+inline constexpr int SENSITIVITY_SLIDER_WIDTH = 200;
+inline constexpr int SENSITIVITY_SLIDER_PICTOGRAM_WIDTH = 32;
+inline constexpr int SENSITIVITY_SLIDER_PICTOGRAM_PADDING = 4;
 
 class MainComponent final : public juce::Component, public TaskListener
 {

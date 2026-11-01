@@ -3,8 +3,8 @@
 #include "juce_graphics/juce_graphics.h"
 #include <unordered_map>
 
-#define FREQVIEW_ROUNDED_CORNERS_WIDTH 7
-#define FREQVIEW_BORDER_WIDTH 3
+inline constexpr int FREQVIEW_ROUNDED_CORNERS_WIDTH = 7;
+inline constexpr int FREQVIEW_BORDER_WIDTH = 3;
 
 class GraphBorders
 {

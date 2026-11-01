@@ -9,11 +9,11 @@
 
 #include <memory>
 
-#define WINDOW_MIN_WIDTH 960
-#define WINDOW_MIN_HEIGHT 540
-#define WINDOW_MAX_WIDTH 4000
-#define WINDOW_MAX_HEIGHT 3000
-#define WINDOW_ICON_WIDTH 64
+constexpr int WINDOW_MIN_WIDTH = 960;
+constexpr int WINDOW_MIN_HEIGHT = 540;
+constexpr int WINDOW_MAX_WIDTH = 4000;
+constexpr int WINDOW_MAX_HEIGHT = 3000;
+constexpr int WINDOW_ICON_WIDTH = 64;
 
 //==============================================================================
 class GuiAppApplication final : public juce::JUCEApplication

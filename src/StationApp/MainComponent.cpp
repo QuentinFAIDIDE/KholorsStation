@@ -16,7 +16,7 @@
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <spdlog/spdlog.h>
 
-#define DEFAULT_SERVER_PORT 7849
+constexpr int DEFAULT_SERVER_PORT = 7849;
 
 MainComponent::MainComponent()
     : trackInfoStore(taskManager), dashboardView(trackInfoStore, taskManager),

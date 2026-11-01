@@ -6,6 +6,7 @@
 #include <mutex>
 #include <vector>
 
+#include "StationApp/GUI/AudioConstants.h"
 #include "Utils/WaitGroup.h"
 #include "fft.h"
 #include "fft_internal.h"
@@ -14,36 +15,33 @@
 
 /**< Number of preallocated structure to pass FFT response data. 8192 is approximately 130Mb and rougthly 80 seconds of
  * stereo signal (# is linear to Mb) */
-#define FFT_PREALLOCATED_JOB_STRUCTS 4096
+inline constexpr int FFT_PREALLOCATED_JOB_STRUCTS = 4096;
 
 /**< How many jobs we will sent together. Beware to keep number of job posting threads (not fft thread pool) below
  * FFT_PREALLOCATED_JOB_STRUCTS / FFT_JOBS_BATCH_SIZE */
-#define FFT_JOBS_BATCH_SIZE 512
+inline constexpr int FFT_JOBS_BATCH_SIZE = 512;
 
 /**< Necessary correction for freq bins amplitudes for the Hanning window function.
  *  See https://community.sw.siemens.com/s/article/window-correction-factors */
-#define HANN_AMPLITUDE_CORRECTION_FACTOR 2.0f
+inline constexpr float HANN_AMPLITUDE_CORRECTION_FACTOR = 2.0f;
 
 // How many frequencies we will store for each fft.
-#define FFT_STORAGE_SCOPE_SIZE 4096
+inline constexpr int FFT_STORAGE_SCOPE_SIZE = 4096;
 
 /**< How much zeros we pad at the end of fft input intensities for each intensity sample */
-#define FFT_ZERO_PADDING_FACTOR 2
+inline constexpr int FFT_ZERO_PADDING_FACTOR = 2;
 
 /**< Number of intensities we send as input (not accounting for zero padding after it). */
-#define FFT_INPUT_NO_INTENSITIES 2048 // always choose a power of two!
+inline constexpr int FFT_INPUT_NO_INTENSITIES = 2048; // always choose a power of two!
 
 /***< What is the overlap of subsequent FFT windows. 2 = 50% overlap, 3 = 66.666% overlap, 4=25% ... */
-#define FFT_OVERLAP_DIVISION 4
+inline constexpr int FFT_OVERLAP_DIVISION = 4;
 
 /**< Size of the output, as the number of frequencies bins */
-#define FFT_OUTPUT_NO_FREQS (((FFT_INPUT_NO_INTENSITIES * FFT_ZERO_PADDING_FACTOR) >> 1) + 1)
+inline constexpr auto FFT_OUTPUT_NO_FREQS = (((FFT_INPUT_NO_INTENSITIES * FFT_ZERO_PADDING_FACTOR) >> 1) + 1);
 
 /**< Number of floats we send to forward fft in muFTT as input */
-#define FFT_INPUT_SIZE (FFT_INPUT_NO_INTENSITIES * FFT_ZERO_PADDING_FACTOR)
-
-/**< Minimum DB intensity to consider possible */
-#define MIN_DB (-64.0f)
+inline constexpr auto FFT_INPUT_SIZE = (FFT_INPUT_NO_INTENSITIES * FFT_ZERO_PADDING_FACTOR);
 
 /**
  * @brief Jobs that are posted in the job queue and picked by threads.

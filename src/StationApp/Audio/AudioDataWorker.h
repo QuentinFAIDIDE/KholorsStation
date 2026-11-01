@@ -9,9 +9,9 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
-#define MAX_AUDIO_SEGMENT_PROCESSING_DELAY_MS 500.0f
+inline constexpr float MAX_AUDIO_SEGMENT_PROCESSING_DELAY_MS = 500.0f;
 
-#define SIMPLE_PAYLOAD_CHECK_INTERVAL_MS 600000
+inline constexpr int SIMPLE_PAYLOAD_CHECK_INTERVAL_MS = 600000;
 
 class AudioDataWorker : public TaskListener
 {

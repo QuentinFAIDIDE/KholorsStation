@@ -3,21 +3,20 @@
 #include "GUIToolkit/Consts.h"
 #include <algorithm>
 
-#define TIP_LINE_HEIGHT 40
-#define TIP_LEFT_PADDING 22
-#define TOP_PADDING 22
+constexpr int TIP_LINE_HEIGHT = 40;
+constexpr int TIP_LEFT_PADDING = 22;
+constexpr int TOP_PADDING = 22;
 
-#define HELP_TIP "Click the help button to view this list of tips."
-#define ADD_VST_TIP "Add the 'KholorsSink' VST plugin to your DAW tracks to draw their spectrum and volumes here."
-#define MOUSE_MOVE_TIP "Middle-click and drag to zoom and pan the view."
-#define AUTOMATION_TIP "The view automatically follows your DAW's playhead, beat signature and BPM."
-#define FOCUS_TRACK_TIP "Hover over a track in the list on the right to highlight its spectrum."
-#define PRECISION_TIP                                                                                                  \
-    "Use the top slider to adjust spectrum detail. Note that lower frequencies are inherently less precise."
-#define FREQ_TIP "Hover over the spectrum to see frequency and time info in the bottom-right corner."
-#define VOLUME_TIP "For consistent color intensity, adjust track gain before the KholorsSink VST plugin."
-#define EXPLAIN_TIP "Graphs show frequencies (upper) and stacked volumes (lower) over time."
-#define EXPLAIN_TIP_2 "Each graph has right channel on top half and left channel on bottom half."
+constexpr const char *HELP_TIP = "Click the help button to view this list of tips.";
+constexpr const char *ADD_VST_TIP = "Add the 'KholorsSink' VST plugin to your DAW tracks to draw their spectrum and volumes here.";
+constexpr const char *MOUSE_MOVE_TIP = "Middle-click and drag to zoom and pan the view.";
+constexpr const char *AUTOMATION_TIP = "The view automatically follows your DAW's playhead, beat signature and BPM.";
+constexpr const char *FOCUS_TRACK_TIP = "Hover over a track in the list on the right to highlight its spectrum.";
+constexpr const char *PRECISION_TIP = "Use the top slider to adjust spectrum detail. Note that lower frequencies are inherently less precise.";
+constexpr const char *FREQ_TIP = "Hover over the spectrum to see frequency and time info in the bottom-right corner.";
+constexpr const char *VOLUME_TIP = "For consistent color intensity, adjust track gain before the KholorsSink VST plugin.";
+constexpr const char *EXPLAIN_TIP = "Graphs show frequencies (upper) and stacked volumes (lower) over time.";
+constexpr const char *EXPLAIN_TIP_2 = "Each graph has right channel on top half and left channel on bottom half.";
 
 HelpDialogContent::HelpDialogContent()
 {

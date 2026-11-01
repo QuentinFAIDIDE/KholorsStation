@@ -10,7 +10,7 @@
 #include <stack>
 #include <thread>
 
-#define ACTIVITY_HISTORY_RING_BUFFER_SIZE 4096
+inline constexpr int ACTIVITY_HISTORY_RING_BUFFER_SIZE = 4096;
 
 /**
 Class responsible for app activity, for example tasks and history.

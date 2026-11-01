@@ -12,14 +12,14 @@
 #include "AudioBlockInfo.h"
 #include "juce_graphics/juce_graphics.h"
 
-#define FORWARDER_THREAD_MAX_WAIT_MS 80
+inline constexpr int FORWARDER_THREAD_MAX_WAIT_MS = 80;
 
-#define NUM_PREALLOCATED_BLOCKINFO 16
-#define NUM_PREALLOCATED_COALESCED_PAYLOADS 8
-#define PREALLOCATED_BLOCKINFO_SAMPLE_SIZE 4096
-#define DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE 4096
-#define MAX_PAYLOAD_IDLE_MS 150
-#define MAX_FAILURE_RECONNECT_TIME_MS 5000
+inline constexpr int NUM_PREALLOCATED_BLOCKINFO = 16;
+inline constexpr int NUM_PREALLOCATED_COALESCED_PAYLOADS = 8;
+inline constexpr int PREALLOCATED_BLOCKINFO_SAMPLE_SIZE = 4096;
+inline constexpr int DEFAULT_AUDIO_SEGMENT_CHANNEL_SIZE = 4096;
+inline constexpr int MAX_PAYLOAD_IDLE_MS = 150;
+inline constexpr int MAX_FAILURE_RECONNECT_TIME_MS = 5000;
 
 /**
  * @brief A class that receives AudioBlockInfos from audio thread, and

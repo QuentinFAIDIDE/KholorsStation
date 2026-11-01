@@ -4,12 +4,6 @@
 #include "juce_graphics/juce_graphics.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 
-#define AXIS_TITLE_PIXELS_FROM_LEFT 14
-#define MAXIMUM_DRAWABLE_LABEL_POSITION_RATIO 0.93
-#define LABEL_HEIGHT 16
-#define LABEL_FONT_HEIGHT (KHOLORS_DEFAULT_FONT_SIZE - 2)
-#define LABEL_RIGHT_PADDING 10
-
 /**
  * @brief A volume scale that will paint tick and
  * volume number depending on the NormalizedUnitTransformer.

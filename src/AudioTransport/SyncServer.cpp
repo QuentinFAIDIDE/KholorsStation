@@ -14,8 +14,8 @@
 using namespace AudioTransport;
 
 // TODO: make this thing a setting
-#define DEFAULT_STORE_PREALLOCS 4096
-#define DEFAULT_SERVER_PORT 8991
+constexpr int DEFAULT_STORE_PREALLOCS = 4096;
+constexpr int DEFAULT_SERVER_PORT = 8991;
 
 SyncServer::SyncServer() : store(DEFAULT_STORE_PREALLOCS), service(store)
 {

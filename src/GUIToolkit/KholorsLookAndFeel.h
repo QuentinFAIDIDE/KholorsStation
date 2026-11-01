@@ -4,13 +4,13 @@
 #include "juce_graphics/juce_graphics.h"
 #include <juce_gui_extra/juce_gui_extra.h>
 
-#define KHOLORS_BUTTON_CORNERSIZE 8
-#define KHOLORS_BUTTON_BORDER_THICKNESS 2
-#define KHOLORS_BUTTON_DOWN_DISPLACEMENT 2
-#define BUTTON_TEXT_HEIGHT 18
-#define LINEAR_SLIDER_HEIGHT 6
-#define LINEAR_SLIDER_BAR_CORNER_RADIUS 4.0f
-#define LINEAR_SLIDER_HANDLE_RADIUS 18
+inline constexpr int KHOLORS_BUTTON_CORNERSIZE = 8;
+inline constexpr int KHOLORS_BUTTON_BORDER_THICKNESS = 2;
+inline constexpr int KHOLORS_BUTTON_DOWN_DISPLACEMENT = 2;
+inline constexpr int BUTTON_TEXT_HEIGHT = 18;
+inline constexpr int LINEAR_SLIDER_HEIGHT = 6;
+inline constexpr float LINEAR_SLIDER_BAR_CORNER_RADIUS = 4.0f;
+inline constexpr int LINEAR_SLIDER_HANDLE_RADIUS = 18;
 
 class KholorsLookAndFeel : public juce::LookAndFeel_V4
 {

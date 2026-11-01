@@ -2,9 +2,6 @@
 #include "GUIToolkit/Consts.h"
 #include "juce_graphics/juce_graphics.h"
 
-#define FREQVIEW_ROUNDED_CORNERS_WIDTH 7
-#define FREQVIEW_BORDER_WIDTH 3
-
 GraphBorders::~GraphBorders()
 {
     borderCache.clear();
