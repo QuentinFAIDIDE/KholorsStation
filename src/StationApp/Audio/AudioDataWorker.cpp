@@ -66,7 +66,7 @@ void AudioDataWorker::processAudioSegment(std::shared_ptr<AudioTransport::AudioS
     }
 
     int const numFFTs = FftRunner::getNumFftFromNumSamples(audioSegment->noAudioSamples);
-    auto const shortTimeFFTs = fftProcessor.performFft(audioBuffer);
+    auto const shortTimeFFTs = fftProcessor.performFft(audioBuffer, audioSegment->sampleRate);
 
     auto const newDataTask = std::make_shared<NewFftDataTask>(
         audioSegment->trackIdentifier, audioSegment->noChannels, audioSegment->channel, audioSegment->sampleRate,

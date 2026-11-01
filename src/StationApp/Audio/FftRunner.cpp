@@ -82,8 +82,32 @@ void FftRunner::reuseResultArray(std::shared_ptr<std::vector<float>> ptr)
     }
 }
 
-std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::AudioSampleBuffer> audioFile)
+const float *FftRunner::getTiltTable(uint32_t sampleRate)
 {
+    std::scoped_lock const lock(tiltTablesMutex);
+    auto existingTable = tiltTablesBySampleRate.find(sampleRate);
+    if (existingTable != tiltTablesBySampleRate.end())
+    {
+        return existingTable->second.data();
+    }
+
+    std::vector<float> tiltTable(FFT_OUTPUT_NO_FREQS, 0.0f);
+    for (size_t i = 0; i < FFT_OUTPUT_NO_FREQS; i++)
+    {
+        float const binFrequency = static_cast<float>(i) * static_cast<float>(sampleRate) / FFT_INPUT_SIZE;
+        if (binFrequency > FFT_TILT_PIVOT_HZ)
+        {
+            tiltTable[i] = FFT_TILT_DB_PER_OCTAVE * std::log2(binFrequency / FFT_TILT_PIVOT_HZ);
+        }
+    }
+    return tiltTablesBySampleRate.emplace(sampleRate, std::move(tiltTable)).first->second.data();
+}
+
+std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::AudioSampleBuffer> audioFile,
+                                                          uint32_t sampleRate)
+{
+    const float *tiltDb = getTiltTable(sampleRate);
+
     // NOTE: one job = one fft
 
     // OPTIMIZATION: reuse result, wg and batchJobs to avoid allocating at every fft
@@ -192,6 +216,7 @@ std::shared_ptr<std::vector<float>> FftRunner::performFft(std::shared_ptr<juce::
                 FftRunnerJob *currentJob = (*batchJobPtr).get();
                 currentJob->input = nextJobStart;
                 currentJob->wg = wg;
+                currentJob->tiltDb = tiltDb;
                 currentJob->position = fftPosition;
                 wg->Add(1);
                 // if our buffer will extend past end of channel, prevent it
@@ -391,6 +416,7 @@ void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, mufft_plan_1d *pla
     float dist = NAN; /**< real and imaginary parts buffers */
 
     float *outPtr = job->output;
+    const float *tiltPtr = job->tiltDb;
 
     for (size_t i = 0; i < FFT_OUTPUT_NO_FREQS; ++i)
     {
@@ -406,7 +432,7 @@ void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, mufft_plan_1d *pla
         }
         else if (dist < highIntensityBounds)
         {
-            *outPtr = (10.0f * std::log10(dist)) + precomputedHannAmplitudeCorrectionShift;
+            *outPtr = std::min(0.0f, (10.0f * std::log10(dist)) + precomputedHannAmplitudeCorrectionShift + tiltPtr[i]);
         }
         else
         {

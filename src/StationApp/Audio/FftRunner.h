@@ -1,7 +1,9 @@
 #pragma once
 
 #include <condition_variable>
+#include <cstdint>
 #include <juce_audio_basics/juce_audio_basics.h>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -31,6 +33,10 @@ inline constexpr int FFT_STORAGE_SCOPE_SIZE = 4096;
 /**< How much zeros we pad at the end of fft input intensities for each intensity sample */
 inline constexpr int FFT_ZERO_PADDING_FACTOR = 2;
 
+/**< Spectral tilt applied to the fft output to compensate for hearing curve */
+inline constexpr float FFT_TILT_DB_PER_OCTAVE = 2.5f;
+inline constexpr float FFT_TILT_PIVOT_HZ = 300.0f;
+
 /**< Number of intensities we send as input (not accounting for zero padding after it). */
 inline constexpr int FFT_INPUT_NO_INTENSITIES = 2048; // always choose a power of two!
 
@@ -54,6 +60,7 @@ struct FftRunnerJob
     float output[FFT_OUTPUT_NO_FREQS]{}; /**< frequency bins as output */
     float inputLength{};                 /**< how many samples in the input are to be picked (from start) */
     std::shared_ptr<WaitGroup> wg;       /**< Synchronisation utility for batch of jobs across threads */
+    const float *tiltDb{}; /**< dB to add to each frequency bin, FFT_OUTPUT_NO_FREQS long, see getTiltTable */
 };
 
 /**
@@ -90,9 +97,11 @@ class FftRunner
      * @brief Perfom a (sequence of short) Fast Fourier Transform on an audio buffer and return its data.
      *
      * @param audioFile A JUCE library audio sample buffer with the audio samples inside.
+     * @param sampleRate Sample rate of the audio, to know the frequency of each bin.
      * @return std::shared_ptr<std::vector<float>>  A vector of resulting fourier transform.
      */
-    std::shared_ptr<std::vector<float>> performFft(std::shared_ptr<juce::AudioSampleBuffer> audioFile);
+    std::shared_ptr<std::vector<float>> performFft(std::shared_ptr<juce::AudioSampleBuffer> audioFile,
+                                                   uint32_t sampleRate);
 
     /**
      * @brief Processes a job using the provided muFFT processing plan.
@@ -118,6 +127,14 @@ class FftRunner
      */
     void fftThreadsLoop();
 
+    /**
+     * @brief Get the dB to add to each frequency bin for the spectral tilt (see FFT_TILT_DB_PER_OCTAVE),
+     * computed once per sample rate as bins frequencies depend on it.
+     *
+     * @return pointer to FFT_OUTPUT_NO_FREQS values, valid as long as the runner.
+     */
+    const float *getTiltTable(uint32_t sampleRate);
+
     bool exiting{false};                                    /**< Do threads needs to exit ? */
     std::mutex queueMutex;                                  /**< Mutex for the job queue */
     std::condition_variable mutexCondition;                 /**< For the thread to poll on jobs or termination */
@@ -128,6 +145,8 @@ class FftRunner
     std::mutex emptyJobsMutex;          /**< Prevent race condition if many threads want to run FFTs */
     std::mutex fftMutex;                /**< Mutex for non thread safe muFFT init functions */
     std::vector<float> hannWindowTable; /**< factors of the hann windowing function for our desired input size */
+    std::map<uint32_t, std::vector<float>> tiltTablesBySampleRate; /**< see getTiltTable */
+    std::mutex tiltTablesMutex;
 
     std::queue<std::shared_ptr<std::vector<float>>> freeResultsArrays; /**< array to hold responses to reuse */
     std::mutex resultsArrayMutex;
