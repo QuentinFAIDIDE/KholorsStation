@@ -9,7 +9,7 @@ It's composed of two parts:
 
 The `Sink` plugin sends audio, track names, and even your DAW's track colors to the `Station`. The result is dual color-coded visualizations showing both frequency spectrum and volume levels over time, where you can see exactly what's happening in your mix, track by track.
 
-![Screenshot](docs/screenshot.jpg)
+![Screenshot](docs/screenshot.png)
 
 ## Getting Started
 
