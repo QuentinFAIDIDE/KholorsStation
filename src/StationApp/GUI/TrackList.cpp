@@ -248,6 +248,17 @@ void TrackList::mouseExit(const juce::MouseEvent & /*event*/)
 void TrackList::drawLabel(juce::Graphics &g, juce::Rectangle<int> bounds, std::string trackName,
                           juce::Colour trackColor, uint64_t trackIdentifier)
 {
+    bool const isHovered = selectedTrack.has_value() && selectedTrack.value() == trackIdentifier;
+    if (isHovered)
+    {
+        auto const hoverBox =
+            bounds.toFloat().reduced(0.5f, static_cast<float>(LABELS_HOVER_BOX_VERTICAL_INSET) + 0.5f);
+        g.setColour(KHOLORS_COLOR_TRACK_HOVER_BACKGROUND);
+        g.fillRoundedRectangle(hoverBox, LABELS_BOX_CORNER_SIZE);
+        g.setColour(KHOLORS_COLOR_TRACK_HOVER_BORDER);
+        g.drawRoundedRectangle(hoverBox, LABELS_BOX_CORNER_SIZE, 1.0f);
+    }
+
     auto reducedBounds = bounds.reduced(LABELS_INNER_PADDING);
 
     if (selectedTrack.has_value() && selectedTrack.value() != trackIdentifier)
@@ -265,14 +276,14 @@ void TrackList::drawLabel(juce::Graphics &g, juce::Rectangle<int> bounds, std::s
 
     if (selectedTrack.has_value() && selectedTrack.value() != trackIdentifier)
     {
-        g.setColour(KHOLORS_COLOR_WHITE.withAlpha(TRACK_NOT_SELECTED_ALPHA));
+        g.setColour(KHOLORS_COLOR_TRACK_NAME.withAlpha(TRACK_NOT_SELECTED_ALPHA));
     }
     else
     {
-        g.setColour(KHOLORS_COLOR_WHITE);
+        g.setColour(KHOLORS_COLOR_TRACK_NAME);
     }
 
-    g.drawEllipse(circleBounds.toFloat(), 1.0f);
+    // g.drawEllipse(circleBounds.toFloat(), 1.0f);
     g.setFont(juce::Font(LABELS_FONT_HEIGHT));
 
     g.drawText(trackName, reducedBounds, juce::Justification::centredLeft, true);
@@ -696,8 +707,7 @@ void TrackList::clearTrackFromRange(uint64_t trackIdientifier, int64_t startSamp
 
     // generate indices in TrackList tiles positions
     int64_t const startTile = std::llround(static_cast<float>(startSample) / static_cast<float>(TILE_WIDTH));
-    int64_t const endTile =
-        startTile + std::llround(static_cast<float>(length) / static_cast<float>(TILE_WIDTH)) - 1;
+    int64_t const endTile = startTile + std::llround(static_cast<float>(length) / static_cast<float>(TILE_WIDTH)) - 1;
 
     for (int64_t i = startTile; i <= endTile; i++)
     {

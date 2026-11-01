@@ -6,10 +6,11 @@
 #include <functional>
 #include <memory>
 
-inline constexpr int CARD_PADDING = 12;
+inline constexpr int CARD_PADDING = 10;
 inline constexpr float CARD_CORNER_RADIUS = 10.0f;
+inline constexpr int CARD_FOOTER_HEIGHT = 16; /**< footer text area, at the bottom of the padded content area */
 inline constexpr int CARD_HEADER_HEIGHT =
-    29; /**< from the card top to the line below the title, which is centred in it */
+    25; /**< from the card top to the line below the title, which is centred in it */
 
 /**
  * @brief A rounded panel with a lighter background and a thin border that
@@ -60,6 +61,12 @@ class Card final : public juce::Component
 
     std::function<void()> onCollapsedChanged; /**< called after the card was collapsed or expanded */
 
+    /**
+     * @brief Show a dimmed text at the bottom of the card, below the content (eg: a usage hint).
+     * An empty text removes the footer.
+     */
+    void setFooterText(const juce::String &text);
+
   private:
     /**
      * @brief Invisible component over the header that toggles the collapsed state on click,
@@ -77,12 +84,21 @@ class Card final : public juce::Component
 
     void drawCollapseChevron(juce::Graphics &g) const;
 
+    /**
+     * @brief Whole-pixel baseline that vertically centres the drawn letters of a text in an area of the given
+     * height. If left fractional, rounding at render time depends on the card position and texts end up 1px apart
+     * from one card to another.
+     */
+    static int getCentredBaseline(const juce::Font &font, const juce::String &text, int areaHeight);
+
     juce::Component &contentComponent;
     juce::Component *sideComponent;
     int sideComponentWidth;
     juce::String title;
     juce::SharedResourcePointer<FontsLoader> sharedFonts; /**< Singleton that loads all fonts */
     int titleBaseline; /**< whole-pixel baseline that centres the title letters in the header */
+    juce::String footerText;
+    int footerBaseline{0}; /**< baseline of the footer text, from the top of the footer area */
     bool collapsible{false};
     bool collapsed{false};
     std::unique_ptr<HeaderClickArea> headerClickArea;

@@ -18,16 +18,28 @@ Card::Card(const juce::String &cardTitle, juce::Component &content, juce::Compon
         addAndMakeVisible(sideComponent);
     }
 
-    // Centre the drawn letters (not the font ascent and descent) in the header, and round
-    // the baseline here: if it's left fractional, rounding at render time depends on the
-    // card position and titles end up 1px apart from one card to another.
+    titleBaseline = getCentredBaseline(sharedFonts->dimmedLabelFont, title, CARD_HEADER_HEIGHT);
+}
+
+int Card::getCentredBaseline(const juce::Font &font, const juce::String &text, int areaHeight)
+{
+    // centre the drawn letters, not the font ascent and descent
     juce::GlyphArrangement glyphs;
-    glyphs.addLineOfText(sharedFonts->dimmedLabelFont, title, 0.0f, 0.0f);
+    glyphs.addLineOfText(font, text, 0.0f, 0.0f);
     juce::Path lettersOutline;
     glyphs.createPath(lettersOutline);
     auto const lettersBounds = lettersOutline.getBounds(); // relative to a baseline at y = 0
-    titleBaseline = juce::roundToInt(((static_cast<float>(CARD_HEADER_HEIGHT) - lettersBounds.getHeight()) / 2.0f) -
-                                     lettersBounds.getY());
+    return juce::roundToInt(((static_cast<float>(areaHeight) - lettersBounds.getHeight()) / 2.0f) -
+                            lettersBounds.getY());
+}
+
+void Card::setFooterText(const juce::String &text)
+{
+    footerText = text.toUpperCase();
+    footerBaseline =
+        footerText.isEmpty() ? 0 : getCentredBaseline(sharedFonts->dimmedLabelFont, footerText, CARD_FOOTER_HEIGHT);
+    resized();
+    repaint();
 }
 
 int Card::getHeightForContent(int contentHeight)
@@ -121,6 +133,14 @@ void Card::paint(juce::Graphics &g)
         drawCollapseChevron(g);
     }
 
+    if (footerText.isNotEmpty() && !collapsed)
+    {
+        int const footerTop = getHeight() - CARD_PADDING - CARD_FOOTER_HEIGHT;
+        g.setColour(KHOLORS_COLOR_DIMMED_LABEL);
+        g.setFont(sharedFonts->dimmedLabelFont);
+        g.drawSingleLineText(footerText, CARD_PADDING, footerTop + footerBaseline);
+    }
+
     // line below the header, with the same side padding as the content
     if (!collapsed)
     {
@@ -161,6 +181,10 @@ void Card::resized()
     }
 
     auto contentBounds = getLocalBounds().withTrimmedTop(CARD_HEADER_HEIGHT + 1).reduced(CARD_PADDING);
+    if (footerText.isNotEmpty())
+    {
+        contentBounds.removeFromBottom(CARD_FOOTER_HEIGHT);
+    }
     if (collapsed)
     {
         // The hidden content keeps its last height, but its width follows the card as

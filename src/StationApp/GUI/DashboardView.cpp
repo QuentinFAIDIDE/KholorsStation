@@ -61,6 +61,7 @@ DashboardView::DashboardView(TrackInfoStore &tis, TaskingManager &tm)
     frequencyCard = std::make_unique<Card>("Spectrograph", *freqOverTimeGraph, &frequencyScale, FREQUENCY_GRID_WIDTH);
     volumeCard = std::make_unique<Card>("Stacked Volumes", *volumeOverTimeGraph, &volumeScale, FREQUENCY_GRID_WIDTH);
     instrumentsCard = std::make_unique<Card>("Instruments", trackList);
+    instrumentsCard->setFooterText("Hover to highlight");
     addAndMakeVisible(frequencyCard.get());
     addAndMakeVisible(volumeCard.get());
     addAndMakeVisible(instrumentsCard.get());

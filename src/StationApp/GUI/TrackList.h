@@ -16,10 +16,11 @@ inline constexpr double BALANCE_SWITCH_THRESOLD = 0.5;
 inline constexpr int LABELS_AREA_X_PADDING = 6;
 inline constexpr int LABELS_AREA_Y_PADDING = 2;
 inline constexpr int LABELS_INNER_PADDING = 6;
-inline constexpr int LABELS_BOX_CORNER_SIZE = 3;
+inline constexpr int LABELS_BOX_CORNER_SIZE = 6;
+inline constexpr int LABELS_HOVER_BOX_VERTICAL_INSET = 3; /**< the hover box is a bit shorter than the label slot */
 inline constexpr int LABELS_CIRCLE_TEXT_PADDING = 10;
-inline constexpr int CIRCLE_PADDING = 2;
-inline constexpr int LABELS_FONT_HEIGHT = 18;
+inline constexpr int CIRCLE_PADDING = 6;
+inline constexpr int LABELS_FONT_HEIGHT = 17;
 
 // max proportion (between 0 and 1) of screen height taken
 // by labels we allow to be drawn with one label per stereo
