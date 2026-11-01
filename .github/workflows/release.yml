@@ -140,7 +140,7 @@ jobs:
 
   build-macos:
     name: Build artifacts on macOS
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -159,8 +159,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./build
-          key: ${{ runner.os }}-build-cache-macos-3-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: ${{ runner.os }}-build-cache-macos-3-${{ hashFiles('**/CMakeLists.txt') }}
+          key: ${{ runner.os }}-build-cache-macos-4-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: ${{ runner.os }}-build-cache-macos-4-${{ hashFiles('**/CMakeLists.txt') }}
       - name: Configure
         run: cmake --preset macos-arm64-release
       - name: Build
