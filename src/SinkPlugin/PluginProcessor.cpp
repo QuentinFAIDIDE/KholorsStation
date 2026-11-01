@@ -4,6 +4,7 @@
 #include "SinkPlugin/BufferForwarder.h"
 #include "juce_audio_processors/juce_audio_processors.h"
 #include "juce_graphics/juce_graphics.h"
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -159,7 +160,7 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer, j
     }
 
     // all this information will be matched against last known values and shipped to the Station
-    blockInfo->sampleRate = static_cast<int64_t>(getSampleRate() + 0.5);
+    blockInfo->sampleRate = static_cast<int64_t>(std::llround(getSampleRate()));
     blockInfo->bpm = positionInfo->getBpm();
     blockInfo->timeSignature = positionInfo->getTimeSignature();
     blockInfo->isLooping = positionInfo->getIsLooping();

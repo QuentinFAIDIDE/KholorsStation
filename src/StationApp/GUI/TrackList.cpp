@@ -695,9 +695,9 @@ void TrackList::clearTrackFromRange(uint64_t trackIdientifier, int64_t startSamp
     std::scoped_lock const lock(tilesMutex);
 
     // generate indices in TrackList tiles positions
-    int64_t const startTile = (static_cast<float>(startSample) / static_cast<float>(TILE_WIDTH)) + 0.5f;
+    int64_t const startTile = std::llround(static_cast<float>(startSample) / static_cast<float>(TILE_WIDTH));
     int64_t const endTile =
-        startTile + static_cast<int64_t>((static_cast<float>(length) / static_cast<float>(TILE_WIDTH)) + 0.5f) - 1;
+        startTile + std::llround(static_cast<float>(length) / static_cast<float>(TILE_WIDTH)) - 1;
 
     for (int64_t i = startTile; i <= endTile; i++)
     {

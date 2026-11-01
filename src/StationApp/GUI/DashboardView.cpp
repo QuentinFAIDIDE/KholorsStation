@@ -20,6 +20,7 @@
 #include "juce_core/juce_core.h"
 #include "juce_gui_basics/juce_gui_basics.h"
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <ctime>
@@ -181,8 +182,8 @@ void DashboardView::updateAutoscroll(int64_t currentTime, int64_t elapsedSinceLa
         else if (lastPlayCursorPos >= (rightScreenSideSamplePos - screenQuarter + 1) &&
                  lastPlayCursorPos < (rightScreenSideSamplePos - (screenQuarter >> 1)))
         {
-            auto const increment = static_cast<int64_t>(
-                (static_cast<float>(elapsedSinceLastCallMs) / 1000.0) * static_cast<float>(VISUAL_SAMPLE_RATE) + 0.5f);
+            auto const increment = static_cast<int64_t>(std::llround(
+                (static_cast<float>(elapsedSinceLastCallMs) / 1000.0) * static_cast<float>(VISUAL_SAMPLE_RATE)));
             updateGraphsViewPositions(viewPosition + increment);
         }
     }

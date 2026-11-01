@@ -57,18 +57,16 @@ void TimeScale::drawTicks(juce::Graphics &g, int64_t currentViewPosition, int64_
     float const framesPerMinutes = VISUAL_SAMPLE_RATE * 60;
 
     float const grid0FrameWidth = (framesPerMinutes / currentBpm);
-    float const grid1FrameWidth = (framesPerMinutes / (currentBpm * 4));
     float const grid2FrameWidth = (framesPerMinutes / (currentBpm * 16));
 
     float const grid2PixelWidth = grid2FrameWidth / static_cast<float>(currentViewScale);
     float const grid1PixelWidth = grid2PixelWidth * 4;
     float const grid0PixelWidth = grid1PixelWidth * 4;
 
+    int const grid0FrameWidthRounded = static_cast<int>(std::lround(grid0FrameWidth));
     int const grid0PixelShift =
-        (static_cast<int>(grid0FrameWidth + 0.5f) - (currentViewPosition % static_cast<int>(grid0FrameWidth + 0.5f))) /
-        currentViewScale;
-    int const grid1PixelShift = static_cast<int>(grid0PixelShift + 0.5f) % static_cast<int>(grid1PixelWidth + 0.5f);
-    int const grid2PixelShift = static_cast<int>(grid1PixelShift + 0.5f) % static_cast<int>(grid2PixelWidth + 0.5f);
+        (grid0FrameWidthRounded - (currentViewPosition % grid0FrameWidthRounded)) / currentViewScale;
+    int const grid1PixelShift = grid0PixelShift % static_cast<int>(std::lround(grid1PixelWidth));
 
     int const currentBarIndex = static_cast<int>((static_cast<float>(currentViewPosition) / grid0FrameWidth)) + 1;
 

@@ -6,6 +6,7 @@
 #include "TaskManagement/TaskingManager.h"
 #include "juce_events/juce_events.h"
 #include "juce_graphics/juce_graphics.h"
+#include <cmath>
 #include <memory>
 #include <string>
 
@@ -35,9 +36,9 @@ void BottomInfoLine::paint(juce::Graphics &g)
         posTip += "     |    " + std::to_string(static_cast<int>(secs)) +
                   " s"
                   "   " +
-                  std::to_string(static_cast<int>(ms + 0.5f)) + " ms";
+                  std::to_string(std::lround(ms)) + " ms";
 
-        rightText = std::to_string(static_cast<int>(lastFrequency + 0.5f)) + " Hz (" + noteFromFreq(lastFrequency) +
+        rightText = std::to_string(std::lround(lastFrequency)) + " Hz (" + noteFromFreq(lastFrequency) +
                     ")" + posTip;
     }
 
@@ -97,10 +98,14 @@ bool BottomInfoLine::taskHandler(std::shared_ptr<Task> task)
 std::string BottomInfoLine::noteFromFreq(float freq)
 {
     float const semiToneShiftFromA4 = 12.0f * std::log2(freq / 440);
-    int const centDistanceToNearestNote = ((100.0f * (semiToneShiftFromA4 - std::round(semiToneShiftFromA4))) + 0.5f);
-    int const noteId = static_cast<int>(semiToneShiftFromA4 + 0.5f);
-    int const octaveInvariantNoteId = noteId % 12;
-    int const octave = 4 + (noteId / 12);
+    int const centDistanceToNearestNote =
+        static_cast<int>(std::lround(100.0f * (semiToneShiftFromA4 - std::round(semiToneShiftFromA4))));
+    // noteId is negative below A4, so modulo and division must round towards negative infinity
+    int const noteId = static_cast<int>(std::lround(semiToneShiftFromA4));
+    int const octaveInvariantNoteId = ((noteId % 12) + 12) % 12;
+    // octaves start at C, which is 9 semitones below A4
+    int const semiTonesFromC4 = noteId + 9;
+    int const octave = 4 + ((semiTonesFromC4 >= 0) ? (semiTonesFromC4 / 12) : ((semiTonesFromC4 - 11) / 12));
     std::string noteTxt;
     switch (octaveInvariantNoteId)
     {
