@@ -55,8 +55,8 @@ class TexturedMulticoloredRectangle : public GlMesh
     void clearAllData();
 
   private:
-    int64_t textureWidth, textureHeight; /**< Dimensions of texture */
-    std::vector<float> texture;          /**< Raw intensities to use as texture */
+    int64_t textureWidth, textureHeight;  /**< Dimensions of texture */
+    std::vector<float> texture;           /**< Raw intensities to use as texture */
     int64_t textureNonce = 0;             /**< A number changed everytime the texture gets modified */
     int64_t lastUploadedTextureNonce = 0; /**< Last nonce where the texture was uploaded to GPU */
 

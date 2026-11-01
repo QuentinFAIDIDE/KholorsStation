@@ -81,8 +81,8 @@ class TexturedMonochromeRectangle : public GlMesh
     void setPosition(int64_t viewPositionSamples, int64_t width, uint64_t trackIdentifer);
 
   private:
-    int64_t textureWidth, textureHeight; /**< Dimensions of texture */
-    std::vector<float> texture;          /**< Raw intensities to use as texture */
+    int64_t textureWidth, textureHeight;  /**< Dimensions of texture */
+    std::vector<float> texture;           /**< Raw intensities to use as texture */
     int64_t textureNonce = 0;             /**< A number changed everytime the texture gets modified */
     int64_t lastUploadedTextureNonce = 0; /**< Last nonce where the texture was uploaded to GPU */
 

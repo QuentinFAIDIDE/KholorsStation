@@ -17,7 +17,7 @@ class RadialGradientRectangle : public GlMesh
     void freeGlObjects() override;
 
   private:
-    std::vector<Vertex> vertices;          /**< List of vertices with position, texture pos, and color */
+    std::vector<Vertex> vertices;    /**< List of vertices with position, texture pos, and color */
     std::vector<GLuint> triangleIds; /**< List of vertice ids to draw each triangle */
 
     GLuint vbo; /**< vertex buffer object identifier */

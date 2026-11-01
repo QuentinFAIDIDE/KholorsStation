@@ -1,6 +1,6 @@
 #include "BeatGridMesh.h"
-#include "StationApp/GUI/AudioConstants.h"
 #include "OpenGLHelpers.h"
+#include "StationApp/GUI/AudioConstants.h"
 #include <limits>
 #include <stdexcept>
 

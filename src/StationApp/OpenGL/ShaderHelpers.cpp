@@ -1,9 +1,8 @@
 #include "ShaderHelpers.h"
 #include <spdlog/spdlog.h>
 
-bool ShaderHelpers::buildShader(std::unique_ptr<juce::OpenGLShaderProgram> &sh, 
-                                const std::string& vertexShader, 
-                                const std::string& fragmentShader)
+bool ShaderHelpers::buildShader(std::unique_ptr<juce::OpenGLShaderProgram> &sh, const std::string &vertexShader,
+                                const std::string &fragmentShader)
 {
     if (!sh->addVertexShader(vertexShader) || !sh->addFragmentShader(fragmentShader) || !sh->link())
     {

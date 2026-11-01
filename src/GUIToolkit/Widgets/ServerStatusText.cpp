@@ -7,8 +7,8 @@
 #include <spdlog/spdlog.h>
 
 ServerStatusText::ServerStatusText(TaskingManager &tm)
-    : currentStatus(UNKNOWN), unknownStatusColor(KHOLORS_COLOR_TEXT_WARN), listeningStatusColor(KHOLORS_COLOR_TEXT_STATUS_OK),
-      offlineStatusColor(KHOLORS_COLOR_TEXT_STATUS_ERROR)
+    : currentStatus(UNKNOWN), unknownStatusColor(KHOLORS_COLOR_TEXT_WARN),
+      listeningStatusColor(KHOLORS_COLOR_TEXT_STATUS_OK), offlineStatusColor(KHOLORS_COLOR_TEXT_STATUS_ERROR)
 {
     tm.registerTaskListener(this);
 }

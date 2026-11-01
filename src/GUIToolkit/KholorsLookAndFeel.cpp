@@ -93,7 +93,8 @@ int KholorsLookAndFeel::getTabButtonBestWidth(juce::TabBarButton &tbb, int)
 {
     auto font = juce::Font(KHOLORS_DEFAULT_FONT_SIZE);
     int i = tbb.getIndex();
-    return juce::GlyphArrangement::getStringWidthInt(font, tbb.getTabbedButtonBar().getTabNames()[i]) + KHOLORS_TAB_BUTTONS_INNER_PADDING;
+    return juce::GlyphArrangement::getStringWidthInt(font, tbb.getTabbedButtonBar().getTabNames()[i]) +
+           KHOLORS_TAB_BUTTONS_INNER_PADDING;
 }
 
 void KholorsLookAndFeel::drawTabbedButtonBarBackground(juce::TabbedButtonBar &, juce::Graphics &g)

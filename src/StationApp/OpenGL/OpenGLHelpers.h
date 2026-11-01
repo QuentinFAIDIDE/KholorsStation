@@ -9,7 +9,7 @@ class OpenGLHelpers
     /**
      * @brief Enable blending and clear OpenGL view with background color.
      */
-    static void clearGlView(const juce::Colour& backgroundColor);
+    static void clearGlView(const juce::Colour &backgroundColor);
 
     /**
      * @brief Setup standard OpenGL blending for transparency.
@@ -19,7 +19,7 @@ class OpenGLHelpers
     /**
      * @brief Log OpenGL and GPU information.
      */
-    static void logOpenGLInfo(juce::OpenGLContext& context);
+    static void logOpenGLInfo(juce::OpenGLContext &context);
 
     /**
      * @brief Enable OpenGL error logging with debug callback.
@@ -35,5 +35,6 @@ class OpenGLHelpers
     /**
      * @brief OpenGL error callback function.
      */
-    static void logOpenGLErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
+    static void logOpenGLErrorCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+                                       const GLchar *message, const void *userParam);
 };

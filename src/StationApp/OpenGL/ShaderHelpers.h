@@ -10,7 +10,6 @@ class ShaderHelpers
     /**
      * @brief Build a shader program from vertex and fragment shader source.
      */
-    static bool buildShader(std::unique_ptr<juce::OpenGLShaderProgram> &sh, 
-                           const std::string& vertexShader, 
-                           const std::string& fragmentShader);
+    static bool buildShader(std::unique_ptr<juce::OpenGLShaderProgram> &sh, const std::string &vertexShader,
+                            const std::string &fragmentShader);
 };

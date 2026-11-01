@@ -92,7 +92,8 @@ RadialGradientRectangle::RadialGradientRectangle(juce::Colour centerCol, juce::C
 
 void RadialGradientRectangle::registerGlObjects()
 {
-    if (!juce::OpenGLHelpers::isContextActive()) {
+    if (!juce::OpenGLHelpers::isContextActive())
+    {
         throw std::runtime_error("called registerGlObjects without a gl context");
     }
 
@@ -118,7 +119,8 @@ void RadialGradientRectangle::registerGlObjects()
 
 void RadialGradientRectangle::drawGlObjects()
 {
-    if (!juce::OpenGLHelpers::isContextActive()) {
+    if (!juce::OpenGLHelpers::isContextActive())
+    {
         throw std::runtime_error("called drawGlObjects without a gl context");
     }
 
