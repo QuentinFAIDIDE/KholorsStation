@@ -332,9 +332,10 @@ void VolumeOverTimeGraph::deleteTilesQueuedForDeletion()
             auto tileIdentifier = secondTilesIndexMap.find(tileIndex);
             if (tileIdentifier != secondTilesIndexMap.end())
             {
+                size_t ringBufferIndex = tileIdentifier->second;
                 secondTilesIndexMap.erase(tileIdentifier);
-                secondTilesRingBuffer[tileIdentifier->second]->tileIndexPosition = -1;
-                freeSecondTilesIndexes.push(tileIdentifier->second);
+                secondTilesRingBuffer[ringBufferIndex]->tileIndexPosition = -1;
+                freeSecondTilesIndexes.push(ringBufferIndex);
             }
         }
     }
