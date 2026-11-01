@@ -66,6 +66,17 @@ DashboardView::DashboardView(TrackInfoStore &tis, TaskingManager &tm)
     addAndMakeVisible(instrumentsCard.get());
     addAndMakeVisible(timeScale);
 
+    // the volume card can be collapsed, and both graph cards resized against each other with the handle
+    // between them
+    volumeCard->setCollapsible(true);
+    volumeCard->onCollapsedChanged = [this]() { resized(); };
+    graphCardsResizeHandle.onDragStart = [this]() { volumeGraphHeightAtDragStart = volumeGraphHeight; };
+    graphCardsResizeHandle.onDrag = [this](int deltaY) {
+        volumeGraphHeight = clampVolumeGraphHeight(volumeGraphHeightAtDragStart - deltaY);
+        resized();
+    };
+    addAndMakeVisible(graphCardsResizeHandle);
+
     startTimer(VIEW_MOVE_TIME_INTERVAL_MS);
 }
 
@@ -303,6 +314,13 @@ bool DashboardView::handleVolumeSensitivityTask(std::shared_ptr<VolumeSensitivit
     return false;
 }
 
+int DashboardView::clampVolumeGraphHeight(int height) const
+{
+    int const maxHeight = graphCardsColumnHeight - CARDS_SPACING - Card::getHeightForContent(MIN_GRAPH_HEIGHT) -
+                          Card::getHeightForContent(0);
+    return std::max(MIN_GRAPH_HEIGHT, std::min(height, maxHeight));
+}
+
 void DashboardView::resized()
 {
     auto bounds = getLocalBounds().reduced(DASHBOARD_SIDE_MARGIN, 0).withTrimmedTop(CARDS_SPACING);
@@ -311,16 +329,40 @@ void DashboardView::resized()
     bounds.removeFromRight(CARDS_SPACING);
 
     auto timeGridBounds = bounds.removeFromBottom(TIME_GRID_HEIGHT);
-    auto const volumeBounds = bounds.removeFromBottom(Card::getHeightForContent(VOLUME_GRAPH_HEIGHT));
-    bounds.removeFromBottom(CARDS_SPACING);
+    instrumentsCard->setBounds(instrumentsBounds.withBottom(bounds.getBottom()));
 
-    frequencyCard->setBounds(bounds);
-    volumeCard->setBounds(volumeBounds);
-    instrumentsCard->setBounds(instrumentsBounds.withBottom(volumeBounds.getBottom()));
+    // graph cards stacked from the top: collapsed ones only take their header,
+    // expanded ones share the rest (split by the resize handle if both are expanded)
+    graphCardsColumnHeight = bounds.getHeight();
+    bool const frequencyCollapsed = frequencyCard->isCollapsed();
+    bool const volumeCollapsed = volumeCard->isCollapsed();
+    int const spaceForCards = graphCardsColumnHeight - CARDS_SPACING;
+    int frequencyCardHeight = Card::getCollapsedHeight();
+    int volumeCardHeight = Card::getCollapsedHeight();
+    if (!frequencyCollapsed && !volumeCollapsed)
+    {
+        volumeCardHeight = Card::getHeightForContent(clampVolumeGraphHeight(volumeGraphHeight));
+        frequencyCardHeight = spaceForCards - volumeCardHeight;
+    }
+    else if (!frequencyCollapsed)
+    {
+        frequencyCardHeight = spaceForCards - volumeCardHeight;
+    }
+    else if (!volumeCollapsed)
+    {
+        volumeCardHeight = spaceForCards - frequencyCardHeight;
+    }
+
+    auto const graphCardsLeft = bounds.getX();
+    auto const graphCardsRight = bounds.getRight();
+    frequencyCard->setBounds(bounds.removeFromTop(frequencyCardHeight));
+    graphCardsResizeHandle.setBounds(bounds.removeFromTop(CARDS_SPACING));
+    graphCardsResizeHandle.setVisible(!frequencyCollapsed && !volumeCollapsed);
+    volumeCard->setBounds(bounds.removeFromTop(volumeCardHeight));
 
     // the time scale is below the cards, aligned with the graphs
-    int const graphsLeft = volumeBounds.getX() + CARD_PADDING + FREQUENCY_GRID_WIDTH;
-    int const graphsRight = volumeBounds.getRight() - CARD_PADDING;
+    int const graphsLeft = graphCardsLeft + CARD_PADDING + FREQUENCY_GRID_WIDTH;
+    int const graphsRight = graphCardsRight - CARD_PADDING;
     timeScale.setBounds(
         timeGridBounds.withLeft(graphsLeft).withRight(graphsRight).removeFromTop(KHOLORS_DEFAULT_FONT_SIZE));
 
@@ -469,7 +511,8 @@ void DashboardView::mouseMove(const juce::MouseEvent &me)
 void DashboardView::broadcastMouseEventInfo(const juce::MouseEvent &me)
 {
     auto const positionRelativeToGraph = me.getEventRelativeTo(freqOverTimeGraph.get());
-    bool const showCursor = freqOverTimeGraph->getLocalBounds().contains(positionRelativeToGraph.getPosition());
+    bool const showCursor = freqOverTimeGraph->isShowing() &&
+                            freqOverTimeGraph->getLocalBounds().contains(positionRelativeToGraph.getPosition());
     freqOverTimeGraph->setMouseCursor(showCursor, positionRelativeToGraph.position.x,
                                       positionRelativeToGraph.position.y);
 

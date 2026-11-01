@@ -7,6 +7,7 @@
 #include "StationApp/Audio/TrackInfoStore.h"
 #include "StationApp/Audio/VolumeSensitivityTask.h"
 #include "StationApp/GUI/Cards/Card.h"
+#include "StationApp/GUI/Cards/CardsResizeHandle.h"
 #include "StationApp/GUI/ClearTask.h"
 #include "StationApp/GUI/Graphs/FftOverTimeGraph.h"
 #include "StationApp/GUI/Graphs/FrequencyScale.h"
@@ -29,7 +30,8 @@ inline constexpr int MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS = 250;
 inline constexpr int MAX_TIME_WITHOUT_TRACK_LIST_PAINT_MS = 150;
 inline constexpr int VIEW_MOVE_TIME_INTERVAL_MS = 15;
 inline constexpr int FREQUENCY_GRID_WIDTH = 90;
-inline constexpr int VOLUME_GRAPH_HEIGHT = 220;
+inline constexpr int VOLUME_GRAPH_HEIGHT = 200; /**< default height of the volume graph, before any resize */
+inline constexpr int MIN_GRAPH_HEIGHT = 80;     /**< graphs can't be resized smaller than this */
 inline constexpr int TRACK_LIST_WIDTH = 220;
 inline constexpr int DASHBOARD_SIDE_MARGIN = 24;
 inline constexpr int CARDS_SPACING = 16;
@@ -93,6 +95,11 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
     bool handleZoom(int dragY, int mouseX);
     bool handlePan(int dragX);
 
+    /**
+     * @brief Limit the volume graph height so that both graphs keep at least MIN_GRAPH_HEIGHT.
+     */
+    int clampVolumeGraphHeight(int height) const;
+
     void updateViewMouseDrag(const juce::MouseEvent &e);
 
     void updateAutoscroll(int64_t currentTime, int64_t elapsedSinceLastCallMs, int64_t lastFftDrawTimeMsCopy);
@@ -139,6 +146,10 @@ class DashboardView : public juce::Component, public TaskListener, public juce::
     std::unique_ptr<Card> frequencyCard;
     std::unique_ptr<Card> volumeCard;
     std::unique_ptr<Card> instrumentsCard;
+    CardsResizeHandle graphCardsResizeHandle; /**< resizes the two graph cards when dragged */
+    int volumeGraphHeight{VOLUME_GRAPH_HEIGHT};
+    int volumeGraphHeightAtDragStart{VOLUME_GRAPH_HEIGHT};
+    int graphCardsColumnHeight{0}; /**< height available for both graph cards and the gap between them */
 
     int lastFftMousePosX;
     int lastFftMousePosY;
