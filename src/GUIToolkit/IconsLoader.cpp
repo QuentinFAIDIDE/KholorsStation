@@ -43,9 +43,6 @@ IconsLoader::IconsLoader()
     folderIcon = juce::Drawable::createFromImageData(GUIData::folder_svg, GUIData::folder_svgSize);
     audioIcon = juce::Drawable::createFromImageData(GUIData::song_svg, GUIData::song_svgSize);
 
-    artifaktNdLogo =
-        juce::Drawable::createFromImageData(GUIData::artifaktnd_logo_svg, GUIData::artifaktnd_logo_svgSize);
-
     kholorsLogo = juce::Drawable::createFromImageData(GUIData::kholors_logo_svg, GUIData::kholors_logo_svgSize);
 
     lowWaveIcon = juce::Drawable::createFromImageData(GUIData::low_waves_svg, GUIData::low_waves_svgSize);
