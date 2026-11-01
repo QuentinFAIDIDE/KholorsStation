@@ -13,9 +13,9 @@ inline const juce::Colour KHOLORS_COLOR_SEPARATOR_LINE = juce::Colour(80, 80, 80
 inline const juce::Colour KHOLORS_COLOR_HIGHLIGHT = juce::Colour(87, 110, 195);
 inline const juce::Colour KHOLORS_COLOR_BUTTON_HIGHLIGHT = juce::Colour(194, 219, 255);
 inline const juce::Colour KHOLORS_COLOR_SELECTED_BACKGROUND = juce::Colour(33, 45, 90);
-inline const juce::Colour KHOLORS_COLOR_GRIDS_LEVEL_0 = juce::Colour(juce::uint8(31), 38, 62, 1.0f);
-inline const juce::Colour KHOLORS_COLOR_GRIDS_LEVEL_1 = juce::Colour(juce::uint8(31), 38, 62, 1.0f);
-inline const juce::Colour KHOLORS_COLOR_GRIDS_LEVEL_2 = juce::Colour(juce::uint8(31), 38, 62, 0.5f);
+inline const juce::Colour KHOLORS_COLOR_GRIDS_LEVEL_0 = juce::Colour(static_cast<juce::uint8>(31), 38, 62, 1.0f);
+inline const juce::Colour KHOLORS_COLOR_GRIDS_LEVEL_1 = juce::Colour(static_cast<juce::uint8>(31), 38, 62, 1.0f);
+inline const juce::Colour KHOLORS_COLOR_GRIDS_LEVEL_2 = juce::Colour(static_cast<juce::uint8>(31), 38, 62, 0.5f);
 inline const juce::Colour KHOLORS_COLOR_INPUT_BACKGROUND = juce::Colour(211, 222, 222);
 inline const juce::Colour KHOLORS_COLOR_INPUT_TEXT = juce::Colour(51, 51, 51);
 
@@ -47,17 +47,9 @@ inline constexpr int KHOLORS_TABS_HEIGHT = 34;
 inline constexpr int KHOLORS_TAB_HIGHLIGHT_LINE_WIDTH = 2;
 
 inline const std::vector<juce::Colour> KHOLORS_COLOR_PALETTE = {
-    juce::Colour::fromString("ff399898"),
-    juce::Colour::fromString("ff3c7a98"),
-    juce::Colour::fromString("ff4056a5"),
-    juce::Colour::fromString("ff663fc6"),
-    juce::Colour::fromString("ff8c2fd3"),
-    juce::Colour::fromString("ffcc34c9"),
-    juce::Colour::fromString("ffc2448a"),
-    juce::Colour::fromString("ffc64264"),
-    juce::Colour::fromString("ff9b5f31"),
-    juce::Colour::fromString("ffc5a536"),
-    juce::Colour::fromString("ffbec83d"),
-    juce::Colour::fromString("ff97c43e"),
+    juce::Colour::fromString("ff399898"), juce::Colour::fromString("ff3c7a98"), juce::Colour::fromString("ff4056a5"),
+    juce::Colour::fromString("ff663fc6"), juce::Colour::fromString("ff8c2fd3"), juce::Colour::fromString("ffcc34c9"),
+    juce::Colour::fromString("ffc2448a"), juce::Colour::fromString("ffc64264"), juce::Colour::fromString("ff9b5f31"),
+    juce::Colour::fromString("ffc5a536"), juce::Colour::fromString("ffbec83d"), juce::Colour::fromString("ff97c43e"),
     juce::Colour::fromString("ff49c479"),
 };

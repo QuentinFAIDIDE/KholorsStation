@@ -310,9 +310,9 @@ void FftOverTimeGraph::ensureTrackTilesDrawOrderIsUpToDate()
         trackTilesDrawOrder.resize(0);
         for (auto &it : trackTilesInDrawingOrder)
         {
-            for (auto it2 = it.second.begin(); it2 != it.second.end(); ++it2)
+            for (unsigned long &it2 : it.second)
             {
-                trackTilesDrawOrder.push_back(*it2);
+                trackTilesDrawOrder.push_back(it2);
             }
         }
         lastTrackDrawOrderNonce = trackDrawOrderNonce;
@@ -332,7 +332,7 @@ void FftOverTimeGraph::clearAllTilesIfNeeded()
             }
         }
 
-        for (auto &i : secondTilesRingBuffer)
+        for (auto const &i : secondTilesRingBuffer)
         {
             if (i.tileIndexPosition >= 0)
             {
@@ -369,7 +369,7 @@ void FftOverTimeGraph::eventuallyRefreshGPUTextures()
 {
     if (renderOpenGlIter % 5 == 0)
     {
-        for (auto &i : secondTilesRingBuffer)
+        for (auto const &i : secondTilesRingBuffer)
         {
             i.mesh->refreshGpuTextureIfChanged();
         }
@@ -388,13 +388,13 @@ void FftOverTimeGraph::applyQueuedColorUpdates()
             colorUpdatesToApply.pop();
         }
     }
-    for (auto &colorUpdate : colorUpdates)
+    for (auto const &colorUpdate : colorUpdates)
     {
         auto const existingTrackColor = knownTrackColors.find(colorUpdate.first);
         if (existingTrackColor == knownTrackColors.end() || existingTrackColor->second != colorUpdate.second)
         {
             knownTrackColors[colorUpdate.first] = colorUpdate.second;
-            for (auto &j : secondTilesRingBuffer)
+            for (auto const &j : secondTilesRingBuffer)
             {
                 if (j.trackIdentifer == colorUpdate.first)
                 {
@@ -416,7 +416,7 @@ void FftOverTimeGraph::drawGlFftTextures()
     texturedPositionedShader->use();
     ensureTrackTilesDrawOrderIsUpToDate();
 
-    for (unsigned long i : trackTilesDrawOrder)
+    for (unsigned long const i : trackTilesDrawOrder)
     {
         if (secondTilesRingBuffer[i].tileIndexPosition >= 0)
         {
@@ -522,7 +522,7 @@ void FftOverTimeGraph::loadGlObjectsAtInit()
 {
     // load tiles textures
     texturedPositionedShader->use();
-    for (auto &i : secondTilesRingBuffer)
+    for (auto const &i : secondTilesRingBuffer)
     {
         if (i.tileIndexPosition >= 0)
         {
@@ -569,7 +569,7 @@ void FftOverTimeGraph::glLoopDrawOverGrid()
 
 void FftOverTimeGraph::deallocateOpenGlResources()
 {
-    for (auto &i : secondTilesRingBuffer)
+    for (auto const &i : secondTilesRingBuffer)
     {
         i.mesh->freeGlObjects();
     }

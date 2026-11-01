@@ -3,8 +3,8 @@
 #include "OpenGLHelpers.h"
 #include "StationApp/GUI/AudioConstants.h"
 #include <algorithm>
+#include <cmath>
 #include <limits>
-#include <math.h>
 #include <stdexcept>
 
 BeatGridMesh::BeatGridMesh(bool superGrid) : isSuperGrid(superGrid)

@@ -403,7 +403,8 @@ class FftOverTimeGraph : public BaseOverTimeGraph
     std::unique_ptr<juce::OpenGLShaderProgram> texturedPositionedShader; /**< shader to draw ffts */
 
     GpuConvolutionId convolutionId{
-        GpuConvolutionId::Emboss}; /**< Identifier of the GLSL convolution to apply with GPU */
+        GpuConvolutionId::Emboss,
+    }; /**< Identifier of the GLSL convolution to apply with GPU */
 
     std::queue<std::shared_ptr<FftToDraw>>
         fftsToDrawQueue;        /**< queue of FFT to be drawn. Depends on the fftsToDrawLock */

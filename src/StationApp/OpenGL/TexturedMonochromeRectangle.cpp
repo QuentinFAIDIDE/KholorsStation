@@ -5,7 +5,6 @@
 #include "OpenGLHelpers.h"
 #include "juce_opengl/opengl/juce_gl.h"
 #include "spdlog/spdlog.h"
-#include <algorithm>
 
 TexturedMonochromeRectangle::TexturedMonochromeRectangle(int64_t width, int64_t height, juce::Colour col)
     : textureWidth(width), textureHeight(height)
@@ -177,7 +176,7 @@ void TexturedMonochromeRectangle::setPixelAt(int x, int y, float intensity)
 }
 
 void TexturedMonochromeRectangle::setRepeatedVerticalHalfLine(int channel, size_t startX, size_t endX,
-                                                              float *intensities)
+                                                              const float *intensities)
 {
     size_t const widthX = (1 + (endX - startX));
 

@@ -12,7 +12,7 @@ void LabeledLineStack::resized()
 {
     auto bounds = getLocalBounds().reduced(LABELED_LINE_STACK_BORDER_PADDING);
     bounds.removeFromTop(LABELED_LINE_STACK_LABEL_HEIGHT);
-    for (auto &stackedComponent : stackedComponents)
+    for (auto const &stackedComponent : stackedComponents)
     {
         if (bounds.getHeight() < (LABELED_LINE_STACK_LINE_TOP_MARGIN + LABELED_LINE_CONTAINER_DEFAULT_HEIGHT))
         {

@@ -19,7 +19,7 @@ ProcessingTimer::ProcessingTimer(TaskingManager &tm) : taskingManager(tm)
 
 ProcessingTimer::~ProcessingTimer()
 {
-    for (auto &waitgroup : waitgroups)
+    for (auto const &waitgroup : waitgroups)
     {
         waitgroup->deactivate();
     }

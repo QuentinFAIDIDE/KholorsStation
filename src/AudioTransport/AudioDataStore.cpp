@@ -192,7 +192,7 @@ void AudioDataStore::parseNewData(const AudioSegmentPayload *payload)
     DawInfo dawInfo;
     TrackInfo trackInfo;
 
-    auto payloadAudioBuffers = extractPayloadAudioSegments(payload);
+    auto const payloadAudioBuffers = extractPayloadAudioSegments(payload);
     for (const auto &payloadAudioBuffer : payloadAudioBuffers)
     {
         pushAudioDatumToQueue(payloadAudioBuffer);

@@ -8,9 +8,9 @@
 #include "spdlog/spdlog.h"
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <math.h>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -188,7 +188,7 @@ void VolumeOverTimeGraph::loadGlObjectsAtInit()
 {
     // load tiles textures
     texturedPositionedShader->use();
-    for (auto &i : secondTilesRingBuffer)
+    for (auto const &i : secondTilesRingBuffer)
     {
         i->mesh->registerGlObjects();
     }
@@ -645,7 +645,7 @@ void VolumeOverTimeGraph::glLoopDrawOverGrid()
 
 void VolumeOverTimeGraph::deallocateOpenGlResources()
 {
-    for (auto &i : secondTilesRingBuffer)
+    for (auto const &i : secondTilesRingBuffer)
     {
         i->mesh->freeGlObjects();
     }

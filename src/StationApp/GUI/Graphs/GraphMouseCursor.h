@@ -6,7 +6,7 @@ class GraphMouseCursor
 {
   public:
     GraphMouseCursor();
-    ~GraphMouseCursor();
+    ~GraphMouseCursor() = default;
 
     void paint(juce::Graphics &g, const juce::Rectangle<int> &bounds) const;
     void setMouseCursor(bool onComponent, int x, int y);

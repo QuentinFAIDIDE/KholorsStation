@@ -43,7 +43,7 @@ inline constexpr int TILE_PIXEL_WIDTH = BARS_PER_TILE;
 // How many audio samples in visual sample rate one bar contains.
 inline constexpr auto TILE_BAR_SAMPLE_WIDTH = (VISUAL_SAMPLE_RATE / BARS_PER_TILE);
 // Width of a bar in pixel
-inline constexpr auto TILE_BAR_PIXEL_WIDTH = ((float)(TILE_PIXEL_WIDTH) / BARS_PER_TILE);
+inline constexpr auto TILE_BAR_PIXEL_WIDTH = (static_cast<float>(TILE_PIXEL_WIDTH) / BARS_PER_TILE);
 
 // Maximum number of tracks to show in the second tile.
 inline constexpr int MAX_NUM_TRACKS_PER_TILE = 32;
@@ -52,10 +52,12 @@ inline constexpr int MAX_NUM_TRACKS_PER_TILE = 32;
 // There is an issue though, there is too little pixel precision if we allow
 // each of the 32 track to fire at max height. Therefore we only consider possible
 // that a subset of them can fire at maximum and we will truncate whathever would draw futher.
-inline constexpr auto MAX_SECOND_TILE_TRACK_PIXEL_SIZE = ((float)(TILE_PIXEL_HEIGHT / 2) / (MAX_NUM_TRACKS_PER_TILE >> 2));
+inline constexpr auto MAX_SECOND_TILE_TRACK_PIXEL_SIZE =
+    (static_cast<float>(TILE_PIXEL_HEIGHT / 2) / (MAX_NUM_TRACKS_PER_TILE >> 2));
 
 // Maximum RMS value when stacking all RMS intensity bars from all 32 channels
-inline constexpr auto MAX_TOTAL_TILE_BAR_RMS_VALUE = ((float)(MAX_NUM_TRACKS_PER_TILE) * MAX_SHOWABLE_RMS_VOLUME);
+inline constexpr auto MAX_TOTAL_TILE_BAR_RMS_VALUE =
+    (static_cast<float>(MAX_NUM_TRACKS_PER_TILE) * MAX_SHOWABLE_RMS_VOLUME);
 
 inline constexpr int ZOOM_FACTOR_UPDATE_INTERVAL_MS = 10;
 inline constexpr float ZOOM_FACTOR_UPDATE_INCREMENT = 0.025f;

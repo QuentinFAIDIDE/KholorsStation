@@ -305,14 +305,14 @@ bool TaskingManager::undoLastActivity()
         // task if it's from the same task group
         int const taskGroupIndex = history[lastActivityIndex]->getTaskGroupIndex();
 
-        auto tasksToCancel = history[lastActivityIndex]->getOppositeTasks();
+        auto const tasksToCancel = history[lastActivityIndex]->getOppositeTasks();
         if (tasksToCancel.empty())
         {
             spdlog::info("This task cannot be canceled (no opposite task set)");
             return false;
         }
 
-        for (auto &i : tasksToCancel)
+        for (auto const &i : tasksToCancel)
         {
             i->declareSelfAsPartOfReversion();
             for (auto &taskListener : taskListeners)

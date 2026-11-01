@@ -28,6 +28,8 @@ Checks: >
   -cppcoreguidelines-pro-type-reinterpret-cast,
   -cppcoreguidelines-pro-type-union-access,
   -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-prefer-member-initializer,
+  -cppcoreguidelines-virtual-class-destructor,
   -misc-include-cleaner,
   -misc-non-private-member-variables-in-classes,
   -modernize-avoid-c-arrays,
@@ -53,9 +55,9 @@ Checks: >
 
 WarningsAsErrors: ''
 
-# Only report warnings from our own headers, not from JUCE, gRPC or generated code.
+# Only report warnings from our own headers, not from JUCE, gRPC, generated code or tests.
 HeaderFilterRegex: '.*/src/.*'
-ExcludeHeaderFilterRegex: '.*/(libs|build|vcpkg_installed)/.*'
+ExcludeHeaderFilterRegex: '.*/(libs|build|vcpkg_installed)/.*|.*Test\.h|.*/Mocked[^/]*\.h'
 
 CheckOptions:
   - key: readability-function-cognitive-complexity.Threshold

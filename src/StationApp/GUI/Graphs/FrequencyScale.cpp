@@ -33,33 +33,33 @@ void FrequencyScale::paint(juce::Graphics &g)
 
     // generate necessary labels
     std::vector<LabelBox> labelsToDraw;
-    auto labs0Hz = generateLabelBox(0, "0", "Hz");
+    auto const labs0Hz = generateLabelBox(0, "0", "Hz");
     labelsToDraw.reserve(labs0Hz.size());
     for (const auto &i : labs0Hz)
     {
         labelsToDraw.push_back(i);
     }
-    auto labs100Hz = generateLabelBox(100, "100", "Hz");
+    auto const labs100Hz = generateLabelBox(100, "100", "Hz");
     for (const auto &i : labs100Hz)
     {
         labelsToDraw.push_back(i);
     }
-    auto labs350Hz = generateLabelBox(350, "350", "Hz");
+    auto const labs350Hz = generateLabelBox(350, "350", "Hz");
     for (const auto &i : labs350Hz)
     {
         labelsToDraw.push_back(i);
     }
-    auto labs1kHz = generateLabelBox(1000, "1", "kHz");
+    auto const labs1kHz = generateLabelBox(1000, "1", "kHz");
     for (const auto &i : labs1kHz)
     {
         labelsToDraw.push_back(i);
     }
-    auto labs35kHz = generateLabelBox(3500, "3.5", "kHz");
+    auto const labs35kHz = generateLabelBox(3500, "3.5", "kHz");
     for (const auto &i : labs35kHz)
     {
         labelsToDraw.push_back(i);
     }
-    auto labs10kHz = generateLabelBox(10000, "10", "kHz");
+    auto const labs10kHz = generateLabelBox(10000, "10", "kHz");
     for (const auto &i : labs10kHz)
     {
         labelsToDraw.push_back(i);
@@ -159,11 +159,11 @@ void FrequencyScale::drawLabels(juce::Graphics &g, std::vector<LabelBox> &labs)
 {
     std::vector<juce::Rectangle<int>> drawnAreas;
 
-    for (auto &lab : labs)
+    for (auto const &lab : labs)
     {
         bool goodToDraw = true;
         // abort if it intersect already drawn Areas
-        for (auto drawnArea : drawnAreas)
+        for (auto const drawnArea : drawnAreas)
         {
             if (drawnArea.intersects(lab.bounds))
             {

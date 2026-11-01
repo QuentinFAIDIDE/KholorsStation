@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Runs clang-tidy on the whole src/ folder.
+# Runs clang-tidy on the whole src/ folder, except the tests (*Test.cpp).
 # Usage: scripts/run_clang_tidy.sh [--fix]
 
 # abort on errors
@@ -15,11 +15,11 @@ if [ "$1" == "--fix" ]; then
     # Checks whose fixes can break the build or change behaviour (dangling
     # references, enum types, linkage...) stay as warnings only, and the analyzer
     # is skipped since it has no fixes and is slow.
-    FILES=$(grep -o '"file": "[^"]*"' "$BUILD_DIR/compile_commands.json" | cut -d'"' -f4 | grep "^$REPO_ROOT/src/" | sort -u)
+    FILES=$(grep -o '"file": "[^"]*"' "$BUILD_DIR/compile_commands.json" | cut -d'"' -f4 | grep "^$REPO_ROOT/src/" | grep -v "Test\.cpp$" | sort -u)
     for f in $FILES; do
         echo "fixing $f"
         clang-tidy -p "$BUILD_DIR" --quiet --fix \
-            -checks='-clang-analyzer-*,-cppcoreguidelines-prefer-member-initializer,-cppcoreguidelines-virtual-class-destructor,-readability-redundant-parentheses,-performance-unnecessary-copy-initialization,-performance-unnecessary-value-param,-performance-enum-size,-misc-use-internal-linkage,-modernize-use-emplace' \
+            -checks='-clang-analyzer-*,-readability-redundant-parentheses,-performance-unnecessary-copy-initialization,-performance-unnecessary-value-param,-performance-enum-size,-misc-use-internal-linkage,-modernize-use-emplace' \
             "$f" > /dev/null 2>&1 || true
     done
 else
@@ -28,5 +28,5 @@ else
         -checks='-clang-analyzer-alpha.*,clang-analyzer-alpha.cplusplus.InvalidatedIterator' \
         -extra-arg=-Xclang -extra-arg=-analyzer-config \
         -extra-arg=-Xclang -extra-arg=aggressive-binary-operation-simplification=true \
-        "$REPO_ROOT/src/"
+        "^$REPO_ROOT/src/(?!.*Test\.cpp$)"
 fi

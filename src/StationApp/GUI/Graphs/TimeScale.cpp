@@ -3,7 +3,7 @@
 #include "GUIToolkit/Consts.h"
 #include "StationApp/GUI/AudioConstants.h"
 #include "juce_graphics/juce_graphics.h"
-#include <math.h>
+#include <cmath>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -38,8 +38,8 @@ void TimeScale::resized()
 
 void TimeScale::paint(juce::Graphics &g)
 {
-    int64_t currentViewPos;
-    int64_t currentViewScale;
+    int64_t currentViewPos = 0;
+    int64_t currentViewScale = 0;
     float currentBpm = NAN;
     {
         std::scoped_lock const lock(mutex);

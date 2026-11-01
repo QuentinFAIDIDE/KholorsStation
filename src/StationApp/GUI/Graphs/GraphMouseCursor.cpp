@@ -1,11 +1,7 @@
 #include "GraphMouseCursor.h"
 #include "GUIToolkit/Consts.h"
 
-GraphMouseCursor::GraphMouseCursor()
-{
-}
-
-GraphMouseCursor::~GraphMouseCursor() = default;
+GraphMouseCursor::GraphMouseCursor() = default;
 
 void GraphMouseCursor::paint(juce::Graphics &g, const juce::Rectangle<int> &bounds) const
 {

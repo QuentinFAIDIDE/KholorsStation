@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstring>
+#include <math.h>
 #include <memory>
 #include <mutex>
 #include <spdlog/spdlog.h>
@@ -385,9 +386,9 @@ void FftRunner::processJob(std::shared_ptr<FftRunnerJob> job, mufft_plan_1d *pla
     // execute the muFFT plan (and the DFT)
     mufft_execute_plan_1d(plan, out, in);
     // copy back the output intensities normalized
-    float re;
-    float im;
-    float dist; /**< real and imaginary parts buffers */
+    float re = NAN;
+    float im = NAN;
+    float dist = NAN; /**< real and imaginary parts buffers */
 
     float *outPtr = job->output;
 

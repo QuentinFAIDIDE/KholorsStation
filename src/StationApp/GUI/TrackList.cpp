@@ -8,8 +8,8 @@
 #include "TaskManagement/TaskingManager.h"
 #include "juce_graphics/juce_graphics.h"
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
-#include <math.h>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -38,8 +38,8 @@ void TrackList::paint(juce::Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
-    int startTile;
-    int endTile;
+    int startTile = 0;
+    int endTile = 0;
     {
         std::scoped_lock const lock(viewMutex);
         startTile = viewPosition / TILE_WIDTH;
@@ -68,7 +68,7 @@ void TrackList::paint(juce::Graphics &g)
 
     tracksLabelPositions.resize(0);
 
-    for (auto &track : tracks)
+    for (auto const &track : tracks)
     {
         auto trackNameOpt = trackInfoStore.getTrackName(track.trackIdentifier);
         if (!trackNameOpt.has_value())
@@ -87,8 +87,8 @@ void TrackList::paint(juce::Graphics &g)
         auto const trackColor = juce::Colour(trackColorOpt->red, trackColorOpt->green, trackColorOpt->blue);
 
         // which channel do we allow to draw based on its usage ?
-        bool leftChannelWillBeDrawn;
-        bool rightChannelWillBeDrawn;
+        bool leftChannelWillBeDrawn = false;
+        bool rightChannelWillBeDrawn = false;
         bool const leftChannelCanBeDrawn = track.stereoBalance == 0 || track.stereoBalance == 2;
         bool const rightChannelCanBeDrawn = track.stereoBalance == 1 || track.stereoBalance == 2;
 
@@ -361,7 +361,7 @@ std::optional<juce::Rectangle<int>> TrackList::tryPositioningTrackLabel(
 
 bool TrackList::rectIntersectsRectList(juce::Rectangle<int> &rect, std::vector<juce::Rectangle<int>> &rectangleList)
 {
-    for (auto i : rectangleList)
+    for (auto const i : rectangleList)
     {
         if (rect.intersects(i))
         {

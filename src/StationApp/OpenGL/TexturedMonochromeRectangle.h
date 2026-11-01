@@ -52,7 +52,7 @@ class TexturedMonochromeRectangle : public GlMesh
      * @param endX last horizontal pixel to copy fft at
      * @param intensities intensities of the vertical line, must be sized of half texture height
      */
-    void setRepeatedVerticalHalfLine(int channel, size_t startX, size_t endX, float *intensities);
+    void setRepeatedVerticalHalfLine(int channel, size_t startX, size_t endX, const float *intensities);
 
     /**
      * @brief Clears all the texture data. It just clear the buffer

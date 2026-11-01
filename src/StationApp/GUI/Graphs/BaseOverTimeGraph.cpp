@@ -34,8 +34,8 @@ BaseOverTimeGraph::~BaseOverTimeGraph() = default;
 
 void BaseOverTimeGraph::paint(juce::Graphics &g)
 {
-    int64_t viewPositionCopy;
-    int64_t viewScaleCopy;
+    int64_t viewPositionCopy = 0;
+    int64_t viewScaleCopy = 0;
     {
         std::scoped_lock const lock(glThreadUniformsMutex);
         viewPositionCopy = viewPosition;

@@ -6,11 +6,7 @@
 constexpr int MIN_SAMPLE_PLAY_CURSOR_BACKWARD_MOVEMENT = 24000;
 constexpr int PLAY_CURSOR_WIDTH = 2;
 
-GraphPlayCursor::GraphPlayCursor()
-{
-}
-
-GraphPlayCursor::~GraphPlayCursor() = default;
+GraphPlayCursor::GraphPlayCursor() = default;
 
 void GraphPlayCursor::paint(juce::Graphics &g, const juce::Rectangle<int> &bounds, int64_t viewPosition,
                             int64_t viewScale)

@@ -190,8 +190,8 @@ void DashboardView::updateAutoscroll(int64_t currentTime, int64_t elapsedSinceLa
 
 void DashboardView::propagateClearedFft()
 {
-    auto tracksClearedInMainView = freqOverTimeGraph->getClearedTrackRanges();
-    for (auto &i : tracksClearedInMainView)
+    auto const tracksClearedInMainView = freqOverTimeGraph->getClearedTrackRanges();
+    for (auto const &i : tracksClearedInMainView)
     {
         trackList.clearTrackFromRange(i.trackIdentifier, i.startSample, i.length);
         volumeOverTimeGraph->clearTracksFromRange(i.startSample, i.length);

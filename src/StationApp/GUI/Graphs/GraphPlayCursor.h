@@ -8,7 +8,7 @@ class GraphPlayCursor
 {
   public:
     GraphPlayCursor();
-    ~GraphPlayCursor();
+    ~GraphPlayCursor() = default;
 
     void paint(juce::Graphics &g, const juce::Rectangle<int> &bounds, int64_t viewPosition, int64_t viewScale);
     int64_t getPlayCursorPosition();
