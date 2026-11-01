@@ -3,7 +3,6 @@
 #include "TaskManagement/TaskingManager.h"
 #include "absl/strings/str_format.h"
 #include <cstdint>
-#include <format>
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <memory>
 #include <mutex>
@@ -98,7 +97,7 @@ bool SyncServer::runServerOnPort(size_t port)
     desiredServerState.first = true;
     desiredServerState.second = port;
     // then we setup the server
-    std::string const server_address = std::format("127.0.0.1:{}", port);
+    std::string const server_address = absl::StrFormat("127.0.0.1:%d", port);
     grpc::ServerBuilder builder;
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
     builder.RegisterService(&service);

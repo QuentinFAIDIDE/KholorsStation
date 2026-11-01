@@ -2,6 +2,8 @@
 # Broad set of checks, minus the ones that are mostly noise for a JUCE/audio codebase.
 # cert-* and the cppcoreguidelines aliases listed at the end are only aliases of
 # checks already enabled; keeping them would report (and --fix) everything twice.
+# modernize-use-std-format/print are off as std::format isn't available with the CI compiler (GCC 12)
+# nor before macOS 13.3, below the macOS deployment target.
 # modernize-macro-to-enum is off because its unnamed enums break templates and
 # collide across headers; cppcoreguidelines-macro-usage still suggests constexpr.
 Checks: >
@@ -35,6 +37,8 @@ Checks: >
   -modernize-avoid-c-arrays,
   -modernize-macro-to-enum,
   -modernize-use-designated-initializers,
+  -modernize-use-std-format,
+  -modernize-use-std-print,
   -modernize-use-nodiscard,
   -modernize-use-trailing-return-type,
   -portability-avoid-pragma-once,
