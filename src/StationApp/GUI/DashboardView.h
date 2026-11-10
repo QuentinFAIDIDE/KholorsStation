@@ -30,7 +30,7 @@ inline constexpr int MAX_TIME_SINCE_FFT_UPDATE_TO_CENTER_VIEW_MS = 250;
 inline constexpr int MAX_TIME_WITHOUT_TRACK_LIST_PAINT_MS = 150;
 inline constexpr int VIEW_MOVE_TIME_INTERVAL_MS = 15;
 inline constexpr int FREQUENCY_GRID_WIDTH = 90;
-inline constexpr int VOLUME_GRAPH_HEIGHT = 200; /**< default height of the volume graph, before any resize */
+inline constexpr int VOLUME_GRAPH_HEIGHT = 160; /**< default height of the volume graph, before any resize */
 inline constexpr int MIN_GRAPH_HEIGHT = 80;     /**< graphs can't be resized smaller than this */
 inline constexpr int TRACK_LIST_WIDTH = 220;
 inline constexpr int DASHBOARD_SIDE_MARGIN = 24;
@@ -38,7 +38,7 @@ inline constexpr int CARDS_SPACING = 16;
 inline constexpr int TIME_GRID_HEIGHT = KHOLORS_DEFAULT_FONT_SIZE + CARDS_SPACING; /**< time scale and space below it */
 
 /**
- * @brief Describe a class which displays a timeline, and
+ * @brief Describe a class which displays a t imeline, and
  * which own a drawing backend that will draw FFT of signal
  * received. It will draw labels and eventually more info over drawing widgets.
  */
