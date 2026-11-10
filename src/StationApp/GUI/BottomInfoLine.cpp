@@ -96,6 +96,11 @@ bool BottomInfoLine::taskHandler(std::shared_ptr<Task> task)
 
 std::string BottomInfoLine::noteFromFreq(float freq)
 {
+    // no note for 0 Hz
+    if (!std::isfinite(freq) || freq <= 0.0f)
+    {
+        return "-";
+    }
     float const semiToneShiftFromA4 = 12.0f * std::log2(freq / 440);
     int const centDistanceToNearestNote =
         static_cast<int>(std::lround(100.0f * (semiToneShiftFromA4 - std::round(semiToneShiftFromA4))));
