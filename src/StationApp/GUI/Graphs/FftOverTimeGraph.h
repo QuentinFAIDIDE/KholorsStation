@@ -194,7 +194,7 @@ class FftOverTimeGraph : public BaseOverTimeGraph
      *
      * @param fftData Struct with the FFt and position data.
      */
-    void drawFftToGpuTexture(std::shared_ptr<FftToDraw> fftData);
+    void drawFftToGpuTexture(const std::shared_ptr<FftToDraw> &fftData);
 
     /**
      * @brief Add this tile to the track drawing order.
@@ -261,7 +261,7 @@ class FftOverTimeGraph : public BaseOverTimeGraph
     /**
      * @brief Generate pixel intensities line from FFT data.
      */
-    float *getFftPixelIntensitiesLine(std::shared_ptr<FftToDraw> fftData, float sampleRateRatio);
+    float *getFftPixelIntensitiesLine(const std::shared_ptr<FftToDraw> &fftData, float sampleRateRatio);
 
     static float computeAudioToVisualSampleRateRatio(uint32_t sampleRate);
 

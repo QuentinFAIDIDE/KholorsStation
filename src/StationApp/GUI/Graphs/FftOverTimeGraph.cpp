@@ -228,7 +228,7 @@ void FftOverTimeGraph::queueFftForDrawing(uint64_t trackIdentifier, int64_t seco
     }
 }
 
-void FftOverTimeGraph::drawFftToGpuTexture(std::shared_ptr<FftToDraw> fftData)
+void FftOverTimeGraph::drawFftToGpuTexture(const std::shared_ptr<FftToDraw> &fftData)
 {
     syncUnitTransformers();
     size_t const tileIndexToDrawIn = getTextureTileAtTrackPosition(fftData->trackIdentifier, fftData->secondTileIndex);
@@ -465,7 +465,7 @@ size_t FftOverTimeGraph::getTextureTileAtTrackPosition(uint64_t trackIdentifier,
 }
 
 // TODO: rename to something more meaningfull
-float *FftOverTimeGraph::getFftPixelIntensitiesLine(std::shared_ptr<FftToDraw> fftData, float sampleRateRatio)
+float *FftOverTimeGraph::getFftPixelIntensitiesLine(const std::shared_ptr<FftToDraw> &fftData, float sampleRateRatio)
 {
     float const rateAdjustedNoFreqBins = static_cast<float>(fftData->fftData.size()) / sampleRateRatio;
     size_t const halfTileHeight = (SECOND_TILE_HEIGHT >> 1);
