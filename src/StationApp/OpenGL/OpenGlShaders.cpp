@@ -84,13 +84,14 @@ uniform bool isDimmed;
 #define emboss mat3(-2, -1, 0, -1, 1, 1, 0, 0, 3)
 
 // Find coordinate of matrix element from index
-vec2 kpos(int index)
+// texelSize : size of a texel in texture coordinates
+vec2 kpos(int index, vec2 texelSize)
 {
     return vec2[9] (
         vec2(-1, -1), vec2(0, -1), vec2(1, -1),
         vec2(-1, 0), vec2(0, 0), vec2(1, 0), 
         vec2(-1, 1), vec2(0, 1), vec2(1, 1)
-    )[index] / vec2(64, 512).xy;
+    )[index] * texelSize;
 }
 
 // Extract region of dimension 3x3 from sampler centered in uv
@@ -101,9 +102,10 @@ mat3 region3x3(sampler2D sampler, vec2 uv)
 {
     // Create each pixels for region
     vec4[9] region;
+    vec2 texelSize = 1.0 / vec2(textureSize(sampler, 0));
     
     for (int i = 0; i < 9; i++)
-        region[i] = texture(sampler, uv + kpos(i));
+        region[i] = texture(sampler, uv + kpos(i, texelSize));
 
     // Create 3x3 region
     mat3 mRegion;

@@ -85,8 +85,8 @@ void TexturedMonochromeRectangle::registerGlObjects()
     // set the filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // send the texture to the gpu
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, textureWidth, textureHeight, 0, GL_RED, GL_FLOAT, texture.data());
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, textureWidth, textureHeight, 0, GL_RED, GL_FLOAT, texture.data());
 
     OpenGLHelpers::printAllOpenGlError();
 

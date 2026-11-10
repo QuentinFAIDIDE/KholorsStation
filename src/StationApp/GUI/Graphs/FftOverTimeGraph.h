@@ -11,11 +11,10 @@
 #include "StationApp/OpenGL/TexturedMonochromeRectangle.h"
 
 inline constexpr int IMAGES_RING_BUFFER_SIZE = 128;
-// Dimensions of a one-second tile.
-// Warning! It is hardcoded as well in the openGL shaders
-// for now, but I should soon rely on textureSize instead
-// and remove this comment. If I forget well, do it!
-inline constexpr int SECOND_TILE_WIDTH = 64;
+// Dimensions of a one-second tile (the shaders read them from the texture size).
+// There are about 94 FFT lines per second (hop of FFT_INPUT_NO_INTENSITIES / FFT_OVERLAP_DIVISION samples),
+// so a width above that shows each one.
+inline constexpr int SECOND_TILE_WIDTH = 128;
 inline constexpr int SECOND_TILE_HEIGHT = 512;
 
 class FftOverTimeGraph : public BaseOverTimeGraph
@@ -403,7 +402,7 @@ class FftOverTimeGraph : public BaseOverTimeGraph
     std::unique_ptr<juce::OpenGLShaderProgram> texturedPositionedShader; /**< shader to draw ffts */
 
     GpuConvolutionId convolutionId{
-        GpuConvolutionId::Emboss,
+        GpuConvolutionId::Identity,
     }; /**< Identifier of the GLSL convolution to apply with GPU */
 
     std::queue<std::shared_ptr<FftToDraw>>
