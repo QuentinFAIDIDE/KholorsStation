@@ -1,17 +1,33 @@
 #pragma once
 
 #include "../Maths/NormalizedBijectiveProjection.h"
-#include <math.h>
+#include <cmath>
 
 #include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
+#include <vector>
 
-inline constexpr int UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE = 4096;
+inline constexpr int UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE = 8192;
 
 using SharedFloatVectPtr = std::shared_ptr<std::vector<float>>;
+
+/**
+ * @brief Read a lookup table with linear interpolation between its entries.
+ * @param table UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE values.
+ * @param in value between 0 and 1, clamped otherwise (NaN reads as 0).
+ */
+inline float interpolatedLookup(const std::vector<float> &table, float in)
+{
+    float const clampedIn = (in > 0.0f) ? std::min(in, 1.0f) : 0.0f;
+    float const position = (clampedIn * static_cast<float>(UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE)) - 0.5f;
+    auto const index0 = static_cast<size_t>(
+        std::clamp<int64_t>(static_cast<int64_t>(std::floor(position)), 0, UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE - 2));
+    float const fraction = position - static_cast<float>(index0);
+    return table[index0] + (fraction * (table[index0 + 1] - table[index0]));
+}
 
 /**
  * @brief A Unit transformer that maps [0, 1] -> [0, 1]
@@ -48,28 +64,14 @@ class NormalizedUnitTransformer
 
     float transform(float in)
     {
-        int64_t lookupIndex = in * static_cast<float>(UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE);
-        if (lookupIndex >= UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE)
-        {
-            lookupIndex = UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE - 1;
-        }
-        lookupIndex = std::max<int64_t>(lookupIndex, 0);
-        auto const lookupIndexSt = static_cast<size_t>(lookupIndex);
         std::shared_lock const lock(mutex);
-        return (*lookupTableIn)[lookupIndexSt];
+        return interpolatedLookup(*lookupTableIn, in);
     }
 
     float transformInv(float in)
     {
-        int64_t lookupIndex = in * static_cast<float>(UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE);
-        if (lookupIndex >= UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE)
-        {
-            lookupIndex = UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE - 1;
-        }
-        lookupIndex = std::max<int64_t>(lookupIndex, 0);
-        auto const lookupIndexSt = static_cast<size_t>(lookupIndex);
         std::shared_lock const lock(mutex);
-        return (*lookupTableOut)[lookupIndexSt];
+        return interpolatedLookup(*lookupTableOut, in);
     }
 
     friend class TmpNormalizedUnitTransformer;
@@ -143,26 +145,12 @@ class TmpNormalizedUnitTransformer
 
     float transform(float in)
     {
-        int64_t lookupIndex = in * static_cast<float>(UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE);
-        if (lookupIndex >= UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE)
-        {
-            lookupIndex = UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE - 1;
-        }
-        lookupIndex = std::max<int64_t>(lookupIndex, 0);
-        auto const lookupIndexSt = static_cast<size_t>(lookupIndex);
-        return lookupTableIn[lookupIndexSt];
+        return interpolatedLookup(lookupTableIn, in);
     }
 
     float transformInv(float in)
     {
-        int64_t lookupIndex = in * static_cast<float>(UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE);
-        if (lookupIndex >= UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE)
-        {
-            lookupIndex = UNIT_TRANSFORMER_LOOKUP_TABLE_SIZE - 1;
-        }
-        lookupIndex = std::max<int64_t>(lookupIndex, 0);
-        auto const lookupIndexSt = static_cast<size_t>(lookupIndex);
-        return lookupTableOut[lookupIndexSt];
+        return interpolatedLookup(lookupTableOut, in);
     }
 
   private:
